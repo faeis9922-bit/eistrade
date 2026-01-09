@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NamTrade - AI Trading Assistant</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;500;700&family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+        h1, h2, h3, .brand-font {
+            font-family: 'Rajdhani', sans-serif;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569; 
+            border-radius: 4px;
+        }
+
+        /* Neon Glow Effects */
+        .neon-text {
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
+        }
+        .ai-pulse {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: pulse-green 2s infinite;
+        }
+        .ai-pulse-red {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            animation: pulse-red 2s infinite;
+        }
+
+        @keyframes pulse-green {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        @keyframes pulse-red {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Fade In Animation */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-cyan-500 selection:text-white">
+
+    <nav class="fixed w-full z-50 glass-panel border-b border-slate-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-robot text-cyan-400 text-2xl animate-bounce"></i>
+                    <span class="brand-font font-bold text-2xl text-white tracking-wider neon-text">NAM<span class="text-cyan-400">TRADE</span></span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#" class="bg-slate-900 text-white px-3 py-2 rounded-md text-sm font-medium border border-cyan-500/50 hover:bg-cyan-900 transition">หน้าเทรด</a>
+                        <a href="#" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition">ประวัติ</a>
+                        <a href="#" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition">VIP AI</a>
+                    </div>
+                </div>
+                <div id="auth-section">
+                    <button onclick="toggleModal('login-modal')" class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg shadow-cyan-500/30 transition transform hover:scale-105">
+                        เข้าสู่ระบบ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-20 pb-10 px-4 max-w-7xl mx-auto min-h-screen flex flex-col gap-6">
+        
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4 fade-in">
+            <div class="relative w-full md:w-1/3">
+                <input type="text" placeholder="ค้นหาคู่เงิน (เช่น EURUSD, XAUUSD)..." class="w-full bg-slate-800 text-white border border-slate-600 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition">
+                <i class="fa-solid fa-search absolute left-3 top-3 text-slate-400"></i>
+            </div>
+            <div class="flex gap-4 text-sm font-mono">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                    <span class="text-green-400">AI Server: Online</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-clock text-cyan-400"></i>
+                    <span id="current-time">00:00:00</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+            
+            <div class="lg:col-span-2 glass-panel rounded-xl p-1 shadow-2xl fade-in overflow-hidden h-[500px] lg:h-[600px]">
+                <div class="tradingview-widget-container" style="height:100%;width:100%">
+                    <div id="tradingview_b1e30" style="height:100%;width:100%"></div>
+                    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+                    <script type="text/javascript">
+                    new TradingView.widget(
+                    {
+                        "autosize": true,
+                        "symbol": "FX:EURUSD",
+                        "interval": "1",
+                        "timezone": "Asia/Bangkok",
+                        "theme": "dark",
+                        "style": "1",
+                        "locale": "th_TH",
+                        "toolbar_bg": "#f1f3f6",
+                        "enable_publishing": false,
+                        "allow_symbol_change": true,
+                        "container_id": "tradingview_b1e30"
+                    });
+                    </script>
+                </div>
+                </div>
+
+            <div class="glass-panel rounded-xl p-6 flex flex-col gap-6 fade-in relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
+                
+                <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+                    <h2 class="text-xl font-bold brand-font text-cyan-400"><i class="fa-solid fa-microchip mr-2"></i>NAMTRADE AI</h2>
+                    <span class="bg-slate-800 text-xs px-2 py-1 rounded text-slate-400">V 2.0.1</span>
+                </div>
+
+                <div class="text-center py-6">
+                    <p class="text-slate-400 text-sm mb-2">สัญญาณปัจจุบัน (XAU/USD)</p>
+                    
+                    <div id="ai-signal-circle" class="w-32 h-32 rounded-full border-4 border-slate-700 mx-auto flex items-center justify-center flex-col relative transition-all duration-500">
+                        <span id="ai-action" class="text-3xl font-bold text-slate-500">WAIT</span>
+                        <span id="ai-timer" class="text-xs text-slate-400 mt-1">Calculating...</span>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-green-400">แรงซื้อ (Buy Pressure)</span>
+                            <span id="buy-percent" class="text-white">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-2">
+                            <div id="buy-bar" class="bg-green-500 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-red-400">แรงขาย (Sell Pressure)</span>
+                            <span id="sell-percent" class="text-white">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-2">
+                            <div id="sell-bar" class="bg-red-500 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                    <h3 class="text-cyan-400 text-sm font-bold mb-2"><i class="fa-solid fa-circle-info mr-1"></i> คำแนะนำ AI</h3>
+                    <p id="ai-reason" class="text-xs text-slate-300 leading-relaxed">
+                        ระบบกำลังวิเคราะห์กราฟแท่งเทียนและ Momentum... กรุณารอสักครู่เพื่อความแม่นยำสูงสุด
+                    </p>
+                    <div class="mt-3 flex justify-between items-center text-xs text-slate-500 border-t border-slate-700 pt-2">
+                        <span>Win Rate: <span class="text-yellow-400">89%</span></span>
+                        <span>Risk: <span class="text-green-400">Low</span></span>
+                    </div>
+                </div>
+
+                <button id="analyze-btn" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transform active:scale-95 transition-all">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> ขอสัญญาณใหม่
+                </button>
+            </div>
+        </div>
+
+        <div class="glass-panel rounded-xl p-6 fade-in">
+            <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-clock-rotate-left text-slate-400"></i> ประวัติสัญญาณล่าสุด
+            </h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-slate-400">
+                    <thead class="text-xs text-slate-200 uppercase bg-slate-800/50">
+                        <tr>
+                            <th class="px-6 py-3">เวลา</th>
+                            <th class="px-6 py-3">คู่เงิน</th>
+                            <th class="px-6 py-3">สัญญาณ</th>
+                            <th class="px-6 py-3">ความแม่นยำ</th>
+                            <th class="px-6 py-3">ผลลัพธ์</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body">
+                        <tr class="border-b border-slate-700 hover:bg-slate-800/30 transition">
+                            <td class="px-6 py-4">10:45:00</td>
+                            <td class="px-6 py-4 font-bold text-white">EUR/USD</td>
+                            <td class="px-6 py-4 text-green-400"><i class="fa-solid fa-arrow-up"></i> BUY</td>
+                            <td class="px-6 py-4">92%</td>
+                            <td class="px-6 py-4"><span class="bg-green-500/20 text-green-400 px-2 py-1 rounded">WIN</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="text-center py-6 text-slate-600 text-sm">
+        <p>&copy; 2026 NamTrade AI. All rights reserved.</p>
+        <p class="text-xs mt-1 text-slate-700">คำเตือน: การลงทุนมีความเสี่ยง ผู้ลงทุนควรศึกษาข้อมูลก่อนตัดสินใจลงทุน</p>
+    </footer>
+
+    <div id="login-modal" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-slate-900 border border-slate-700 p-8 rounded-2xl w-full max-w-md relative shadow-2xl">
+            <button onclick="toggleModal('login-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark fa-lg"></i></button>
+            
+            <h2 class="text-2xl font-bold text-center mb-6 brand-font text-white">เข้าสู่ระบบ <span class="text-cyan-500">NamTrade</span></h2>
+            
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1">Email</label>
+                    <input type="email" id="email" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-cyan-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1">Password</label>
+                    <input type="password" id="password" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-cyan-500 focus:outline-none">
+                </div>
+                <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 rounded-lg transition">Log In</button>
+            </form>
+            
+            <p class="text-center text-sm text-slate-500 mt-4">ยังไม่มีบัญชี? <a href="#" class="text-cyan-400 hover:underline">สมัครสมาชิก</a></p>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+
+        // --- FIREBASE CONFIG ---
+        // Warning: Exposing keys in client-side code is risky. Restrict domains in Firebase Console.
+        const firebaseConfig = {
+            apiKey: "AIzaSyADXGuFyQ-hVkMYCZVy1GHPB218iztS1Ag",
+            authDomain: "eistrade.firebaseapp.com",
+            projectId: "eistrade",
+            storageBucket: "eistrade.firebasestorage.app",
+            messagingSenderId: "387010350248",
+            appId: "1:387010350248:web:1b2eb28de888943e1c069d",
+            measurementId: "G-R0WF2FVMT2"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // --- AUTH LOGIC ---
+        const loginForm = document.getElementById('login-form');
+        const authSection = document.getElementById('auth-section');
+
+        // Handle Login
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    alert("ยินดีต้อนรับกลับ: " + user.email);
+                    toggleModal('login-modal');
+                })
+                .catch((error) => {
+                    alert("เกิดข้อผิดพลาด: " + error.message);
+                });
+        });
+
+        // Monitor Auth State
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                authSection.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm text-cyan-300">${user.email}</span>
+                        <button id="logout-btn" class="bg-red-500/20 text-red-400 px-3 py-1 rounded border border-red-500/50 hover:bg-red-500 hover:text-white text-xs transition">Logout</button>
+                    </div>
+                `;
+                document.getElementById('logout-btn').addEventListener('click', () => {
+                    signOut(auth);
+                });
+            } else {
+                authSection.innerHTML = `
+                    <button onclick="toggleModal('login-modal')" class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg shadow-cyan-500/30 transition transform hover:scale-105">
+                        เข้าสู่ระบบ
+                    </button>
+                `;
+            }
+        });
+
+        // --- AI SIMULATION LOGIC ---
+        // (Note: This is a frontend simulation. Real AI requires backend logic)
+        const aiAction = document.getElementById('ai-action');
+        const aiCircle = document.getElementById('ai-signal-circle');
+        const buyBar = document.getElementById('buy-bar');
+        const sellBar = document.getElementById('sell-bar');
+        const aiReason = document.getElementById('ai-reason');
+        const analyzeBtn = document.getElementById('analyze-btn');
+
+        function generateSignal() {
+            // Loading state
+            aiAction.innerText = "...";
+            aiCircle.className = "w-32 h-32 rounded-full border-4 border-slate-600 mx-auto flex items-center justify-center flex-col relative animate-spin";
+            
+            setTimeout(() => {
+                // Random Logic for Demo
+                const isBuy = Math.random() > 0.5;
+                const confidence = Math.floor(Math.random() * (98 - 70) + 70); // 70-98%
+                
+                aiCircle.classList.remove('animate-spin');
+                
+                if(isBuy) {
+                    aiAction.innerText = "BUY";
+                    aiAction.className = "text-3xl font-bold text-green-400 neon-text";
+                    aiCircle.className = "w-32 h-32 rounded-full border-4 border-green-500 mx-auto flex items-center justify-center flex-col relative ai-pulse bg-green-900/20";
+                    buyBar.style.width = confidence + "%";
+                    sellBar.style.width = (100 - confidence) + "%";
+                    document.getElementById('buy-percent').innerText = confidence + "%";
+                    document.getElementById('sell-percent').innerText = (100 - confidence) + "%";
+                    aiReason.innerHTML = `ตรวจพบแนวรับสำคัญที่ RSI < 30 <br> AI คาดการณ์กราฟจะดีดตัวขึ้นใน 5 นาที <span class="text-green-400">Strong Momentum</span>`;
+                    addToHistory("EUR/USD", "BUY", confidence);
+                } else {
+                    aiAction.innerText = "SELL";
+                    aiAction.className = "text-3xl font-bold text-red-400 neon-text";
+                    aiCircle.className = "w-32 h-32 rounded-full border-4 border-red-500 mx-auto flex items-center justify-center flex-col relative ai-pulse-red bg-red-900/20";
+                    sellBar.style.width = confidence + "%";
+                    buyBar.style.width = (100 - confidence) + "%";
+                    document.getElementById('sell-percent').innerText = confidence + "%";
+                    document.getElementById('buy-percent').innerText = (100 - confidence) + "%";
+                    aiReason.innerHTML = `กราฟชนแนวต้าน EMA 200 <br> Volume การซื้อลดลงอย่างมีนัยสำคัญ <span class="text-red-400">Bearish Divergence</span>`;
+                    addToHistory("EUR/USD", "SELL", confidence);
+                }
+            }, 1500);
+        }
+
+        analyzeBtn.addEventListener('click', generateSignal);
+
+        // Add to history table
+        function addToHistory(pair, type, conf) {
+            const table = document.getElementById('history-table-body');
+            const now = new Date().toLocaleTimeString('th-TH');
+            const colorClass = type === 'BUY' ? 'text-green-400' : 'text-red-400';
+            const icon = type === 'BUY' ? 'fa-arrow-up' : 'fa-arrow-down';
+            
+            const row = `
+                <tr class="border-b border-slate-700 hover:bg-slate-800/30 transition fade-in">
+                    <td class="px-6 py-4">${now}</td>
+                    <td class="px-6 py-4 font-bold text-white">${pair}</td>
+                    <td class="px-6 py-4 ${colorClass}"><i class="fa-solid ${icon}"></i> ${type}</td>
+                    <td class="px-6 py-4">${conf}%</td>
+                    <td class="px-6 py-4"><span class="text-slate-500">Waiting...</span></td>
+                </tr>
+            `;
+            table.insertAdjacentHTML('afterbegin', row);
+        }
+
+        // --- UTILS ---
+        // Clock
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('current-time').innerText = now.toLocaleTimeString('th-TH');
+        }, 1000);
+
+    </script>
+    
+    <script>
+        // Modal Toggles (Outside module for onclick access)
+        function toggleModal(modalID) {
+            const modal = document.getElementById(modalID);
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+    </script>
+</body>
+</html>
