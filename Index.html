@@ -4,36 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>NamTrade AI - Enterprise Platform</title>
+    <title>EISTRADE AI - Enterprise Platform</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Prompt:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <style>
         /* --- CORE VARIABLES --- */
         :root {
             --bg-dark: #020617;
-            --bg-panel: rgba(15, 23, 42, 0.65);
-            --primary: #06b6d4;  /* Cyan-500 */
-            --primary-glow: #22d3ee;
-            --accent: #8b5cf6;   /* Violet-500 */
+            --bg-panel: rgba(15, 23, 42, 0.75);
+            --primary: #06b6d4;  /* Cyan */
+            --primary-glow: rgba(6, 182, 212, 0.5);
+            --accent: #8b5cf6;   /* Violet */
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
             --text-main: #f1f5f9;
-            --text-muted: #94a3b8;
-            --border-glass: rgba(255, 255, 255, 0.08);
+            --border-glass: rgba(255, 255, 255, 0.1);
             --font-tech: 'Rajdhani', sans-serif;
             --font-body: 'Prompt', sans-serif;
         }
 
-        /* --- GLOBAL RESET & TYPOGRAPHY --- */
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        /* --- GLOBAL & TYPOGRAPHY --- */
         body {
             background-color: var(--bg-dark);
             color: var(--text-main);
@@ -41,199 +39,199 @@
             overflow-x: hidden;
             min-height: 100vh;
         }
-        h1, h2, h3, h4, h5, h6, .tech-font { font-family: var(--font-tech); }
+        h1, h2, h3, h4, .tech-font { font-family: var(--font-tech); text-transform: uppercase; }
 
-        /* --- CUSTOM SCROLLBAR --- */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
-
-        /* --- BACKGROUND CANVAS --- */
+        /* --- BACKGROUND FX --- */
         #starfield {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: -1; pointer-events: none;
-            background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
+            background: radial-gradient(circle at 50% 10%, #1e293b 0%, #020617 80%);
         }
 
-        /* --- UTILITIES & GLASSMORPHISM --- */
+        /* --- GLASSMORPHISM --- */
         .glass {
             background: var(--bg-panel);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid var(--border-glass);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
-        .glass-high {
-            background: rgba(30, 41, 59, 0.8);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+        .glass-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s ease;
         }
-        .border-gradient {
-            border-image: linear-gradient(to right, var(--primary), var(--accent)) 1;
+        .glass-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.2);
+            outline: none;
         }
 
         /* --- ANIMATIONS --- */
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 10px var(--primary-glow); } 50% { box-shadow: 0 0 25px var(--primary-glow); } }
-        @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes pulse-border { 0% { border-color: rgba(6, 182, 212, 0.2); } 50% { border-color: rgba(6, 182, 212, 0.8); box-shadow: 0 0 15px var(--primary-glow); } 100% { border-color: rgba(6, 182, 212, 0.2); } }
         
-        .anim-fade { animation: fadeIn 0.5s ease-out forwards; }
-        .anim-slide { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .anim-pulse { animation: pulse-glow 2s infinite; }
-
-        /* --- LOADER --- */
-        .loader-wrapper {
-            position: fixed; inset: 0; z-index: 9999;
-            background: #020617; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-        }
-        .hex-spinner {
-            width: 60px; height: 60px;
-            border: 4px solid rgba(6, 182, 212, 0.1);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin-slow 1s linear infinite;
-        }
-
-        /* --- GLITCH TEXT EFFECT --- */
-        .glitch-text { position: relative; display: inline-block; }
-        .glitch-text::before, .glitch-text::after {
-            content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.8;
-        }
-        .glitch-text::before { color: #f0f; clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%); transform: translate(-2px, -2px); animation: glitch 3s infinite linear alternate-reverse; }
-        .glitch-text::after { color: #0ff; clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%); transform: translate(2px, 2px); animation: glitch 2s infinite linear alternate-reverse; }
-        @keyframes glitch { 0% { transform: translate(0); } 20% { transform: translate(-2px, 2px); } 40% { transform: translate(-2px, -2px); } 60% { transform: translate(2px, 2px); } 80% { transform: translate(2px, -2px); } 100% { transform: translate(0); } }
-
-        /* --- SCANNER EFFECT --- */
-        .scanner-container { position: relative; overflow: hidden; }
-        .scan-beam {
-            position: absolute; top: 0; left: 0; width: 100%; height: 4px;
-            background: var(--primary);
-            box-shadow: 0 0 15px var(--primary), 0 0 30px var(--primary);
-            animation: scan 2s ease-in-out infinite;
-            opacity: 0; z-index: 10;
-        }
-        .scan-grid {
-            position: absolute; inset: 0;
-            background-image: linear-gradient(0deg, transparent 24%, rgba(6, 182, 212, .1) 25%, rgba(6, 182, 212, .1) 26%, transparent 27%, transparent 74%, rgba(6, 182, 212, .1) 75%, rgba(6, 182, 212, .1) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(6, 182, 212, .1) 25%, rgba(6, 182, 212, .1) 26%, transparent 27%, transparent 74%, rgba(6, 182, 212, .1) 75%, rgba(6, 182, 212, .1) 76%, transparent 77%, transparent);
-            background-size: 30px 30px;
-            opacity: 0; animation: fadeIn 0.5s forwards;
-        }
-        @keyframes scan { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
-
+        .anim-fade { animation: fadeIn 0.6s ease-out forwards; }
+        .anim-slide { animation: slideUp 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        
         /* --- COMPONENTS --- */
         .btn-primary {
             background: linear-gradient(135deg, var(--primary), #0891b2);
-            color: white; font-weight: 600;
-            transition: all 0.3s;
-            position: relative; overflow: hidden;
-            box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+            color: white; font-weight: 700; letter-spacing: 1px;
+            transition: all 0.3s; position: relative; overflow: hidden;
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
         }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(6, 182, 212, 0.5); }
-        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
-
-        .input-field {
-            background: rgba(2, 6, 23, 0.5);
-            border: 1px solid rgba(148, 163, 184, 0.2);
-            color: white; transition: 0.3s;
-        }
-        .input-field:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 10px rgba(6, 182, 212, 0.2); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(6, 182, 212, 0.4); }
+        .btn-primary:active { transform: translateY(0); }
+        .btn-primary:disabled { filter: grayscale(1); opacity: 0.6; cursor: not-allowed; }
 
         .nav-item {
-            cursor: pointer; position: relative; color: var(--text-muted); transition: 0.3s;
+            position: relative; color: #64748b; cursor: pointer; transition: 0.3s;
         }
         .nav-item:hover, .nav-item.active { color: var(--primary); }
         .nav-item.active::after {
-            content: ''; position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
-            width: 5px; height: 5px; background: var(--primary); border-radius: 50%;
-            box-shadow: 0 0 10px var(--primary);
+            content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
+            width: 4px; height: 4px; background: var(--primary); border-radius: 50%;
+            box-shadow: 0 0 8px var(--primary);
         }
 
-        .history-row:hover { background: rgba(255,255,255,0.02); }
+        /* --- SCANNER EFFECT --- */
+        .scanner-line {
+            position: absolute; width: 100%; height: 2px; background: var(--primary);
+            box-shadow: 0 0 15px var(--primary); top: 0; opacity: 0; z-index: 10;
+        }
+        .scanning .scanner-line { animation: scan 2s ease-in-out infinite; opacity: 1; }
+        @keyframes scan { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
+
+        /* --- TABLE STYLE --- */
+        .custom-table th { font-weight: 600; color: #94a3b8; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+        .custom-table td { color: #e2e8f0; font-family: 'Rajdhani', monospace; font-size: 0.95rem; }
+        .tr-hover:hover { background: rgba(255, 255, 255, 0.03); }
+
+        /* --- TOAST --- */
+        #toast-box {
+            position: fixed; top: 20px; right: 20px; z-index: 9999;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .toast {
+            min-width: 300px; padding: 16px; border-radius: 8px;
+            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px);
+            border-left: 4px solid var(--primary);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .toast.show { transform: translateX(0); }
     </style>
 </head>
 <body>
 
     <canvas id="starfield"></canvas>
 
-    <div id="loader" class="loader-wrapper">
-        <div class="hex-spinner mb-4"></div>
-        <div class="text-xl font-bold tech-font tracking-widest text-cyan-400 animate-pulse">SYSTEM INITIALIZING</div>
-        <div class="text-xs text-slate-500 mt-2 font-mono">Loading Firebase Core...</div>
+    <div id="loader" class="fixed inset-0 z-[100] bg-[#020617] flex flex-col items-center justify-center transition-opacity duration-500">
+        <div class="relative w-24 h-24 mb-6">
+            <div class="absolute inset-0 border-4 border-cyan-500/20 rounded-full"></div>
+            <div class="absolute inset-0 border-4 border-cyan-500 rounded-full border-t-transparent animate-spin"></div>
+            <div class="absolute inset-4 bg-cyan-500/10 rounded-full animate-pulse"></div>
+        </div>
+        <h1 class="text-3xl font-bold text-white tracking-[0.2em] animate-pulse">EISTRADE</h1>
+        <p class="text-cyan-500 font-mono text-sm mt-2">SYSTEM INITIALIZING...</p>
     </div>
 
-    <div id="toast-container" class="fixed top-5 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 w-full max-w-sm px-4"></div>
+    <div id="toast-box"></div>
 
-    <section id="auth-page" class="min-h-screen flex items-center justify-center p-4 hidden anim-fade">
-        <div class="glass w-full max-w-4xl rounded-3xl overflow-hidden flex flex-col md:flex-row shadow-2xl relative">
+    <section id="auth-page" class="min-h-screen flex items-center justify-center p-4 hidden">
+        <div class="glass w-full max-w-5xl rounded-3xl overflow-hidden flex flex-col md:flex-row shadow-2xl relative border border-slate-800">
             
-            <div class="w-full md:w-1/2 bg-slate-900/50 p-10 flex flex-col justify-center items-center text-center relative overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 z-0"></div>
-                <div class="relative z-10">
-                    <div class="mb-6 inline-block">
-                        <i class="fa-solid fa-layer-group text-6xl text-cyan-400 drop-shadow-[0_0_15px_rgba(6,182,212,0.5)]"></i>
+            <div class="w-full md:w-5/12 bg-slate-900/60 p-12 flex flex-col justify-between relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent"></div>
+                
+                <div>
+                    <div class="w-12 h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center mb-6 border border-cyan-500/50">
+                        <i class="fa-solid fa-chart-simple text-2xl text-cyan-400"></i>
                     </div>
-                    <h1 class="text-4xl font-bold tech-font mb-2 glitch-text" data-text="NAMTRADE AI">NAMTRADE AI</h1>
-                    <p class="text-slate-400 text-sm tracking-wide">ENTERPRISE MARKET ANALYSIS</p>
-                    <div class="mt-8 flex gap-2 justify-center">
-                        <span class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span>
-                        <span class="w-2 h-2 rounded-full bg-purple-500 animate-pulse delay-75"></span>
-                        <span class="w-2 h-2 rounded-full bg-pink-500 animate-pulse delay-150"></span>
+                    <h1 class="text-5xl font-bold text-white mb-2 leading-tight tech-font">EIS<br><span class="text-cyan-400">TRADE</span></h1>
+                    <p class="text-slate-400 text-sm tracking-wide mt-4">AI-POWERED MARKET INTELLIGENCE<br>VERSION 2.0 ENTERPRISE</p>
+                </div>
+
+                <div class="space-y-4 mt-12">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-cyan-400"><i class="fa-solid fa-robot"></i></div>
+                        <div>
+                            <div class="text-white font-bold text-sm">Gemini 1.5 Vision</div>
+                            <div class="text-slate-500 text-xs">Real-time Chart Analysis</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-purple-400"><i class="fa-solid fa-database"></i></div>
+                        <div>
+                            <div class="text-white font-bold text-sm">Cloud Sync</div>
+                            <div class="text-slate-500 text-xs">Secure Firebase Storage</div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="w-full md:w-1/2 p-10 relative bg-black/40">
+            <div class="w-full md:w-7/12 p-10 relative flex flex-col justify-center bg-black/20">
                 
-                <div id="login-form" class="auth-content">
-                    <h2 class="text-2xl font-bold mb-1 text-white lang" key="login_title">Welcome Back</h2>
-                    <p class="text-slate-400 text-sm mb-6 lang" key="login_subtitle">Access your trading dashboard</p>
-                    
+                <div id="login-form" class="auth-content anim-fade">
+                    <h2 class="text-2xl font-bold text-white mb-1 lang" key="login_title">ACCESS TERMINAL</h2>
+                    <p class="text-slate-400 text-sm mb-8 lang" key="login_subtitle">Please authenticate to continue.</p>
+
                     <form onsubmit="event.preventDefault(); Auth.login();">
-                        <div class="space-y-4">
+                        <div class="space-y-5">
                             <div>
-                                <label class="text-xs text-cyan-400 font-bold ml-1 mb-1 block lang" key="email">EMAIL ADDRESS</label>
-                                <input type="email" id="l-email" class="input-field w-full rounded-lg p-3 text-sm" placeholder="trader@example.com" required>
+                                <label class="text-xs text-cyan-500 font-bold uppercase mb-2 block tracking-wider lang" key="email">Identity (Email)</label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-envelope absolute left-4 top-3.5 text-slate-500"></i>
+                                    <input type="email" id="l-email" class="glass-input w-full rounded-xl py-3 pl-10 pr-4 text-sm" placeholder="trader@eistrade.com" required>
+                                </div>
                             </div>
                             <div>
-                                <label class="text-xs text-cyan-400 font-bold ml-1 mb-1 block lang" key="password">PASSWORD</label>
-                                <input type="password" id="l-pass" class="input-field w-full rounded-lg p-3 text-sm" placeholder="••••••••" required>
+                                <label class="text-xs text-cyan-500 font-bold uppercase mb-2 block tracking-wider lang" key="password">Passcode</label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-lock absolute left-4 top-3.5 text-slate-500"></i>
+                                    <input type="password" id="l-pass" class="glass-input w-full rounded-xl py-3 pl-10 pr-4 text-sm" placeholder="••••••••" required>
+                                </div>
                             </div>
-                            <button type="submit" class="btn-primary w-full py-3 rounded-lg mt-2 flex items-center justify-center gap-2 group">
-                                <span class="lang" key="btn_login">SECURE LOGIN</span> <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition"></i>
+                            <button type="submit" class="btn-primary w-full py-4 rounded-xl mt-4 flex items-center justify-center gap-2 group">
+                                <span class="lang" key="btn_login">ESTABLISH CONNECTION</span> 
+                                <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition"></i>
                             </button>
                         </div>
                     </form>
-                    <div class="mt-6 text-center text-sm">
-                        <span class="text-slate-500 lang" key="no_account">No account?</span>
-                        <button onclick="Auth.switch('register')" class="text-cyan-400 font-bold hover:underline lang" key="create_one">Create One</button>
+
+                    <div class="mt-8 text-center pt-6 border-t border-slate-800">
+                        <p class="text-slate-500 text-sm mb-2 lang" key="no_account">New to the system?</p>
+                        <button onclick="Auth.switch('register')" class="text-cyan-400 font-bold hover:text-cyan-300 transition text-sm uppercase tracking-wider lang" key="create_one">Create Identity</button>
                     </div>
                 </div>
 
                 <div id="register-form" class="auth-content hidden">
-                    <h2 class="text-2xl font-bold mb-1 text-white lang" key="reg_title">New Trader ID</h2>
-                    <p class="text-slate-400 text-sm mb-6 lang" key="reg_subtitle">Join the AI-powered network</p>
-                    
+                    <h2 class="text-2xl font-bold text-white mb-1 lang" key="reg_title">NEW REGISTRATION</h2>
+                    <p class="text-slate-400 text-sm mb-8 lang" key="reg_subtitle">Join the trading network.</p>
+
                     <form onsubmit="event.preventDefault(); Auth.register();">
-                        <div class="space-y-4">
+                        <div class="space-y-5">
                             <div>
-                                <label class="text-xs text-purple-400 font-bold ml-1 mb-1 block lang" key="email">EMAIL ADDRESS</label>
-                                <input type="email" id="r-email" class="input-field w-full rounded-lg p-3 text-sm" placeholder="newtrader@example.com" required>
+                                <label class="text-xs text-purple-500 font-bold uppercase mb-2 block tracking-wider lang" key="email">Email Address</label>
+                                <input type="email" id="r-email" class="glass-input w-full rounded-xl py-3 px-4 text-sm" placeholder="email@example.com" required>
                             </div>
                             <div>
-                                <label class="text-xs text-purple-400 font-bold ml-1 mb-1 block lang" key="password">CREATE PASSWORD</label>
-                                <input type="password" id="r-pass" class="input-field w-full rounded-lg p-3 text-sm" placeholder="Minimum 6 chars" required>
+                                <label class="text-xs text-purple-500 font-bold uppercase mb-2 block tracking-wider lang" key="password">Set Password</label>
+                                <input type="password" id="r-pass" class="glass-input w-full rounded-xl py-3 px-4 text-sm" placeholder="Min 6 characters" required>
                             </div>
-                            <button type="submit" class="btn-primary w-full py-3 rounded-lg mt-2 !bg-purple-600 !shadow-purple-500/30 border-none">
+                            <button type="submit" class="btn-primary w-full py-4 rounded-xl mt-4 !bg-purple-600 !shadow-purple-500/30 border-none">
                                 <span class="lang" key="btn_register">INITIALIZE ACCOUNT</span>
                             </button>
                         </div>
                     </form>
-                    <div class="mt-6 text-center text-sm">
-                        <span class="text-slate-500 lang" key="have_account">Have an account?</span>
-                        <button onclick="Auth.switch('login')" class="text-purple-400 font-bold hover:underline lang" key="login_here">Login Here</button>
+
+                    <div class="mt-8 text-center pt-6 border-t border-slate-800">
+                        <button onclick="Auth.switch('login')" class="text-slate-400 hover:text-white transition text-sm flex items-center justify-center gap-2 mx-auto">
+                            <i class="fa-solid fa-arrow-left"></i> <span class="lang" key="back_login">Back to Login</span>
+                        </button>
                     </div>
                 </div>
 
@@ -243,199 +241,201 @@
 
     <section id="app-page" class="hidden min-h-screen pb-20">
         
-        <header class="fixed top-0 w-full z-40 glass h-16 px-4 flex items-center justify-between border-b border-white/5">
+        <header class="fixed top-0 w-full z-40 glass h-16 px-6 flex items-center justify-between border-b border-white/5 bg-[#020617]/80 backdrop-blur-md">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg">N</div>
-                <div class="hidden sm:block">
-                    <h1 class="text-lg font-bold tech-font leading-none">NAM<span class="text-cyan-400">TRADE</span></h1>
-                    <span class="text-[10px] text-slate-400 tracking-wider">ENTERPRISE V.4.0</span>
+                <div class="w-8 h-8 rounded bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold shadow-lg">E</div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-widest leading-none">EIS<span class="text-cyan-400">TRADE</span></h1>
                 </div>
             </div>
             
             <div class="flex items-center gap-4">
-                <button onclick="Lang.toggle()" class="flex items-center gap-2 bg-slate-800/50 px-3 py-1.5 rounded-full border border-slate-700 hover:border-cyan-500 transition">
-                    <i class="fa-solid fa-globe text-cyan-400 text-xs"></i>
-                    <span id="current-lang" class="text-xs font-bold font-mono">TH</span>
+                <button onclick="Lang.toggle()" class="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700 hover:border-cyan-500 transition group">
+                    <i class="fa-solid fa-globe text-cyan-500 group-hover:rotate-180 transition duration-500"></i>
+                    <span id="current-lang" class="text-xs font-bold text-slate-300">TH</span>
                 </button>
 
+                <div class="h-6 w-px bg-slate-700"></div>
+
                 <div class="relative group">
-                    <div class="flex items-center gap-2 cursor-pointer">
+                    <button class="flex items-center gap-3 hover:bg-slate-800/50 p-1.5 rounded-lg transition">
                         <div class="text-right hidden sm:block">
                             <div id="user-display" class="text-xs font-bold text-white">Trader</div>
-                            <div class="text-[9px] text-green-400">● ONLINE</div>
+                            <div class="text-[9px] text-green-400 font-mono">● SECURE</div>
                         </div>
-                        <div class="w-9 h-9 rounded-full bg-slate-700 overflow-hidden border border-slate-600">
-                            <img src="https://ui-avatars.com/api/?name=T&background=random" alt="Avatar" class="w-full h-full object-cover">
+                        <div class="w-8 h-8 rounded-full bg-slate-700 overflow-hidden border border-slate-600">
+                            <img src="https://ui-avatars.com/api/?name=User&background=0f172a&color=fff" alt="User" class="w-full h-full object-cover">
                         </div>
-                    </div>
-                    <div class="absolute right-0 top-full mt-2 w-48 bg-[#0f172a] border border-slate-700 rounded-xl shadow-xl overflow-hidden hidden group-hover:block anim-fade">
-                        <button onclick="Settings.open()" class="w-full text-left px-4 py-3 text-sm hover:bg-slate-800 text-slate-300 hover:text-white flex items-center gap-2">
-                            <i class="fa-solid fa-key"></i> <span class="lang" key="menu_api">API Settings</span>
+                    </button>
+                    <div class="absolute right-0 top-full mt-2 w-48 bg-[#0f172a] border border-slate-700 rounded-xl shadow-2xl overflow-hidden hidden group-hover:block anim-fade">
+                        <button onclick="Settings.open()" class="w-full text-left px-4 py-3 text-xs hover:bg-slate-800 text-slate-300 hover:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-key text-cyan-400"></i> <span class="lang" key="menu_api">API Configuration</span>
                         </button>
                         <div class="h-px bg-slate-800"></div>
-                        <button onclick="Auth.logout()" class="w-full text-left px-4 py-3 text-sm hover:bg-red-900/20 text-red-400 flex items-center gap-2">
-                            <i class="fa-solid fa-power-off"></i> <span class="lang" key="menu_logout">Logout</span>
+                        <button onclick="Auth.logout()" class="w-full text-left px-4 py-3 text-xs hover:bg-red-900/20 text-red-400 flex items-center gap-2">
+                            <i class="fa-solid fa-power-off"></i> <span class="lang" key="menu_logout">Disconnect</span>
                         </button>
                     </div>
                 </div>
             </div>
         </header>
 
-        <main class="pt-24 px-4 max-w-6xl mx-auto flex flex-col lg:flex-row gap-6">
+        <main class="pt-24 px-4 max-w-7xl mx-auto flex flex-col lg:flex-row gap-6">
             
-            <div class="w-full lg:w-1/3 space-y-6">
+            <div class="w-full lg:w-4/12 space-y-6">
                 
-                <div class="glass p-6 rounded-2xl relative overflow-hidden group">
-                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
-                        <i class="fa-solid fa-chart-line text-6xl text-white"></i>
+                <div class="glass p-6 rounded-2xl relative overflow-hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <label class="text-xs text-cyan-500 font-bold uppercase tracking-wider lang" key="label_asset">1. Target Asset</label>
+                        <i class="fa-solid fa-crosshairs text-slate-600"></i>
                     </div>
-                    <label class="text-xs text-cyan-400 font-bold uppercase tracking-wider mb-4 block lang" key="label_asset">1. SELECT ASSET</label>
                     
                     <div class="grid grid-cols-3 gap-2 mb-3">
-                        <button onclick="App.setPair('XAUUSD')" class="pair-btn active bg-slate-800 border border-cyan-500 text-cyan-400 p-3 rounded-xl font-bold text-sm shadow-[0_0_10px_rgba(6,182,212,0.2)]">XAUUSD</button>
-                        <button onclick="App.setPair('BTCUSD')" class="pair-btn bg-slate-800/50 border border-slate-700 text-slate-400 p-3 rounded-xl font-bold text-sm hover:bg-slate-700 transition">BTCUSD</button>
-                        <button onclick="App.setPair('EURUSD')" class="pair-btn bg-slate-800/50 border border-slate-700 text-slate-400 p-3 rounded-xl font-bold text-sm hover:bg-slate-700 transition">EURUSD</button>
+                        <button onclick="App.setPair('XAUUSD')" class="pair-btn active bg-slate-800 border border-cyan-500 text-cyan-400 p-2.5 rounded-lg font-bold text-sm shadow-[0_0_10px_rgba(6,182,212,0.2)]">GOLD</button>
+                        <button onclick="App.setPair('BTCUSD')" class="pair-btn bg-slate-800/50 border border-slate-700 text-slate-400 p-2.5 rounded-lg font-bold text-sm hover:bg-slate-700 transition">BTC</button>
+                        <button onclick="App.setPair('EURUSD')" class="pair-btn bg-slate-800/50 border border-slate-700 text-slate-400 p-2.5 rounded-lg font-bold text-sm hover:bg-slate-700 transition">EUR</button>
                     </div>
-                    <select id="custom-pair" class="w-full bg-[#020617] border border-slate-700 rounded-xl p-3 text-sm text-white focus:border-cyan-500 outline-none" onchange="App.setPair(this.value, true)">
-                        <option value="" class="lang" key="opt_custom">Or select custom...</option>
-                        <option value="GBPUSD">GBPUSD</option>
-                        <option value="USDJPY">USDJPY</option>
-                        <option value="USDTTHB">USDTTHB</option>
-                        <option value="ETHUSD">ETHUSD</option>
-                    </select>
+                    <input type="text" id="custom-pair" class="glass-input w-full rounded-lg p-2.5 text-sm uppercase text-center font-bold tracking-widest" placeholder="CUSTOM PAIR (e.g. GBPJPY)" onkeyup="App.setPair(this.value, true)">
                 </div>
 
                 <div class="glass p-6 rounded-2xl">
-                    <label class="text-xs text-cyan-400 font-bold uppercase tracking-wider mb-4 block lang" key="label_vision">2. CHART VISION</label>
+                    <div class="flex justify-between items-center mb-4">
+                        <label class="text-xs text-cyan-500 font-bold uppercase tracking-wider lang" key="label_vision">2. Chart Data Input</label>
+                        <i class="fa-solid fa-eye text-slate-600"></i>
+                    </div>
                     
-                    <div id="drop-zone" class="border-2 border-dashed border-slate-600 rounded-xl h-56 relative overflow-hidden flex flex-col items-center justify-center transition-all bg-[#020617]/50 hover:border-cyan-500/50 cursor-pointer group">
+                    <div id="drop-zone" class="border-2 border-dashed border-slate-700 rounded-xl h-60 relative overflow-hidden flex flex-col items-center justify-center transition-all bg-[#020617]/50 hover:border-cyan-500/50 cursor-pointer group">
                         <input type="file" id="file-input" accept="image/*" class="absolute inset-0 opacity-0 z-20 cursor-pointer">
                         
                         <div id="upload-empty" class="text-center group-hover:scale-105 transition duration-300">
-                            <div class="w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center mx-auto mb-3 shadow-inner">
+                            <div class="w-16 h-16 rounded-full bg-slate-800/80 flex items-center justify-center mx-auto mb-3 shadow-inner ring-1 ring-slate-700">
                                 <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-400 group-hover:text-cyan-400 transition"></i>
                             </div>
-                            <h3 class="font-bold text-slate-200 lang" key="upload_title">Upload Chart</h3>
-                            <p class="text-[10px] text-slate-500 mt-1 lang" key="upload_desc">Support JPG, PNG (Max 5MB)</p>
+                            <h3 class="font-bold text-slate-200 text-sm lang" key="upload_title">Upload Chart Image</h3>
+                            <p class="text-[10px] text-slate-500 mt-1 lang" key="upload_desc">Max size 5MB (JPG/PNG)</p>
                         </div>
 
                         <img id="img-preview" class="absolute inset-0 w-full h-full object-contain hidden z-10 bg-black">
                         
-                        <div id="scan-fx" class="absolute inset-0 z-15 hidden scanner-container">
-                            <div class="scan-beam"></div>
-                            <div class="scan-grid"></div>
+                        <div id="scan-fx" class="absolute inset-0 z-15 hidden">
+                            <div class="scanner-line"></div>
+                            <div class="absolute inset-0 bg-cyan-500/10 mix-blend-overlay"></div>
                         </div>
 
-                        <button id="btn-clear" onclick="App.clearImage()" class="absolute top-2 right-2 z-30 bg-red-500/80 hover:bg-red-600 text-white w-8 h-8 rounded-full hidden items-center justify-center shadow-lg backdrop-blur">
+                        <button id="btn-clear" onclick="App.clearImage()" class="absolute top-2 right-2 z-30 bg-red-500/80 hover:bg-red-600 text-white w-8 h-8 rounded-full hidden items-center justify-center shadow-lg backdrop-blur hover:rotate-90 transition">
                             <i class="fa-solid fa-xmark"></i>
                         </button>
                     </div>
                 </div>
 
-                <button id="btn-analyze" onclick="AI.analyze()" class="w-full btn-primary py-5 rounded-2xl text-xl uppercase tracking-widest relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed group shadow-[0_0_30px_rgba(6,182,212,0.2)]">
+                <button id="btn-analyze" onclick="AI.analyze()" class="w-full btn-primary py-5 rounded-2xl text-xl uppercase tracking-widest relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed group">
                     <span class="relative z-10 flex items-center justify-center gap-3">
-                        <i class="fa-solid fa-robot group-hover:animate-bounce"></i> <span class="lang" key="btn_analyze">START ANALYSIS</span>
+                        <i class="fa-solid fa-microchip group-hover:animate-pulse"></i> 
+                        <span class="lang" key="btn_analyze">RUN ANALYSIS</span>
                     </span>
-                    <div class="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition duration-300"></div>
+                    <div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition duration-500 ease-in-out"></div>
                 </button>
 
             </div>
 
-            <div class="w-full lg:w-2/3 space-y-6">
+            <div class="w-full lg:w-8/12 flex flex-col gap-6">
                 
-                <div class="flex gap-4 border-b border-slate-700/50 pb-1">
-                    <button onclick="UI.switchTab('result')" class="nav-item active px-4 py-2 font-bold text-sm uppercase lang" id="tab-res" key="tab_result">Live Result</button>
-                    <button onclick="UI.switchTab('history')" class="nav-item px-4 py-2 font-bold text-sm uppercase lang" id="tab-hist" key="tab_history">History Data</button>
+                <div class="flex gap-1 bg-slate-900/50 p-1 rounded-xl w-fit border border-slate-800">
+                    <button onclick="UI.switchTab('result')" id="tab-res" class="px-6 py-2 rounded-lg text-sm font-bold transition-all bg-slate-800 text-cyan-400 shadow-lg lang" key="tab_result">LIVE SIGNAL</button>
+                    <button onclick="UI.switchTab('history')" id="tab-hist" class="px-6 py-2 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-white lang" key="tab_history">DATABASE LOG</button>
                 </div>
 
-                <div id="view-result" class="anim-slide min-h-[400px]">
+                <div id="view-result" class="flex-1 min-h-[500px] anim-slide">
                     
-                    <div id="res-placeholder" class="h-full flex flex-col items-center justify-center text-slate-600 py-20 border-2 border-dashed border-slate-800 rounded-3xl">
-                        <i class="fa-solid fa-microchip text-6xl mb-4 opacity-20"></i>
-                        <p class="text-sm font-light lang" key="waiting_data">Waiting for input data...</p>
+                    <div id="res-placeholder" class="h-full flex flex-col items-center justify-center text-slate-600 py-20 border border-slate-800 rounded-3xl bg-slate-900/20">
+                        <i class="fa-solid fa-satellite-dish text-7xl mb-6 opacity-20 animate-pulse"></i>
+                        <p class="text-sm font-light tracking-wider uppercase lang" key="waiting_data">Awaiting Data Stream...</p>
                     </div>
 
-                    <div id="res-content" class="hidden">
-                        <div class="glass p-0 rounded-3xl overflow-hidden shadow-2xl mb-6 relative">
-                            <div id="signal-bar" class="h-2 w-full bg-slate-600"></div>
-                            <div class="p-8 relative z-10">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <div class="flex items-center gap-2 mb-2">
-                                            <span id="res-pair" class="px-2 py-0.5 bg-white/10 rounded text-[10px] font-bold tracking-wider text-slate-300">XAUUSD</span>
-                                            <span class="text-[10px] text-slate-500">• H1 Timeframe</span>
-                                        </div>
-                                        <h2 id="res-action" class="text-6xl font-bold tech-font text-white drop-shadow-md mb-2">WAIT</h2>
-                                        <div class="flex items-center gap-2">
-                                            <div class="h-1.5 w-24 bg-slate-700 rounded-full overflow-hidden">
-                                                <div id="conf-bar" class="h-full bg-cyan-400 w-0 transition-all duration-1000"></div>
-                                            </div>
-                                            <span id="res-conf" class="text-xs text-cyan-400 font-bold">0% Confidence</span>
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <div class="text-[10px] text-slate-400 uppercase mb-1">Risk Ratio</div>
-                                        <div id="res-rr" class="text-2xl font-mono font-bold text-white">1:2.5</div>
-                                    </div>
-                                </div>
-                            </div>
+                    <div id="res-content" class="hidden space-y-4">
+                        <div class="glass p-0 rounded-3xl overflow-hidden relative group">
+                            <div id="signal-bg" class="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900 to-slate-800 opacity-90 z-0"></div>
                             
-                            <div class="grid grid-cols-3 divide-x divide-white/5 border-t border-white/5 bg-black/20">
-                                <div class="p-4 text-center">
-                                    <span class="text-[10px] text-slate-400 uppercase block mb-1">ENTRY</span>
-                                    <span id="res-entry" class="font-mono font-bold text-white">-</span>
+                            <div id="signal-color-bar" class="absolute left-0 top-0 bottom-0 w-2 bg-slate-600 z-10"></div>
+
+                            <div class="p-8 relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                                <div>
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <span id="res-pair" class="px-2 py-0.5 bg-white/10 rounded text-[10px] font-bold tracking-wider text-slate-300 border border-white/5">XAUUSD</span>
+                                        <span class="text-[10px] text-slate-500 flex items-center gap-1"><i class="fa-solid fa-clock"></i> <span id="res-time">Just now</span></span>
+                                    </div>
+                                    <h2 id="res-action" class="text-7xl font-bold tech-font text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">WAIT</h2>
+                                    <div class="flex items-center gap-3 mt-2">
+                                        <div class="h-2 w-32 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                                            <div id="conf-bar" class="h-full bg-cyan-400 w-0 transition-all duration-1000 shadow-[0_0_10px_cyan]"></div>
+                                        </div>
+                                        <span id="res-conf" class="text-xs text-cyan-400 font-bold font-mono">0% AI CONFIDENCE</span>
+                                    </div>
                                 </div>
-                                <div class="p-4 text-center bg-red-500/5">
-                                    <span class="text-[10px] text-red-400 uppercase block mb-1">STOP LOSS</span>
-                                    <span id="res-sl" class="font-mono font-bold text-red-400">-</span>
-                                </div>
-                                <div class="p-4 text-center bg-green-500/5">
-                                    <span class="text-[10px] text-green-400 uppercase block mb-1">TAKE PROFIT</span>
-                                    <span id="res-tp" class="font-mono font-bold text-green-400">-</span>
+                                
+                                <div class="grid grid-cols-3 gap-px bg-slate-700/50 rounded-xl overflow-hidden border border-slate-700">
+                                    <div class="bg-slate-900 p-4 text-center min-w-[100px]">
+                                        <div class="text-[10px] text-slate-500 uppercase mb-1">ENTRY</div>
+                                        <div id="res-entry" class="text-lg font-mono font-bold text-white">-</div>
+                                    </div>
+                                    <div class="bg-slate-900 p-4 text-center min-w-[100px]">
+                                        <div class="text-[10px] text-red-500 uppercase mb-1">STOP LOSS</div>
+                                        <div id="res-sl" class="text-lg font-mono font-bold text-red-400">-</div>
+                                    </div>
+                                    <div class="bg-slate-900 p-4 text-center min-w-[100px]">
+                                        <div class="text-[10px] text-green-500 uppercase mb-1">TAKE PROFIT</div>
+                                        <div id="res-tp" class="text-lg font-mono font-bold text-green-400">-</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="glass p-6 rounded-2xl border-l-4 border-cyan-500">
+                        <div class="glass p-6 rounded-2xl border-l-4 border-cyan-500 relative overflow-hidden">
+                            <i class="fa-solid fa-quote-right absolute top-4 right-4 text-6xl text-white/5"></i>
                             <h4 class="text-sm font-bold text-cyan-400 mb-3 flex items-center gap-2">
-                                <i class="fa-solid fa-comment-dots"></i> <span class="lang" key="ai_reason">AI REASONING</span>
+                                <i class="fa-solid fa-brain"></i> <span class="lang" key="ai_reason">AI ANALYSIS REASONING</span>
                             </h4>
-                            <p id="res-reason" class="text-slate-300 font-light leading-relaxed text-sm">-</p>
+                            <p id="res-reason" class="text-slate-300 font-light leading-relaxed text-sm relative z-10">-</p>
                         </div>
-                        
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                            <div class="glass p-4 rounded-xl border-l-2 border-green-500 bg-green-900/10">
-                                <span class="text-[10px] text-green-500 font-bold uppercase block mb-1">STRONG BUY ZONE</span>
-                                <span id="res-z-buy" class="text-sm text-slate-200 font-mono">-</span>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="glass p-5 rounded-xl border border-green-500/20 bg-green-500/5">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div class="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center text-green-400"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                                    <span class="text-xs font-bold text-green-400 uppercase">Strong Buy Zone</span>
+                                </div>
+                                <div id="res-z-buy" class="text-xl font-mono text-white pl-11">-</div>
                             </div>
-                            <div class="glass p-4 rounded-xl border-l-2 border-red-500 bg-red-900/10">
-                                <span class="text-[10px] text-red-500 font-bold uppercase block mb-1">STRONG SELL ZONE</span>
-                                <span id="res-z-sell" class="text-sm text-slate-200 font-mono">-</span>
+                            <div class="glass p-5 rounded-xl border border-red-500/20 bg-red-500/5">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center text-red-400"><i class="fa-solid fa-arrow-trend-down"></i></div>
+                                    <span class="text-xs font-bold text-red-400 uppercase">Strong Sell Zone</span>
+                                </div>
+                                <div id="res-z-sell" class="text-xl font-mono text-white pl-11">-</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div id="view-history" class="hidden anim-slide">
-                    <div class="glass rounded-2xl overflow-hidden">
-                        <div class="p-4 border-b border-white/5 bg-black/20 flex justify-between items-center">
-                            <h3 class="font-bold text-white lang" key="hist_title">Trade Log</h3>
-                            <button onclick="History.load()" class="text-xs text-cyan-400 hover:text-white"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+                <div id="view-history" class="hidden flex-1 anim-slide">
+                    <div class="glass rounded-2xl overflow-hidden min-h-[500px] flex flex-col">
+                        <div class="p-5 border-b border-slate-700 bg-slate-900/50 flex justify-between items-center">
+                            <h3 class="font-bold text-white flex items-center gap-2"><i class="fa-solid fa-list text-cyan-500"></i> <span class="lang" key="hist_title">TRANSACTION LOG</span></h3>
+                            <button onclick="History.load()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded text-white transition"><i class="fa-solid fa-rotate"></i> Refresh</button>
                         </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse">
-                                <thead>
-                                    <tr class="text-[10px] text-slate-500 uppercase bg-black/40 border-b border-white/5">
-                                        <th class="p-3">Time</th>
-                                        <th class="p-3">Pair</th>
-                                        <th class="p-3">Action</th>
-                                        <th class="p-3">Entry</th>
-                                        <th class="p-3">Result</th>
+                        <div class="overflow-x-auto flex-1">
+                            <table class="w-full text-left custom-table">
+                                <thead class="bg-slate-900/80">
+                                    <tr>
+                                        <th class="p-4">Time</th>
+                                        <th class="p-4">Pair</th>
+                                        <th class="p-4">Signal</th>
+                                        <th class="p-4">Entry</th>
+                                        <th class="p-4 text-right">Confidence</th>
                                     </tr>
                                 </thead>
-                                <tbody id="history-table-body" class="text-xs text-slate-300 font-mono">
-                                    <tr><td colspan="5" class="p-6 text-center text-slate-500">Loading data...</td></tr>
-                                </tbody>
+                                <tbody id="history-table-body">
+                                    </tbody>
                             </table>
                         </div>
                     </div>
@@ -445,284 +445,130 @@
         </main>
     </section>
 
-    <div id="modal-settings" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 anim-fade">
-        <div class="glass w-full max-w-md rounded-2xl p-6 shadow-2xl border border-cyan-500/20">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold tech-font text-white"><i class="fa-solid fa-gear text-cyan-400 mr-2"></i> SYSTEM CONFIG</h3>
-                <button onclick="Settings.close()" class="text-slate-500 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
+    <div id="modal-settings" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 anim-fade">
+        <div class="glass w-full max-w-md rounded-2xl p-6 shadow-2xl border border-cyan-500/30 relative">
+            <button onclick="Settings.close()" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            
+            <h3 class="text-xl font-bold tech-font text-white mb-6 flex items-center gap-2">
+                <i class="fa-solid fa-gear text-cyan-400"></i> SYSTEM CONFIGURATION
+            </h3>
             
             <div class="mb-6">
-                <label class="text-xs text-slate-400 block mb-2 font-bold">GEMINI API KEY</label>
-                <div class="relative">
-                    <i class="fa-brands fa-google absolute left-3 top-3 text-slate-500"></i>
-                    <input type="password" id="set-api-key" class="w-full bg-black/50 border border-slate-600 rounded-lg py-2.5 pl-10 pr-2 text-xs font-mono text-cyan-400 focus:border-cyan-500 outline-none transition" placeholder="Paste AIza... key here">
+                <label class="text-xs text-slate-400 block mb-2 font-bold uppercase tracking-wider">Gemini API Key (Required for AI)</label>
+                <div class="relative group">
+                    <i class="fa-brands fa-google absolute left-3 top-3 text-slate-500 group-focus-within:text-cyan-400 transition"></i>
+                    <input type="password" id="set-api-key" class="w-full bg-black/50 border border-slate-600 rounded-lg py-3 pl-10 pr-2 text-xs font-mono text-cyan-400 focus:border-cyan-500 outline-none transition shadow-inner" placeholder="Paste AIza... key here">
                 </div>
-                <p class="text-[10px] text-slate-500 mt-2">Required for vision analysis. Key is stored locally.</p>
+                <p class="text-[10px] text-slate-500 mt-2">
+                    <i class="fa-solid fa-circle-info text-cyan-500"></i> 
+                    Key is stored locally in your browser. <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-cyan-400 underline">Get Key Here</a>
+                </p>
             </div>
 
-            <button onclick="Settings.save()" class="w-full btn-primary py-2.5 rounded-lg shadow-lg">SAVE CONFIGURATION</button>
+            <button onclick="Settings.save()" class="w-full btn-primary py-3 rounded-lg shadow-lg text-sm">SAVE & CLOSE</button>
         </div>
     </div>
 
     <script>
         /**
          * ------------------------------------------------------------------
-         * CONFIGURATION SECTION (USER MUST EDIT THIS)
+         * CONFIGURATION - ใส่ Firebase Config ที่คุณให้มาแล้วเรียบร้อย
          * ------------------------------------------------------------------
          */
         const FIREBASE_CONFIG = {
-            // 🔴 REPLACE THIS OBJECT WITH YOUR FIREBASE CONFIG
-            apiKey: "YOUR_FIREBASE_API_KEY",
-            authDomain: "your-project.firebaseapp.com",
-            projectId: "your-project-id",
-            storageBucket: "your-project.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456:web:abcdef"
+            apiKey: "AIzaSyADXGuFyQ-hVkMYCZVy1GHPB218iztS1Ag",
+            authDomain: "eistrade.firebaseapp.com",
+            projectId: "eistrade",
+            storageBucket: "eistrade.firebasestorage.app",
+            messagingSenderId: "387010350248",
+            appId: "1:387010350248:web:1b2eb28de888943e1c069d",
+            measurementId: "G-R0WF2FVMT2"
         };
+
+        // Initialize Firebase
+        try {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(FIREBASE_CONFIG);
+            }
+        } catch(e) { console.error("Firebase Init Error:", e); }
+
+        const db = firebase.firestore();
+        const auth = firebase.auth();
 
         /**
          * ------------------------------------------------------------------
-         * 1. LANGUAGE DICTIONARY (i18n)
+         * TRANSLATION DATA
          * ------------------------------------------------------------------
          */
-        const TRANSLATIONS = {
+        const DICT = {
             en: {
-                login_title: "Welcome Back",
-                login_subtitle: "Access your trading dashboard",
-                email: "EMAIL ADDRESS",
-                password: "PASSWORD",
-                btn_login: "SECURE LOGIN",
-                no_account: "No account?",
-                create_one: "Create One",
-                reg_title: "New Trader ID",
-                reg_subtitle: "Join the AI-powered network",
-                btn_register: "INITIALIZE ACCOUNT",
-                have_account: "Have an account?",
-                login_here: "Login Here",
-                menu_api: "API Settings",
-                menu_logout: "Logout",
-                label_asset: "1. SELECT ASSET",
-                opt_custom: "Or select custom...",
-                label_vision: "2. CHART VISION",
-                upload_title: "Upload Chart",
-                upload_desc: "Support JPG, PNG (Max 5MB)",
-                btn_analyze: "START ANALYSIS",
-                tab_result: "Live Result",
-                tab_history: "History Data",
-                waiting_data: "Waiting for input data...",
-                ai_reason: "AI REASONING",
-                hist_title: "Trade Log",
-                toast_login_success: "Login Successful",
-                toast_reg_success: "Account Created",
-                toast_error: "Error Occurred",
-                toast_no_api: "Missing API Key",
-                toast_no_img: "Please upload image",
-                analyze_success: "Analysis Completed"
+                login_title: "ACCESS TERMINAL", login_subtitle: "Please authenticate to continue.", email: "IDENTITY (EMAIL)", password: "PASSCODE",
+                btn_login: "ESTABLISH CONNECTION", no_account: "New to the system?", create_one: "Create Identity",
+                reg_title: "NEW REGISTRATION", reg_subtitle: "Join the trading network.", btn_register: "INITIALIZE ACCOUNT", back_login: "Back to Login",
+                menu_api: "API Configuration", menu_logout: "Disconnect", label_asset: "1. Target Asset", label_vision: "2. Chart Data Input",
+                upload_title: "Upload Chart Image", upload_desc: "Max size 5MB (JPG/PNG)", btn_analyze: "RUN ANALYSIS",
+                tab_result: "LIVE SIGNAL", tab_history: "DATABASE LOG", waiting_data: "Awaiting Data Stream...", ai_reason: "AI ANALYSIS REASONING",
+                hist_title: "TRANSACTION LOG", toast_success: "Operation Successful", toast_error: "System Error", toast_welcome: "Welcome, Trader."
             },
             th: {
-                login_title: "ยินดีต้อนรับกลับ",
-                login_subtitle: "เข้าสู่ระบบเพื่อใช้งาน",
-                email: "อีเมล",
-                password: "รหัสผ่าน",
-                btn_login: "เข้าสู่ระบบ",
-                no_account: "ไม่มีบัญชี?",
-                create_one: "สร้างบัญชีใหม่",
-                reg_title: "สมัครสมาชิกใหม่",
-                reg_subtitle: "เข้าร่วมเครือข่าย AI เทรดเดอร์",
-                btn_register: "ยืนยันการสมัคร",
-                have_account: "มีบัญชีอยู่แล้ว?",
-                login_here: "เข้าสู่ระบบที่นี่",
-                menu_api: "ตั้งค่า API Key",
-                menu_logout: "ออกจากระบบ",
-                label_asset: "1. เลือกสินทรัพย์",
-                opt_custom: "หรือเลือกคู่อื่นๆ...",
-                label_vision: "2. วิเคราะห์กราฟภาพ",
-                upload_title: "อัปโหลดรูปกราฟ",
-                upload_desc: "รองรับ JPG, PNG (สูงสุด 5MB)",
-                btn_analyze: "เริ่มวิเคราะห์ด้วย AI",
-                tab_result: "ผลลัพธ์ล่าสุด",
-                tab_history: "ประวัติการเทรด",
-                waiting_data: "รอข้อมูลเพื่อประมวลผล...",
-                ai_reason: "เหตุผลประกอบจาก AI",
-                hist_title: "บันทึกการเทรด",
-                toast_login_success: "เข้าสู่ระบบสำเร็จ",
-                toast_reg_success: "สร้างบัญชีสำเร็จ",
-                toast_error: "เกิดข้อผิดพลาด",
-                toast_no_api: "ไม่พบ API Key",
-                toast_no_img: "กรุณาอัปโหลดรูปภาพ",
-                analyze_success: "วิเคราะห์เสร็จสิ้น"
+                login_title: "เข้าสู่ระบบ", login_subtitle: "กรุณายืนยันตัวตนเพื่อเข้าใช้งาน", email: "อีเมล", password: "รหัสผ่าน",
+                btn_login: "เข้าสู่ระบบทันที", no_account: "ยังไม่มีบัญชี?", create_one: "สมัครสมาชิก",
+                reg_title: "สมัครสมาชิกใหม่", reg_subtitle: "เข้าร่วมเครือข่าย EISTRADE", btn_register: "ยืนยันการสมัคร", back_login: "กลับไปหน้าเข้าสู่ระบบ",
+                menu_api: "ตั้งค่า API Key", menu_logout: "ออกจากระบบ", label_asset: "1. เลือกสินทรัพย์", label_vision: "2. ข้อมูลกราฟ",
+                upload_title: "อัปโหลดรูปกราฟ", upload_desc: "รองรับ JPG/PNG (สูงสุด 5MB)", btn_analyze: "เริ่มวิเคราะห์ AI",
+                tab_result: "ผลวิเคราะห์ล่าสุด", tab_history: "ประวัติย้อนหลัง", waiting_data: "รอข้อมูลเพื่อประมวลผล...", ai_reason: "เหตุผลการวิเคราะห์จาก AI",
+                hist_title: "บันทึกธุรกรรม", toast_success: "ดำเนินการสำเร็จ", toast_error: "เกิดข้อผิดพลาด", toast_welcome: "ยินดีต้อนรับ เทรดเดอร์"
             }
         };
 
         /**
          * ------------------------------------------------------------------
-         * 2. CORE SYSTEMS (Audio, Lang, UI)
+         * CORE APP LOGIC
          * ------------------------------------------------------------------
          */
         
-        // --- Sound Engine (Web Audio API) ---
-        class SoundSystem {
-            constructor() {
-                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                this.masterGain = this.ctx.createGain();
-                this.masterGain.gain.value = 0.3; // Volume control
-                this.masterGain.connect(this.ctx.destination);
-            }
-
-            play(type = 'click') {
-                if(this.ctx.state === 'suspended') this.ctx.resume();
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.connect(gain);
-                gain.connect(this.masterGain);
-
-                const now = this.ctx.currentTime;
-                
-                if (type === 'click') {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(800, now);
-                    osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
-                    gain.gain.setValueAtTime(0.5, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                    osc.start(now);
-                    osc.stop(now + 0.1);
-                } else if (type === 'success') {
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(440, now);
-                    osc.frequency.setValueAtTime(880, now + 0.1);
-                    gain.gain.setValueAtTime(0.5, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-                    osc.start(now);
-                    osc.stop(now + 0.4);
-                } else if (type === 'error') {
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(150, now);
-                    osc.frequency.linearRampToValueAtTime(100, now + 0.3);
-                    gain.gain.setValueAtTime(0.5, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-                    osc.start(now);
-                    osc.stop(now + 0.3);
-                }
-            }
-        }
-        const SFX = new SoundSystem();
-
-        // --- Language Manager ---
+        // 1. Language System
         const Lang = {
-            current: 'th',
+            curr: 'th',
             toggle() {
-                SFX.play('click');
-                this.current = this.current === 'th' ? 'en' : 'th';
-                document.getElementById('current-lang').innerText = this.current.toUpperCase();
-                this.apply();
-                // Update dynamic content if exists
-                if(AI.lastResult) AI.render(AI.lastResult);
+                this.curr = this.curr === 'th' ? 'en' : 'th';
+                document.getElementById('current-lang').innerText = this.curr.toUpperCase();
+                this.render();
+                // If result exists, re-render it to switch text
+                if(AI.data) AI.display(AI.data); 
             },
-            apply() {
+            render() {
                 document.querySelectorAll('.lang').forEach(el => {
-                    const key = el.getAttribute('key');
-                    if(TRANSLATIONS[this.current][key]) {
-                        el.innerText = TRANSLATIONS[this.current][key];
-                    }
+                    const k = el.getAttribute('key');
+                    if(DICT[this.curr][k]) el.innerText = DICT[this.curr][k];
                 });
             },
-            get(key) { return TRANSLATIONS[this.current][key] || key; }
+            get(k) { return DICT[this.curr][k] || k; }
         };
 
-        // --- Toast Notification ---
-        const Toast = {
-            show(msgKey, type = 'info', rawText = null) {
-                const text = rawText || Lang.get(msgKey);
-                const container = document.getElementById('toast-container');
-                const el = document.createElement('div');
-                
-                let colors = 'border-cyan-500 bg-cyan-900/80';
-                if(type === 'success') colors = 'border-green-500 bg-green-900/80';
-                if(type === 'error') colors = 'border-red-500 bg-red-900/80';
-
-                el.className = `p-3 rounded-lg border-l-4 ${colors} text-white text-sm shadow-lg backdrop-blur flex items-center justify-between anim-slide`;
-                el.innerHTML = `<span>${text}</span>`;
-                
-                container.appendChild(el);
-                if(type === 'success') SFX.play('success');
-                if(type === 'error') SFX.play('error');
-
-                setTimeout(() => {
-                    el.style.opacity = '0';
-                    setTimeout(() => el.remove(), 300);
-                }, 3000);
-            }
-        };
-
-        // --- UI Manager ---
-        const UI = {
-            switchTab(tab) {
-                SFX.play('click');
-                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-                document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
-
-                if(tab === 'result') {
-                    document.getElementById('tab-res').classList.add('active');
-                    document.getElementById('view-result').classList.remove('hidden');
-                } else {
-                    document.getElementById('tab-hist').classList.add('active');
-                    document.getElementById('view-history').classList.remove('hidden');
-                    History.load(); // Load data when tab switched
-                }
-            }
-        };
-
-        /**
-         * ------------------------------------------------------------------
-         * 3. FIREBASE MANAGER (Auth & Database)
-         * ------------------------------------------------------------------
-         */
-        let db, auth;
-
+        // 2. Auth System
         const Auth = {
             user: null,
-
             init() {
-                try {
-                    // Initialize Firebase if user replaced config
-                    if(FIREBASE_CONFIG.apiKey !== "YOUR_FIREBASE_API_KEY") {
-                        firebase.initializeApp(FIREBASE_CONFIG);
-                        auth = firebase.auth();
-                        db = firebase.firestore();
-                        
-                        // Auth State Listener
-                        auth.onAuthStateChanged(user => {
-                            this.user = user;
-                            const loader = document.getElementById('loader');
-                            
-                            if (user) {
-                                // User logged in
-                                document.getElementById('auth-page').classList.add('hidden');
-                                document.getElementById('app-page').classList.remove('hidden');
-                                document.getElementById('user-display').innerText = user.email.split('@')[0];
-                            } else {
-                                // No user
-                                document.getElementById('auth-page').classList.remove('hidden');
-                                document.getElementById('app-page').classList.add('hidden');
-                            }
-                            
-                            // Hide loader
-                            setTimeout(() => loader.style.display = 'none', 500);
-                        });
+                auth.onAuthStateChanged(u => {
+                    this.user = u;
+                    const loader = document.getElementById('loader');
+                    if(u) {
+                        document.getElementById('auth-page').classList.add('hidden');
+                        document.getElementById('app-page').classList.remove('hidden');
+                        document.getElementById('user-display').innerText = u.email.split('@')[0];
+                        Toast.show(Lang.get('toast_welcome'), 'success');
+                        History.load(); // Auto load history
                     } else {
-                        console.warn("Firebase Config Not Set");
-                        document.getElementById('loader').style.display = 'none';
-                        alert("Please configure FIREBASE_CONFIG in the code first!");
+                        document.getElementById('auth-page').classList.remove('hidden');
+                        document.getElementById('app-page').classList.add('hidden');
                     }
-                } catch (e) {
-                    console.error("Firebase Init Error:", e);
-                }
+                    setTimeout(()=> loader.classList.add('opacity-0'), 1000);
+                    setTimeout(()=> loader.style.display = 'none', 1500);
+                });
             },
-
-            switch(mode) {
-                SFX.play('click');
-                if(mode === 'register') {
+            switch(page) {
+                if(page === 'register') {
                     document.getElementById('login-form').classList.add('hidden');
                     document.getElementById('register-form').classList.remove('hidden');
                     document.getElementById('register-form').classList.add('anim-fade');
@@ -732,328 +578,288 @@
                     document.getElementById('login-form').classList.add('anim-fade');
                 }
             },
-
             async login() {
-                const email = document.getElementById('l-email').value;
-                const pass = document.getElementById('l-pass').value;
-                try {
-                    await auth.signInWithEmailAndPassword(email, pass);
-                    Toast.show('toast_login_success', 'success');
-                } catch (error) {
-                    Toast.show('toast_error', 'error', error.message);
-                }
+                const e = document.getElementById('l-email').value;
+                const p = document.getElementById('l-pass').value;
+                try { await auth.signInWithEmailAndPassword(e, p); }
+                catch(err) { Toast.show(err.message, 'error'); }
             },
-
             async register() {
-                const email = document.getElementById('r-email').value;
-                const pass = document.getElementById('r-pass').value;
-                try {
-                    await auth.createUserWithEmailAndPassword(email, pass);
-                    Toast.show('toast_reg_success', 'success');
-                } catch (error) {
-                    Toast.show('toast_error', 'error', error.message);
-                }
+                const e = document.getElementById('r-email').value;
+                const p = document.getElementById('r-pass').value;
+                try { await auth.createUserWithEmailAndPassword(e, p); }
+                catch(err) { Toast.show(err.message, 'error'); }
             },
-
-            async logout() {
-                await auth.signOut();
-                SFX.play('click');
-            }
+            logout() { auth.signOut(); }
         };
 
-        const History = {
-            async save(data) {
-                if(!Auth.user || !db) return;
-                try {
-                    await db.collection('trades').add({
-                        userId: Auth.user.uid,
-                        pair: data.pair,
-                        action: data.action,
-                        entry: data.entry,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                        confidence: data.confidence,
-                        result: 'Pending' // Can be updated later
-                    });
-                    console.log("Trade Saved to Firestore");
-                } catch (e) {
-                    console.error("Save Error", e);
-                }
-            },
+        // 3. UI Manager
+        const UI = {
+            switchTab(t) {
+                const btnRes = document.getElementById('tab-res');
+                const btnHist = document.getElementById('tab-hist');
+                const viewRes = document.getElementById('view-result');
+                const viewHist = document.getElementById('view-history');
 
-            async load() {
-                if(!Auth.user || !db) return;
-                const tbody = document.getElementById('history-table-body');
-                tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-500"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</td></tr>';
+                if(t === 'result') {
+                    btnRes.classList.replace('text-slate-400','text-cyan-400');
+                    btnRes.classList.add('bg-slate-800','shadow-lg');
+                    btnHist.classList.remove('bg-slate-800','shadow-lg','text-cyan-400');
+                    btnHist.classList.add('text-slate-400');
+                    
+                    viewRes.classList.remove('hidden');
+                    viewHist.classList.add('hidden');
+                } else {
+                    btnHist.classList.replace('text-slate-400','text-cyan-400');
+                    btnHist.classList.add('bg-slate-800','shadow-lg');
+                    btnRes.classList.remove('bg-slate-800','shadow-lg','text-cyan-400');
+                    btnRes.classList.add('text-slate-400');
 
-                try {
-                    const snapshot = await db.collection('trades')
-                        .where('userId', '==', Auth.user.uid)
-                        .orderBy('timestamp', 'desc')
-                        .limit(20)
-                        .get();
-
-                    if(snapshot.empty) {
-                        tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-500">No history found</td></tr>';
-                        return;
-                    }
-
-                    let html = '';
-                    snapshot.forEach(doc => {
-                        const d = doc.data();
-                        const time = d.timestamp ? new Date(d.timestamp.toDate()).toLocaleTimeString() : '-';
-                        let color = d.action === 'BUY' ? 'text-green-400' : (d.action === 'SELL' ? 'text-red-400' : 'text-slate-400');
-                        
-                        html += `
-                            <tr class="history-row border-b border-white/5 transition">
-                                <td class="p-3 text-slate-400">${time}</td>
-                                <td class="p-3 font-bold">${d.pair}</td>
-                                <td class="p-3 ${color} font-bold">${d.action}</td>
-                                <td class="p-3">${d.entry}</td>
-                                <td class="p-3 text-slate-500">${d.confidence}%</td>
-                            </tr>
-                        `;
-                    });
-                    tbody.innerHTML = html;
-
-                } catch (e) {
-                    console.error("Load History Error", e);
-                    tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-red-500">Error loading data</td></tr>';
+                    viewHist.classList.remove('hidden');
+                    viewRes.classList.add('hidden');
+                    History.load();
                 }
             }
         };
 
-        /**
-         * ------------------------------------------------------------------
-         * 4. APP LOGIC & AI
-         * ------------------------------------------------------------------
-         */
-        const App = {
-            currentPair: 'XAUUSD',
-            imageBase64: null,
-
-            setPair(pair, isCustom = false) {
-                SFX.play('click');
-                this.currentPair = pair;
+        // 4. Toast System
+        const Toast = {
+            show(msg, type='info') {
+                const box = document.getElementById('toast-box');
+                const el = document.createElement('div');
+                const color = type === 'success' ? 'var(--success)' : (type === 'error' ? 'var(--danger)' : 'var(--primary)');
+                el.className = 'toast';
+                el.style.borderLeftColor = color;
+                el.innerHTML = `<div class="font-bold text-white text-sm">${type.toUpperCase()}</div><div class="text-slate-300 text-xs">${msg}</div>`;
+                box.appendChild(el);
                 
-                // Update UI Buttons
-                document.querySelectorAll('.pair-btn').forEach(btn => {
-                    if(btn.innerText === pair) {
-                        btn.classList.add('active', 'bg-slate-800', 'border-cyan-500', 'text-cyan-400', 'shadow-[0_0_10px_rgba(6,182,212,0.2)]');
-                        btn.classList.remove('bg-slate-800/50', 'border-slate-700', 'text-slate-400');
-                    } else {
-                        btn.classList.remove('active', 'bg-slate-800', 'border-cyan-500', 'text-cyan-400', 'shadow-[0_0_10px_rgba(6,182,212,0.2)]');
-                        btn.classList.add('bg-slate-800/50', 'border-slate-700', 'text-slate-400');
-                    }
-                });
+                requestAnimationFrame(() => el.classList.add('show'));
+                setTimeout(() => {
+                    el.classList.remove('show');
+                    setTimeout(() => el.remove(), 300);
+                }, 3000);
+            }
+        };
 
-                if(!isCustom && pair !== '') document.getElementById('custom-pair').value = "";
+        // 5. Application Logic
+        const App = {
+            pair: 'XAUUSD',
+            imgData: null,
+            
+            setPair(v, custom=false) {
+                this.pair = v.toUpperCase();
+                if(!custom) {
+                    document.getElementById('custom-pair').value = '';
+                    document.querySelectorAll('.pair-btn').forEach(b => {
+                        b.classList.remove('active', 'bg-slate-800', 'border-cyan-500', 'text-cyan-400', 'shadow-[0_0_10px_rgba(6,182,212,0.2)]');
+                        b.classList.add('bg-slate-800/50', 'border-slate-700', 'text-slate-400');
+                        if(b.innerText.includes(v.substring(0,3))) {
+                            b.classList.add('active', 'bg-slate-800', 'border-cyan-500', 'text-cyan-400', 'shadow-[0_0_10px_rgba(6,182,212,0.2)]');
+                            b.classList.remove('bg-slate-800/50', 'border-slate-700', 'text-slate-400');
+                        }
+                    });
+                }
             },
-
-            handleFile(file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    this.imageBase64 = e.target.result.split(',')[1];
-                    const img = document.getElementById('img-preview');
-                    img.src = e.target.result;
-                    img.classList.remove('hidden');
+            
+            handleFile(f) {
+                if(!f) return;
+                const r = new FileReader();
+                r.onload = e => {
+                    this.imgData = e.target.result.split(',')[1];
+                    document.getElementById('img-preview').src = e.target.result;
+                    document.getElementById('img-preview').classList.remove('hidden');
                     document.getElementById('upload-empty').classList.add('hidden');
                     document.getElementById('btn-clear').style.display = 'flex';
-                    SFX.play('success');
                 };
-                reader.readAsDataURL(file);
+                r.readAsDataURL(f);
             },
-
+            
             clearImage() {
-                this.imageBase64 = null;
+                this.imgData = null;
                 document.getElementById('img-preview').classList.add('hidden');
                 document.getElementById('upload-empty').classList.remove('hidden');
                 document.getElementById('btn-clear').style.display = 'none';
-                SFX.play('click');
+                document.getElementById('file-input').value = '';
             }
         };
 
+        // 6. AI Engine (Gemini)
+        const AI = {
+            data: null,
+            async analyze() {
+                const key = localStorage.getItem('gemini_api_key');
+                if(!key) return Toast.show('Please set API Key in Settings first!', 'error');
+                if(!App.imgData) return Toast.show('Please upload an image!', 'error');
+
+                const btn = document.getElementById('btn-analyze');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> PROCESSING DATA...';
+                document.getElementById('scan-fx').classList.remove('hidden');
+                document.getElementById('drop-zone').classList.add('scanning');
+
+                try {
+                    const prompt = `Analyze this chart for ${App.pair}. Respond in JSON ONLY: {"action":"BUY/SELL/WAIT", "confidence":80, "entry":"1234", "sl":"1230", "tp":"1250", "reason_th":"...", "reason_en":"...", "zone_buy":"...", "zone_sell":"..."}`;
+                    
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            contents: [{ parts: [{text: prompt}, {inline_data: {mime_type: "image/jpeg", data: App.imgData}}] }]
+                        })
+                    });
+                    
+                    const raw = await res.json();
+                    if(raw.error) throw new Error(raw.error.message);
+                    
+                    const txt = raw.candidates[0].content.parts[0].text.replace(/```json|```/g,'').trim();
+                    this.data = JSON.parse(txt);
+                    
+                    // Display & Save
+                    this.display(this.data);
+                    History.save(this.data);
+                    Toast.show(Lang.get('toast_success'), 'success');
+
+                } catch(e) {
+                    console.error(e);
+                    Toast.show(e.message, 'error');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = `<span class="relative z-10 flex items-center justify-center gap-3"><i class="fa-solid fa-microchip"></i> <span>${Lang.get('btn_analyze')}</span></span><div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition duration-500 ease-in-out"></div>`;
+                    document.getElementById('scan-fx').classList.add('hidden');
+                    document.getElementById('drop-zone').classList.remove('scanning');
+                }
+            },
+            display(d) {
+                UI.switchTab('result');
+                document.getElementById('res-placeholder').classList.add('hidden');
+                document.getElementById('res-content').classList.remove('hidden');
+                
+                const isBuy = d.action === 'BUY';
+                const isSell = d.action === 'SELL';
+                const color = isBuy ? '#10b981' : (isSell ? '#ef4444' : '#64748b');
+                
+                document.getElementById('res-pair').innerText = App.pair;
+                document.getElementById('res-time').innerText = new Date().toLocaleTimeString();
+                
+                const actEl = document.getElementById('res-action');
+                actEl.innerText = d.action;
+                actEl.className = `text-7xl font-bold tech-font drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] ${isBuy ? 'text-green-500' : (isSell ? 'text-red-500' : 'text-slate-400')}`;
+                
+                document.getElementById('signal-color-bar').style.backgroundColor = color;
+                document.getElementById('conf-bar').style.width = d.confidence + '%';
+                document.getElementById('res-conf').innerText = d.confidence + '% CONFIDENCE';
+                
+                document.getElementById('res-entry').innerText = d.entry;
+                document.getElementById('res-sl').innerText = d.sl;
+                document.getElementById('res-tp').innerText = d.tp;
+                document.getElementById('res-reason').innerText = Lang.curr === 'th' ? d.reason_th : d.reason_en;
+                document.getElementById('res-z-buy').innerText = d.zone_buy || '-';
+                document.getElementById('res-z-sell').innerText = d.zone_sell || '-';
+            }
+        };
+
+        // 7. History System (Firestore)
+        const History = {
+            async save(d) {
+                if(!Auth.user) return;
+                try {
+                    await db.collection('analysis_logs').add({
+                        uid: Auth.user.uid,
+                        pair: App.pair,
+                        action: d.action,
+                        entry: d.entry,
+                        confidence: d.confidence,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } catch(e) { console.error("Save failed", e); }
+            },
+            async load() {
+                if(!Auth.user) return;
+                const tbody = document.getElementById('history-table-body');
+                tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-500"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</td></tr>';
+                
+                try {
+                    const snap = await db.collection('analysis_logs')
+                        .where('uid', '==', Auth.user.uid)
+                        .orderBy('timestamp', 'desc')
+                        .limit(20)
+                        .get();
+                        
+                    if(snap.empty) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-500">No data found</td></tr>';
+                        return;
+                    }
+                    
+                    let h = '';
+                    snap.forEach(doc => {
+                        const r = doc.data();
+                        const time = r.timestamp ? new Date(r.timestamp.toDate()).toLocaleTimeString() : '-';
+                        const color = r.action === 'BUY' ? 'text-green-400' : (r.action === 'SELL' ? 'text-red-400' : 'text-slate-400');
+                        h += `<tr class="tr-hover border-b border-white/5 transition">
+                            <td class="p-4 text-slate-400">${time}</td>
+                            <td class="p-4 font-bold text-white">${r.pair}</td>
+                            <td class="p-4 ${color} font-bold">${r.action}</td>
+                            <td class="p-4 font-mono">${r.entry}</td>
+                            <td class="p-4 text-right font-mono text-cyan-500">${r.confidence}%</td>
+                        </tr>`;
+                    });
+                    tbody.innerHTML = h;
+                } catch(e) {
+                    console.error(e);
+                    // Handle Indexing Error (Required composite index in Firestore)
+                    tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-red-400 text-xs">Error: Firestore Index Required or Permission Denied.</td></tr>';
+                }
+            }
+        };
+
+        // 8. Settings Logic
         const Settings = {
             open() {
                 document.getElementById('modal-settings').classList.remove('hidden');
-                document.getElementById('set-api-key').value = localStorage.getItem('gemini_api') || '';
+                document.getElementById('set-api-key').value = localStorage.getItem('gemini_api_key') || '';
             },
-            close() {
-                document.getElementById('modal-settings').classList.add('hidden');
-            },
+            close() { document.getElementById('modal-settings').classList.add('hidden'); },
             save() {
-                const key = document.getElementById('set-api-key').value.trim();
-                localStorage.setItem('gemini_api', key);
-                Toast.show('Configuration Saved', 'success', null);
+                const k = document.getElementById('set-api-key').value.trim();
+                localStorage.setItem('gemini_api_key', k);
+                Toast.show('Configuration Saved', 'success');
                 this.close();
             }
         };
 
-        const AI = {
-            lastResult: null,
-
-            async analyze() {
-                const apiKey = localStorage.getItem('gemini_api');
-                if(!apiKey) return Toast.show('toast_no_api', 'error');
-                if(!App.imageBase64) return Toast.show('toast_no_img', 'error');
-
-                // Start Loading
-                const btn = document.getElementById('btn-analyze');
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> PROCESSING...';
-                
-                document.getElementById('scan-fx').classList.remove('hidden'); // Show scanner
-                SFX.play('click');
-
-                try {
-                    const prompt = `
-                        Analyze this technical chart for ${App.currentPair}. Identify trend, key levels, and setup.
-                        Response strictly in JSON format ONLY:
-                        {
-                            "action": "BUY" | "SELL" | "WAIT",
-                            "confidence": 85,
-                            "entry": "price",
-                            "sl": "price",
-                            "tp": "price",
-                            "rr": "1:2",
-                            "buy_zone": "range",
-                            "sell_zone": "range",
-                            "reason_th": "Thai explanation max 30 words",
-                            "reason_en": "English explanation max 30 words"
-                        }
-                    `;
-
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            contents: [{
-                                parts: [
-                                    { text: prompt },
-                                    { inline_data: { mime_type: "image/jpeg", data: App.imageBase64 } }
-                                ]
-                            }]
-                        })
-                    });
-
-                    const data = await response.json();
-                    
-                    if(data.error) throw new Error(data.error.message);
-
-                    const text = data.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
-                    const json = JSON.parse(text);
-
-                    this.lastResult = json;
-                    this.render(json);
-                    
-                    // Save to Firebase
-                    History.save({
-                        pair: App.currentPair,
-                        action: json.action,
-                        entry: json.entry,
-                        confidence: json.confidence
-                    });
-
-                    Toast.show('analyze_success', 'success');
-
-                } catch (err) {
-                    console.error(err);
-                    Toast.show('toast_error', 'error', err.message);
-                } finally {
-                    btn.disabled = false;
-                    btn.innerHTML = '<span class="relative z-10 flex items-center justify-center gap-3"><i class="fa-solid fa-robot"></i> <span class="lang" key="btn_analyze">START ANALYSIS</span></span>';
-                    Lang.apply(); // Re-apply lang to button
-                    document.getElementById('scan-fx').classList.add('hidden');
-                }
-            },
-
-            render(data) {
-                UI.switchTab('result');
-                document.getElementById('res-placeholder').classList.add('hidden');
-                document.getElementById('res-content').classList.remove('hidden');
-
-                // Update Values
-                document.getElementById('res-pair').innerText = App.currentPair;
-                document.getElementById('res-action').innerText = data.action;
-                document.getElementById('res-conf').innerText = data.confidence + "% Confidence";
-                document.getElementById('res-rr').innerText = data.rr;
-                document.getElementById('res-entry').innerText = data.entry;
-                document.getElementById('res-sl').innerText = data.sl;
-                document.getElementById('res-tp').innerText = data.tp;
-                document.getElementById('res-z-buy').innerText = data.buy_zone;
-                document.getElementById('res-z-sell').innerText = data.sell_zone;
-                document.getElementById('res-reason').innerText = Lang.current === 'th' ? data.reason_th : data.reason_en;
-
-                // Dynamic Styling
-                const color = data.action === 'BUY' ? '#10b981' : (data.action === 'SELL' ? '#ef4444' : '#f59e0b');
-                const textClass = data.action === 'BUY' ? 'text-green-500' : (data.action === 'SELL' ? 'text-red-500' : 'text-yellow-500');
-                
-                document.getElementById('res-action').className = `text-6xl font-bold tech-font drop-shadow-md mb-2 ${textClass}`;
-                document.getElementById('signal-bar').style.backgroundColor = color;
-                document.getElementById('conf-bar').style.width = data.confidence + "%";
-            }
-        };
-
-        // --- Event Listeners ---
-        document.getElementById('file-input').addEventListener('change', (e) => App.handleFile(e.target.files[0]));
-        
-        // --- Init ---
-        window.onload = () => {
-            Lang.apply();
-            Auth.init();
-        };
-
-        /**
-         * ------------------------------------------------------------------
-         * 5. BACKGROUND PARTICLE SYSTEM (Canvas)
-         * ------------------------------------------------------------------
-         */
+        // 9. Particle Background
         const canvas = document.getElementById('starfield');
         const ctx = canvas.getContext('2d');
         let particles = [];
-
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
+        
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize);
         resize();
-
+        
         class Particle {
-            constructor() {
-                this.reset();
-            }
+            constructor() { this.reset(); }
             reset() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 2;
-                this.speedX = (Math.random() - 0.5) * 0.2;
-                this.speedY = (Math.random() - 0.5) * 0.2;
-                this.opacity = Math.random() * 0.5;
+                this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 1.5; this.speed = Math.random() * 0.2; this.op = Math.random() * 0.5;
             }
             update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
-            }
-            draw() {
-                ctx.fillStyle = `rgba(148, 163, 184, ${this.opacity})`;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
+                this.y -= this.speed;
+                if(this.y < 0) this.reset();
+                ctx.fillStyle = `rgba(100, 116, 139, ${this.op})`;
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill();
             }
         }
-
-        for (let i = 0; i < 100; i++) particles.push(new Particle());
-
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(p => {
-                p.update();
-                p.draw();
-            });
-            requestAnimationFrame(animate);
+        for(let i=0; i<80; i++) particles.push(new Particle());
+        function anim() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            particles.forEach(p => p.update());
+            requestAnimationFrame(anim);
         }
-        animate();
+        anim();
+
+        // 10. Event Listeners
+        document.getElementById('file-input').addEventListener('change', e => App.handleFile(e.target.files[0]));
+        window.onload = () => { Lang.render(); Auth.init(); };
 
     </script>
 </body>
