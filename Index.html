@@ -8,8 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -37,9 +37,9 @@
 
     <style>
         :root {
-            --bg-dark: #080808;
-            --panel-bg: rgba(20, 20, 20, 0.7);
-            --border-color: rgba(255, 255, 255, 0.1);
+            --bg-dark: #050505;
+            --panel-bg: rgba(15, 15, 15, 0.85);
+            --border-color: rgba(255, 255, 255, 0.08);
             --neon-blue: #00f3ff;
             --neon-green: #00ff9d;
         }
@@ -47,57 +47,46 @@
         body {
             background-color: var(--bg-dark);
             background-image: 
-                linear-gradient(rgba(0, 255, 157, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 157, 0.05) 1px, transparent 1px);
-            background-size: 30px 30px;
+                radial-gradient(circle at 50% 50%, rgba(0, 243, 255, 0.03) 0%, transparent 50%),
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 40px 40px, 40px 40px;
             color: #e0e0e0;
-            overflow: hidden; /* App style */
+            overflow: hidden;
         }
 
         /* SCROLLBAR */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #111; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--neon-green); }
 
         /* GLASS PANEL */
         .glass-panel {
             background: var(--panel-bg);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
             border: 1px solid var(--border-color);
-            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
         }
 
         /* SIDEBAR ITEM */
         .pair-item {
             transition: all 0.2s;
-            border-left: 3px solid transparent;
+            border-left: 2px solid transparent;
         }
         .pair-item:hover, .pair-item.active {
-            background: rgba(255,255,255,0.05);
+            background: linear-gradient(90deg, rgba(0,255,157,0.1) 0%, transparent 100%);
             border-left-color: var(--neon-green);
             color: white;
-        }
-
-        /* LOADING ANIMATION */
-        .scanner-line {
-            width: 100%; height: 2px;
-            background: var(--neon-blue);
-            box-shadow: 0 0 10px var(--neon-blue);
-            animation: scan 2s infinite linear;
-        }
-        @keyframes scan {
-            0% { transform: translateY(-100px); opacity: 0; }
-            50% { opacity: 1; }
-            100% { transform: translateY(100px); opacity: 0; }
         }
 
         /* GLOW TEXT */
         .text-glow { text-shadow: 0 0 10px currentColor; }
         
-        .grid-bg {
-            background-image: radial-gradient(circle, #222 1px, transparent 1px);
-            background-size: 20px 20px;
+        /* MODAL */
+        .modal-overlay {
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
         }
     </style>
 </head>
@@ -109,8 +98,8 @@
                 <span class="text-white">EIS</span><span class="text-neon">GEMINI</span>
             </h1>
             <div class="flex items-center justify-between mt-2 text-[10px] text-gray-500 font-mono">
-                <span><i class="fa-solid fa-server text-green-500 mr-1"></i>DB: ONLINE</span>
-                <span>V.4.0</span>
+                <span id="api-status"><i class="fa-solid fa-circle text-red-500 mr-1"></i>API: OFFLINE</span>
+                <span>V.5.0-API</span>
             </div>
         </div>
 
@@ -125,13 +114,9 @@
             </div>
 
         <div class="p-3 border-t border-gray-800 bg-black/20">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 flex items-center justify-center font-bold text-xs">AD</div>
-                <div>
-                    <div class="font-bold text-xs text-white">ADMINISTRATOR</div>
-                    <div class="text-[10px] text-green-400">ACCESS GRANTED</div>
-                </div>
-            </div>
+            <button onclick="openSettings()" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded text-xs font-bold transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-key"></i> SET API KEY
+            </button>
         </div>
     </aside>
 
@@ -140,21 +125,15 @@
         <header class="h-14 glass-panel border-b border-gray-800 flex items-center justify-between px-6">
             <div class="flex items-center gap-4">
                 <h2 id="current-pair-title" class="text-xl font-bold font-display text-white tracking-wider flex items-center gap-2">
-                    <img id="current-pair-icon" src="https://cryptologos.cc/logos/bitcoin-btc-logo.png?v=025" class="w-6 h-6">
-                    <span id="pair-name">BTC/USD</span>
+                    <img id="current-pair-icon" src="" class="w-6 h-6 hidden">
+                    <span id="pair-name">SELECT PAIR</span>
                 </h2>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-800 text-gray-400 border border-gray-700" id="market-status">MARKET OPEN</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-800 text-gray-400 border border-gray-700" id="market-status">MARKET ACTIVE</span>
             </div>
 
             <div class="flex items-center gap-4">
-                <div class="text-right hidden md:block">
-                    <div class="text-[10px] text-gray-500 font-mono">AI CONFIDENCE</div>
-                    <div class="w-32 h-1.5 bg-gray-800 rounded-full overflow-hidden mt-1">
-                        <div id="top-confidence-bar" class="h-full bg-neon w-0 transition-all duration-1000"></div>
-                    </div>
-                </div>
-                <button onclick="refreshAnalysis()" class="bg-neon/10 text-neon border border-neon/50 px-4 py-1.5 rounded hover:bg-neon/20 transition-all font-display font-bold text-xs flex items-center gap-2">
-                    <i class="fa-solid fa-rotate"></i> REFRESH AI
+                <button onclick="runAIAnalysis()" class="bg-neon/10 text-neon border border-neon/50 px-6 py-1.5 rounded hover:bg-neon/20 transition-all font-display font-bold text-xs flex items-center gap-2 shadow-[0_0_10px_rgba(0,255,204,0.2)]">
+                    <i class="fa-solid fa-microchip"></i> RUN AI ANALYSIS
                 </button>
             </div>
         </header>
@@ -162,52 +141,45 @@
         <div class="flex-1 p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-y-auto">
             
             <div class="lg:col-span-8 flex flex-col gap-4">
-                <div class="glass-panel h-[500px] w-full relative overflow-hidden rounded-lg p-1">
-                    <div class="absolute inset-0 z-0" id="tv-chart-container"></div>
-                </div>
-
-                <div class="glass-panel p-3 flex justify-between items-center text-xs font-mono">
-                    <div class="flex gap-4">
-                        <span class="text-gray-500">SESSION: <span class="text-white">LONDON/NY</span></span>
-                        <span class="text-gray-500">VOLATILITY: <span class="text-yellow-400">HIGH</span></span>
+                <div class="glass-panel h-[550px] w-full relative overflow-hidden rounded-lg p-1 bg-black">
+                    <div class="absolute inset-0 z-0" id="tv-chart-container">
+                        <div class="flex items-center justify-center h-full text-gray-600 font-mono text-xs">
+                            WAITING FOR PAIR SELECTION...
+                        </div>
                     </div>
-                    <div class="text-neon animate-pulse">● LIVE DATA FEED ACTIVE</div>
                 </div>
             </div>
 
             <div class="lg:col-span-4 flex flex-col gap-4 relative">
                 
-                <div id="ai-processing-overlay" class="hidden absolute inset-0 z-50 glass-panel flex-col items-center justify-center bg-black/90 backdrop-blur-xl">
+                <div id="ai-processing-overlay" class="hidden absolute inset-0 z-50 glass-panel flex-col items-center justify-center bg-black/95 backdrop-blur-xl">
                     <div class="relative w-24 h-24 mb-4">
                         <div class="absolute inset-0 border-4 border-t-neon border-r-transparent border-b-purple-500 border-l-transparent rounded-full animate-spin"></div>
                         <div class="absolute inset-2 border-2 border-t-transparent border-r-white border-b-transparent border-l-white rounded-full animate-spin-slow opacity-50"></div>
                         <i class="fa-solid fa-brain absolute inset-0 flex items-center justify-center text-2xl text-neon/80"></i>
                     </div>
-                    <h3 class="text-xl font-display font-bold text-white tracking-widest animate-pulse">ANALYZING MARKET</h3>
+                    <h3 class="text-xl font-display font-bold text-white tracking-widest animate-pulse">GEMINI PROCESSING</h3>
                     <div class="font-mono text-[10px] text-green-400 mt-2 h-6 overflow-hidden w-48 text-center" id="loading-text">
-                        Loading Historic Data...
-                    </div>
-                    <div class="w-48 h-1 bg-gray-800 rounded mt-2 overflow-hidden">
-                        <div class="h-full bg-gradient-to-r from-neon to-purple-500 animate-[width_2s_ease-in-out_infinite]" style="width: 50%"></div>
+                        Initializing...
                     </div>
                 </div>
 
                 <div class="glass-panel p-5 relative overflow-hidden group">
-                    <div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <div class="absolute top-0 right-0 p-3 opacity-10">
                         <i class="fa-solid fa-robot text-6xl text-white"></i>
                     </div>
                     
                     <div class="relative z-10">
                         <div class="flex justify-between items-start mb-2">
-                            <span class="text-[10px] font-bold text-gray-500 tracking-widest border border-gray-700 px-2 py-0.5 rounded">AI DECISION</span>
-                            <span id="data-timestamp" class="text-[10px] text-gray-600 font-mono">UPDATED: JUST NOW</span>
+                            <span class="text-[10px] font-bold text-gray-500 tracking-widest border border-gray-700 px-2 py-0.5 rounded">GEMINI DECISION</span>
+                            <span id="data-timestamp" class="text-[10px] text-gray-600 font-mono">--:--</span>
                         </div>
                         
                         <div class="flex items-center gap-4 my-3">
-                            <div id="signal-text" class="text-4xl font-black font-display text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">NEUTRAL</div>
+                            <div id="signal-text" class="text-4xl font-black font-display text-gray-500">WAIT</div>
                             <div class="flex flex-col">
-                                <span class="text-[10px] text-gray-400">WIN RATE PROBABILITY</span>
-                                <span id="confidence-val" class="text-2xl font-bold text-neon font-cyber">0%</span>
+                                <span class="text-[10px] text-gray-400">CONFIDENCE</span>
+                                <span id="confidence-val" class="text-2xl font-bold text-gray-500 font-cyber">0%</span>
                             </div>
                         </div>
 
@@ -216,53 +188,43 @@
                         </div>
 
                         <div class="grid grid-cols-2 gap-2">
-                            <div class="bg-red-500/10 border border-red-500/30 p-2 rounded">
+                            <div class="bg-red-500/10 border border-red-500/30 p-2 rounded relative overflow-hidden">
                                 <div class="text-[9px] text-red-400 font-bold mb-1">STOP LOSS</div>
-                                <div id="price-sl" class="text-sm font-mono font-bold text-white">0.00000</div>
+                                <div id="price-sl" class="text-sm font-mono font-bold text-white relative z-10">-</div>
                             </div>
-                            <div class="bg-green-500/10 border border-green-500/30 p-2 rounded">
+                            <div class="bg-green-500/10 border border-green-500/30 p-2 rounded relative overflow-hidden">
                                 <div class="text-[9px] text-green-400 font-bold mb-1">TAKE PROFIT</div>
-                                <div id="price-tp" class="text-sm font-mono font-bold text-white">0.00000</div>
+                                <div id="price-tp" class="text-sm font-mono font-bold text-white relative z-10">-</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="glass-panel p-4 space-y-3">
-                    <div class="flex items-center gap-2 mb-2">
-                        <i class="fa-solid fa-crosshairs text-blue-400"></i>
-                        <span class="text-xs font-bold text-gray-300 font-display">ENTRY STRATEGY</span>
-                    </div>
-
-                    <div class="flex justify-between items-center bg-black/40 p-3 rounded border border-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.1)]">
-                        <span class="text-[10px] text-blue-400 font-bold">ENTRY PRICE</span>
-                        <span id="price-entry" class="text-xl font-mono font-bold text-white">0.00000</span>
+                    <div class="flex justify-between items-center bg-black/40 p-3 rounded border border-blue-500/20">
+                        <span class="text-[10px] text-blue-400 font-bold">ENTRY ZONE</span>
+                        <span id="price-entry" class="text-lg font-mono font-bold text-white">-</span>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3 mt-2">
-                        <div class="text-center p-2 bg-black/20 rounded">
-                            <div class="text-[9px] text-gray-500">TREND (H4)</div>
-                            <div id="trend-val" class="text-xs font-bold text-white mt-1">BULLISH</div>
+                        <div class="text-center p-2 bg-black/20 rounded border border-gray-800">
+                            <div class="text-[9px] text-gray-500">TIMEFRAME</div>
+                            <div class="text-xs font-bold text-white mt-1">H4 / D1</div>
                         </div>
-                        <div class="text-center p-2 bg-black/20 rounded">
-                            <div class="text-[9px] text-gray-500">ORDER BLOCK</div>
-                            <div id="ob-val" class="text-xs font-bold text-white mt-1">DETECTED</div>
+                        <div class="text-center p-2 bg-black/20 rounded border border-gray-800">
+                            <div class="text-[9px] text-gray-500">RISK LEVEL</div>
+                            <div id="risk-val" class="text-xs font-bold text-white mt-1">-</div>
                         </div>
                     </div>
                 </div>
 
                 <div class="glass-panel flex-1 flex flex-col p-0 overflow-hidden min-h-[150px]">
-                    <div class="bg-gray-900/80 px-3 py-1 border-b border-gray-700 flex justify-between items-center">
-                        <span class="text-[10px] font-mono text-gray-400">root@eis-ai:~# reasoning_log</span>
-                        <div class="flex gap-1">
-                            <div class="w-2 h-2 rounded-full bg-red-500"></div>
-                            <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
-                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
-                        </div>
+                    <div class="bg-gray-900/80 px-3 py-1.5 border-b border-gray-700 flex justify-between items-center">
+                        <span class="text-[10px] font-mono text-gray-400">gemini-pro@analysis:~# log</span>
                     </div>
-                    <div class="p-3 font-mono text-[11px] text-green-400 overflow-y-auto custom-scrollbar leading-relaxed" id="terminal-reasoning">
-                        Waiting for signal selection...<br>
-                        > System ready.
+                    <div class="p-3 font-mono text-[11px] text-green-400 overflow-y-auto custom-scrollbar leading-relaxed h-full" id="terminal-reasoning">
+                        > System Initialized.<br>
+                        > Waiting for API Key configuration...
                     </div>
                 </div>
 
@@ -270,35 +232,34 @@
         </div>
     </main>
 
+    <div id="settings-modal" class="hidden fixed inset-0 z-[60] modal-overlay flex items-center justify-center px-4">
+        <div class="bg-[#111] border border-gray-700 rounded-lg p-6 w-full max-w-md shadow-2xl relative">
+            <button onclick="closeSettings()" class="absolute top-4 right-4 text-gray-500 hover:text-white"><i class="fa-solid fa-times"></i></button>
+            
+            <h2 class="text-xl font-display font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-key text-neon"></i> API CONFIGURATION
+            </h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">GOOGLE GEMINI API KEY</label>
+                    <input type="password" id="api-key-input" class="w-full bg-black border border-gray-700 rounded p-2 text-white text-xs focus:border-neon outline-none font-mono" placeholder="Enter your key here (starts with AIza...)">
+                    <p class="text-[10px] text-gray-600 mt-1">Key is stored locally in your browser. Not sent to any server.</p>
+                </div>
+                
+                <button onclick="saveApiKey()" class="w-full bg-neon/80 hover:bg-neon text-black font-bold py-2 rounded transition font-display">
+                    SAVE & CONNECT
+                </button>
+                
+                <div class="text-[10px] text-gray-500 text-center">
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" class="underline hover:text-white">Get Gemini API Key Here</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // --- 1. CONFIG & DATA ---
-        
-        // ************************************************
-        // ตั้งค่า FIREBASE ของคุณตรงนี้ (ถ้ายังไม่มี ข้ามไปก่อนได้)
-        // ************************************************
-        const firebaseConfig = {
-            apiKey: "API_KEY",
-            authDomain: "PROJECT_ID.firebaseapp.com",
-            databaseURL: "https://PROJECT_ID-default-rtdb.firebaseio.com",
-            projectId: "PROJECT_ID",
-            storageBucket: "PROJECT_ID.appspot.com",
-            messagingSenderId: "SENDER_ID",
-            appId: "APP_ID"
-        };
-        
-        // Set to TRUE to use fake data (Demo Mode), FALSE to use Real Firebase
-        const USE_MOCK_DATA = true; 
-
-        // Init Firebase (Try/Catch in case config is empty)
-        let db;
-        try {
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.database();
-        } catch (e) {
-            console.log("Firebase not configured properly, running in Offline Mode");
-        }
-
-        // Available Assets
+        // --- DATA & STATE ---
         const assets = [
             { symbol: "XAUUSD", name: "GOLD", type: "COMMODITY", icon: "https://cdn-icons-png.flaticon.com/512/11520/11520626.png" },
             { symbol: "BTCUSD", name: "BITCOIN", type: "CRYPTO", icon: "https://cryptologos.cc/logos/bitcoin-btc-logo.png?v=025" },
@@ -306,26 +267,61 @@
             { symbol: "EURUSD", name: "EURO/USD", type: "FOREX", icon: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Flag_of_Europe.svg/1200px-Flag_of_Europe.svg.png" },
             { symbol: "GBPUSD", name: "GBP/USD", type: "FOREX", icon: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Flag_of_the_United_Kingdom_%281-2%29.svg/1200px-Flag_of_the_United_Kingdom_%281-2%29.svg.png" },
             { symbol: "USDJPY", name: "USD/JPY", type: "FOREX", icon: "https://upload.wikimedia.org/wikipedia/en/thumb/9/9e/Flag_of_Japan.svg/1200px-Flag_of_Japan.svg.png" },
-            { symbol: "SOLUSD", name: "SOLANA", type: "CRYPTO", icon: "https://cryptologos.cc/logos/solana-sol-logo.png?v=025" },
-            { symbol: "XRPUSD", name: "XRP", type: "CRYPTO", icon: "https://cryptologos.cc/logos/xrp-xrp-logo.png?v=025" }
+            { symbol: "SOLUSD", name: "SOLANA", type: "CRYPTO", icon: "https://cryptologos.cc/logos/solana-sol-logo.png?v=025" }
         ];
 
-        let currentSymbol = "XAUUSD";
+        let currentSymbol = null;
+        let GEMINI_API_KEY = localStorage.getItem('GEMINI_API_KEY') || "";
 
-        // --- 2. INIT & FUNCTIONS ---
-
+        // --- INIT ---
         window.onload = function() {
             renderPairList();
-            loadChart(currentSymbol);
-            refreshAnalysis(); // Simulate first load
+            checkApiStatus();
+            
+            // Auto select first pair if available
+            if(assets.length > 0) selectPair(assets[0]);
         };
 
+        // --- SETTINGS FUNCTIONS ---
+        function openSettings() {
+            document.getElementById('settings-modal').classList.remove('hidden');
+            document.getElementById('api-key-input').value = GEMINI_API_KEY;
+        }
+
+        function closeSettings() {
+            document.getElementById('settings-modal').classList.add('hidden');
+        }
+
+        function saveApiKey() {
+            const input = document.getElementById('api-key-input').value.trim();
+            if(input) {
+                GEMINI_API_KEY = input;
+                localStorage.setItem('GEMINI_API_KEY', input);
+                checkApiStatus();
+                closeSettings();
+                logToTerminal("> API Key Updated. Ready to scan.");
+            } else {
+                alert("Please enter a valid API Key");
+            }
+        }
+
+        function checkApiStatus() {
+            const statusEl = document.getElementById('api-status');
+            if(GEMINI_API_KEY && GEMINI_API_KEY.length > 10) {
+                statusEl.innerHTML = '<i class="fa-solid fa-circle text-green-500 mr-1"></i>API: ONLINE';
+            } else {
+                statusEl.innerHTML = '<i class="fa-solid fa-circle text-red-500 mr-1"></i>API: MISSING';
+                logToTerminal("> WARNING: API Key Missing. Please configure in settings.");
+            }
+        }
+
+        // --- PAIR & UI FUNCTIONS ---
         function renderPairList() {
             const list = document.getElementById('pair-list');
             list.innerHTML = '';
             assets.forEach(asset => {
                 const item = document.createElement('div');
-                item.className = `pair-item p-3 cursor-pointer flex items-center justify-between ${asset.symbol === currentSymbol ? 'active' : ''}`;
+                item.className = `pair-item p-3 cursor-pointer flex items-center justify-between ${currentSymbol && asset.symbol === currentSymbol.symbol ? 'active' : ''}`;
                 item.onclick = () => selectPair(asset);
                 item.innerHTML = `
                     <div class="flex items-center gap-3">
@@ -335,53 +331,40 @@
                             <div class="text-[9px] text-gray-500">${asset.name}</div>
                         </div>
                     </div>
-                    <div class="text-[9px] font-bold ${asset.type === 'CRYPTO' ? 'text-purple-400' : (asset.type === 'FOREX' ? 'text-blue-400' : 'text-yellow-400')}">${asset.type}</div>
+                    <div class="text-[9px] font-bold text-gray-600">${asset.type}</div>
                 `;
                 list.appendChild(item);
             });
         }
 
-        function filterPairs() {
-            const query = document.getElementById('search-pair').value.toUpperCase();
-            const items = document.querySelectorAll('.pair-item');
-            items.forEach(item => {
-                const text = item.innerText.toUpperCase();
-                item.style.display = text.includes(query) ? 'flex' : 'none';
-            });
-        }
-
         function selectPair(asset) {
-            currentSymbol = asset.symbol;
-            
-            // Update Header
+            currentSymbol = asset;
             document.getElementById('pair-name').innerText = asset.symbol;
             document.getElementById('current-pair-icon').src = asset.icon;
-
-            // Update List Active State
-            renderPairList();
-
-            // Reload Chart
+            document.getElementById('current-pair-icon').classList.remove('hidden');
+            
+            // Re-render list to update active state
+            renderPairList(); 
+            
+            // Load TV Chart
             loadChart(asset.symbol);
-
-            // Trigger AI Analysis
-            refreshAnalysis();
+            
+            // Reset Dashboard
+            resetDashboard();
         }
 
-        // TradingView Widget Code
         function loadChart(symbol) {
-            // Clean symbol for TV (e.g., remove USD for some forex or keep as is)
             const tvSymbol = symbol.includes("USD") ? symbol : `BINANCE:${symbol}`; 
-            
             const container = document.getElementById('tv-chart-container');
-            container.innerHTML = ''; // Clear old chart
-
+            container.innerHTML = ''; 
+            
             const script = document.createElement('script');
             script.src = 'https://s3.tradingview.com/tv.js';
             script.onload = () => {
                 new TradingView.widget({
                     "autosize": true,
                     "symbol": symbol,
-                    "interval": "30",
+                    "interval": "60",
                     "timezone": "Etc/UTC",
                     "theme": "dark",
                     "style": "1",
@@ -389,143 +372,169 @@
                     "toolbar_bg": "#f1f3f6",
                     "enable_publishing": false,
                     "hide_top_toolbar": false,
-                    "hide_side_toolbar": false,
                     "container_id": "tv-chart-container",
-                    "allow_symbol_change": false,
-                    "details": false,
-                    "studies": [
-                        "RSI@tv-basicstudies"
-                    ]
+                    "studies": ["RSI@tv-basicstudies"]
                 });
             };
             container.appendChild(script);
         }
 
-        // --- 3. THE AI SIMULATION CORE ---
-        
-        function refreshAnalysis() {
-            // Show Loader
+        function resetDashboard() {
+            document.getElementById('signal-text').innerText = "READY";
+            document.getElementById('signal-text').className = "text-4xl font-black font-display text-gray-500";
+            document.getElementById('confidence-val').innerText = "0%";
+            document.getElementById('signal-meter').style.width = "0%";
+            document.getElementById('price-entry').innerText = "-";
+            document.getElementById('price-sl').innerText = "-";
+            document.getElementById('price-tp').innerText = "-";
+            document.getElementById('terminal-reasoning').innerText = "> Ready to analyze " + currentSymbol.symbol;
+        }
+
+        // --- AI LOGIC (GEMINI API) ---
+        async function runAIAnalysis() {
+            if(!currentSymbol) return;
+            if(!GEMINI_API_KEY) {
+                openSettings();
+                return;
+            }
+
+            // Show Overlay
             const overlay = document.getElementById('ai-processing-overlay');
             overlay.classList.remove('hidden');
             overlay.classList.add('flex');
 
-            // Simulate loading steps text
-            const loadTexts = [
-                "Connecting to Satellite...",
-                "Scanning H4 Trendlines...",
-                "Detecting Liquidity Pools...",
-                "Calculating Fibonacci Levels...",
-                "Synthesizing Neural Output..."
-            ];
-            const textEl = document.getElementById('loading-text');
-            let step = 0;
+            // Simulate Steps
+            const loadingText = document.getElementById('loading-text');
+            const steps = ["Accessing Global Data...", "Analyzing Market Structure...", "Calculating Volatility...", "Generating Prediction..."];
+            
+            // Animation loop
+            let stepIdx = 0;
             const interval = setInterval(() => {
-                if(step < loadTexts.length) {
-                    textEl.innerText = loadTexts[step];
-                    step++;
+                if(stepIdx < steps.length) {
+                    loadingText.innerText = steps[stepIdx];
+                    stepIdx++;
                 }
-            }, 400);
+            }, 800);
 
-            // Wait 2.5 seconds then show result
-            setTimeout(() => {
+            try {
+                // *** CALL GEMINI API ***
+                const prompt = `
+                    You are an expert Forex and Crypto trader AI. 
+                    Analyze the trading pair: ${currentSymbol.symbol}. 
+                    Based on general market structure knowledge and price action patterns (assume current date/time is relevant), provide a trading signal.
+                    
+                    CRITICAL: Return ONLY a JSON object. No Markdown. No extra text.
+                    Format:
+                    {
+                        "signal": "BUY" or "SELL" or "NEUTRAL",
+                        "confidence": number (0-100),
+                        "entry": "string price range",
+                        "sl": "string price",
+                        "tp": "string price",
+                        "risk": "LOW" or "MEDIUM" or "HIGH",
+                        "reasoning": "Short summarized bullet points of technical reasoning (max 30 words)."
+                    }
+                    Mock the prices to be realistic for ${currentSymbol.symbol}.
+                `;
+
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }]
+                    })
+                });
+
+                const data = await response.json();
+                
                 clearInterval(interval);
                 overlay.classList.add('hidden');
                 overlay.classList.remove('flex');
-                
-                fetchDataAndRender();
-            }, 2500);
-        }
 
-        function fetchDataAndRender() {
-            if (USE_MOCK_DATA) {
-                // Generate Fake Data for Demo
-                const isBuy = Math.random() > 0.5;
-                const price = Math.random() * 2000 + 1000;
-                const data = {
-                    signal: isBuy ? "BUY" : "SELL",
-                    confidence: Math.floor(Math.random() * 30) + 70, // 70-99%
-                    entry: (isBuy ? price : price + 5).toFixed(2),
-                    sl: (isBuy ? price - 10 : price + 15).toFixed(2),
-                    tp: (isBuy ? price + 20 : price - 25).toFixed(2),
-                    trend: isBuy ? "STRONG BULLISH" : "BEARISH DIVERGENCE",
-                    ob: "M15 OB + FVG",
-                    reasoning: `> Analyzing ${currentSymbol} structure...\n> Break of structure (BOS) detected on M30.\n> Price approaching key demand zone at ${price.toFixed(0)}.\n> RSI divergence confirms momentum shift.\n> RECOMMENDED ACTION: Wait for retest before entry.`
-                };
-                renderUI(data);
-            } else {
-                // Real Firebase Fetch
-                if(!db) return;
-                const ref = db.ref('signals/' + currentSymbol);
-                ref.once('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if(data) {
-                        renderUI(data);
-                    } else {
-                        renderUI({ signal: "WAIT", confidence: 0, reasoning: "No data available in database." });
-                    }
-                });
+                // Parse Result
+                if(data.candidates && data.candidates[0].content) {
+                    const text = data.candidates[0].content.parts[0].text;
+                    // Clean markdown code blocks if present
+                    const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
+                    const result = JSON.parse(cleanJson);
+                    
+                    updateUI(result);
+                } else {
+                    throw new Error("Invalid API Response");
+                }
+
+            } catch (error) {
+                clearInterval(interval);
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+                alert("AI Error: " + error.message);
+                console.error(error);
+                logToTerminal("> ERROR: Analysis Failed. Check API Key or Network.");
             }
         }
 
-        function renderUI(data) {
-            // Elements
+        function updateUI(data) {
             const signalText = document.getElementById('signal-text');
             const meter = document.getElementById('signal-meter');
             const confVal = document.getElementById('confidence-val');
-            const topBar = document.getElementById('top-confidence-bar');
-
+            
             // Colors
             let colorClass = "text-gray-400";
             let bgClass = "bg-gray-600";
-            
+            let glow = "none";
+
             if(data.signal === "BUY") {
                 colorClass = "text-neon";
                 bgClass = "bg-neon";
-                signalText.style.textShadow = "0 0 20px #00ff9d";
+                glow = "0 0 20px #00ff9d";
             } else if (data.signal === "SELL") {
                 colorClass = "text-red-500";
                 bgClass = "bg-red-500";
-                signalText.style.textShadow = "0 0 20px #ff0033";
-            } else {
-                signalText.style.textShadow = "none";
+                glow = "0 0 20px #ff0033";
             }
 
-            // Update Values
+            // Update Signal
             signalText.innerText = data.signal;
             signalText.className = `text-4xl font-black font-display drop-shadow-lg ${colorClass}`;
-            
+            signalText.style.textShadow = glow;
+
+            // Confidence
             confVal.innerText = data.confidence + "%";
             confVal.className = `text-2xl font-bold font-cyber ${colorClass}`;
-
             meter.className = `h-full transition-all duration-1000 ${bgClass}`;
             meter.style.width = data.confidence + "%";
-            
-            topBar.className = `h-full transition-all duration-1000 ${bgClass}`;
-            topBar.style.width = data.confidence + "%";
 
             // Prices
-            document.getElementById('price-entry').innerText = data.entry || "-";
-            document.getElementById('price-sl').innerText = data.sl || "-";
-            document.getElementById('price-tp').innerText = data.tp || "-";
+            document.getElementById('price-entry').innerText = data.entry;
+            document.getElementById('price-sl').innerText = data.sl;
+            document.getElementById('price-tp').innerText = data.tp;
+            document.getElementById('risk-val').innerText = data.risk;
 
-            // Details
-            document.getElementById('trend-val').innerText = data.trend || "-";
-            document.getElementById('ob-val').innerText = data.ob || "-";
-
-            // Reasoning Typewriter
+            // Reasoning with Typewriter effect
             const terminal = document.getElementById('terminal-reasoning');
-            terminal.innerHTML = "";
+            terminal.innerHTML = ""; // clear
+            
+            const timestamp = new Date().toLocaleTimeString();
+            let fullText = `> [${timestamp}] Analysis Complete.\n> PAIR: ${currentSymbol.symbol}\n> LOGIC:\n${data.reasoning}`;
+            
             let i = 0;
-            const txt = data.reasoning;
             function typeWriter() {
-                if (i < txt.length) {
-                    terminal.innerHTML += txt.charAt(i) === '\n' ? '<br>' : txt.charAt(i);
+                if (i < fullText.length) {
+                    const char = fullText.charAt(i);
+                    terminal.innerHTML += char === '\n' ? '<br>' : char;
                     i++;
-                    setTimeout(typeWriter, 20);
                     terminal.scrollTop = terminal.scrollHeight;
+                    setTimeout(typeWriter, 15);
                 }
             }
             typeWriter();
+            
+            document.getElementById('data-timestamp').innerText = "UPDATED: " + timestamp;
+        }
+
+        function logToTerminal(msg) {
+            const term = document.getElementById('terminal-reasoning');
+            term.innerHTML += `<br>${msg}`;
         }
 
     </script>
