@@ -1,34 +1,36 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EISGEMINI | CENTRAL INTELLIGENCE</title>
+    <title>EISGEMINI | SYSTEM V.FINAL</title>
     
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <link href="[https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css)" rel="stylesheet">
+    <link href="[https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap](https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap)" rel="stylesheet">
 
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        display: ['Rajdhani', 'sans-serif'],
+                        sans: ['Rajdhani', 'sans-serif'],
                         cyber: ['Orbitron', 'sans-serif'],
-                        mono: ['Courier New', 'monospace'],
+                        mono: ['JetBrains Mono', 'monospace'],
                     },
                     colors: {
-                        gold: { 400: '#ffd700', 500: '#d4af37' },
                         neon: '#00ffcc',
-                        danger: '#ff0033'
+                        danger: '#ff2a6d',
+                        panel: 'rgba(10, 10, 12, 0.9)'
                     },
                     animation: {
-                        'spin-slow': 'spin 3s linear infinite',
-                        'pulse-fast': 'pulse 0.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'pulse-glow': 'pulseGlow 2s infinite',
+                    },
+                    keyframes: {
+                        pulseGlow: {
+                            '0%, 100%': { boxShadow: '0 0 5px #00ffcc' },
+                            '50%': { boxShadow: '0 0 20px #00ffcc' },
+                        }
                     }
                 }
             }
@@ -36,483 +38,355 @@
     </script>
 
     <style>
-        :root {
-            --bg-dark: #050505;
-            --panel-bg: rgba(15, 15, 15, 0.85);
-            --border-color: rgba(255, 255, 255, 0.08);
-            --neon-blue: #00f3ff;
-            --neon-green: #00ff9d;
-        }
-
         body {
-            background-color: var(--bg-dark);
-            background-image: 
-                radial-gradient(circle at 50% 50%, rgba(0, 243, 255, 0.03) 0%, transparent 50%),
-                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-            background-size: 100% 100%, 40px 40px, 40px 40px;
-            color: #e0e0e0;
+            background-color: #050505;
+            background-image: linear-gradient(0deg, transparent 24%, rgba(0, 255, 204, .03) 25%, rgba(0, 255, 204, .03) 26%, transparent 27%, transparent 74%, rgba(0, 255, 204, .03) 75%, rgba(0, 255, 204, .03) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(0, 255, 204, .03) 25%, rgba(0, 255, 204, .03) 26%, transparent 27%, transparent 74%, rgba(0, 255, 204, .03) 75%, rgba(0, 255, 204, .03) 76%, transparent 77%, transparent);
+            background-size: 50px 50px;
+            color: #dcdcdc;
             overflow: hidden;
         }
-
-        /* SCROLLBAR */
-        ::-webkit-scrollbar { width: 4px; }
+        .glass {
+            background: var(--panel);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+        .terminal-text {
+            text-shadow: 0 0 5px currentColor;
+        }
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: #000; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--neon-green); }
-
-        /* GLASS PANEL */
-        .glass-panel {
-            background: var(--panel-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--border-color);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        /* SIDEBAR ITEM */
-        .pair-item {
-            transition: all 0.2s;
-            border-left: 2px solid transparent;
-        }
-        .pair-item:hover, .pair-item.active {
-            background: linear-gradient(90deg, rgba(0,255,157,0.1) 0%, transparent 100%);
-            border-left-color: var(--neon-green);
-            color: white;
-        }
-
-        /* GLOW TEXT */
-        .text-glow { text-shadow: 0 0 10px currentColor; }
-        
-        /* MODAL */
-        .modal-overlay {
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(5px);
-        }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00ffcc; }
     </style>
 </head>
-<body class="flex h-screen w-screen text-sm">
+<body class="flex h-screen w-screen text-sm select-none">
 
-    <aside class="w-64 flex flex-col glass-panel z-20 border-r border-gray-800">
-        <div class="p-4 border-b border-gray-800 bg-black/40">
-            <h1 class="text-2xl font-cyber font-bold tracking-widest text-center">
-                <span class="text-white">EIS</span><span class="text-neon">GEMINI</span>
+    <aside class="w-64 flex flex-col glass border-r border-white/10 z-20">
+        <div class="p-5 border-b border-white/10 text-center">
+            <h1 class="text-3xl font-cyber font-bold text-white tracking-widest">
+                EIS<span class="text-neon">GEMINI</span>
             </h1>
-            <div class="flex items-center justify-between mt-2 text-[10px] text-gray-500 font-mono">
-                <span id="api-status"><i class="fa-solid fa-circle text-red-500 mr-1"></i>API: OFFLINE</span>
-                <span>V.5.0-API</span>
+            <div id="status-indicator" class="mt-2 text-[10px] font-mono text-red-500 bg-red-500/10 py-1 rounded border border-red-500/20">
+                ● SYSTEM OFFLINE
             </div>
         </div>
 
         <div class="p-3">
-            <div class="relative">
-                <i class="fa-solid fa-search absolute left-3 top-2.5 text-gray-500 text-xs"></i>
-                <input type="text" id="search-pair" placeholder="SEARCH ASSET..." class="w-full bg-black/50 border border-gray-700 rounded py-2 pl-8 pr-2 text-xs text-white focus:border-neon focus:outline-none uppercase font-display" onkeyup="filterPairs()">
-            </div>
+            <input type="text" id="search-box" placeholder="SEARCH ASSET..." class="w-full bg-black/50 border border-white/20 rounded px-3 py-2 text-white focus:border-neon outline-none font-mono text-xs uppercase">
         </div>
 
-        <div id="pair-list" class="flex-1 overflow-y-auto custom-scrollbar">
+        <div id="asset-list" class="flex-1 overflow-y-auto p-2 space-y-1">
             </div>
 
-        <div class="p-3 border-t border-gray-800 bg-black/20">
-            <button onclick="openSettings()" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded text-xs font-bold transition flex items-center justify-center gap-2">
-                <i class="fa-solid fa-key"></i> SET API KEY
+        <div class="p-3 mt-auto border-t border-white/10">
+            <button onclick="openModal()" class="w-full bg-white/5 hover:bg-white/10 text-gray-300 py-2 rounded border border-white/10 transition flex items-center justify-center gap-2 text-xs font-bold">
+                <i class="fa-solid fa-gear"></i> API SETTINGS
             </button>
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col relative z-10 bg-[#0b0b0b]">
+    <main class="flex-1 flex flex-col relative bg-[#080808]">
         
-        <header class="h-14 glass-panel border-b border-gray-800 flex items-center justify-between px-6">
+        <header class="h-16 glass border-b border-white/10 flex items-center justify-between px-6">
             <div class="flex items-center gap-4">
-                <h2 id="current-pair-title" class="text-xl font-bold font-display text-white tracking-wider flex items-center gap-2">
-                    <img id="current-pair-icon" src="" class="w-6 h-6 hidden">
-                    <span id="pair-name">SELECT PAIR</span>
-                </h2>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-800 text-gray-400 border border-gray-700" id="market-status">MARKET ACTIVE</span>
+                <img id="curr-icon" src="" class="w-8 h-8 hidden">
+                <div>
+                    <h2 id="curr-pair" class="text-2xl font-bold text-white font-cyber tracking-wider">SELECT PAIR</h2>
+                    <div class="text-[10px] text-gray-500 font-mono">WAITING FOR USER INPUT...</div>
+                </div>
             </div>
-
-            <div class="flex items-center gap-4">
-                <button onclick="runAIAnalysis()" class="bg-neon/10 text-neon border border-neon/50 px-6 py-1.5 rounded hover:bg-neon/20 transition-all font-display font-bold text-xs flex items-center gap-2 shadow-[0_0_10px_rgba(0,255,204,0.2)]">
-                    <i class="fa-solid fa-microchip"></i> RUN AI ANALYSIS
-                </button>
-            </div>
+            <button onclick="runAnalysis()" class="bg-neon/10 text-neon border border-neon/50 px-8 py-2 rounded hover:bg-neon hover:text-black transition-all font-bold font-cyber tracking-widest shadow-[0_0_15px_rgba(0,255,204,0.2)] flex items-center gap-2">
+                <i class="fa-solid fa-bolt"></i> ANALYZE
+            </button>
         </header>
 
-        <div class="flex-1 p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-y-auto">
+        <div class="flex-1 p-4 grid grid-cols-12 gap-4 overflow-hidden">
             
-            <div class="lg:col-span-8 flex flex-col gap-4">
-                <div class="glass-panel h-[550px] w-full relative overflow-hidden rounded-lg p-1 bg-black">
-                    <div class="absolute inset-0 z-0" id="tv-chart-container">
-                        <div class="flex items-center justify-center h-full text-gray-600 font-mono text-xs">
-                            WAITING FOR PAIR SELECTION...
-                        </div>
-                    </div>
+            <div class="col-span-8 glass rounded-lg overflow-hidden relative">
+                <div id="tv-chart" class="w-full h-full bg-black flex items-center justify-center text-gray-700 font-mono">
+                    [ TRADINGVIEW CHART AREA ]
                 </div>
             </div>
 
-            <div class="lg:col-span-4 flex flex-col gap-4 relative">
+            <div class="col-span-4 flex flex-col gap-4 h-full overflow-hidden">
                 
-                <div id="ai-processing-overlay" class="hidden absolute inset-0 z-50 glass-panel flex-col items-center justify-center bg-black/95 backdrop-blur-xl">
-                    <div class="relative w-24 h-24 mb-4">
-                        <div class="absolute inset-0 border-4 border-t-neon border-r-transparent border-b-purple-500 border-l-transparent rounded-full animate-spin"></div>
-                        <div class="absolute inset-2 border-2 border-t-transparent border-r-white border-b-transparent border-l-white rounded-full animate-spin-slow opacity-50"></div>
-                        <i class="fa-solid fa-brain absolute inset-0 flex items-center justify-center text-2xl text-neon/80"></i>
-                    </div>
-                    <h3 class="text-xl font-display font-bold text-white tracking-widest animate-pulse">GEMINI PROCESSING</h3>
-                    <div class="font-mono text-[10px] text-green-400 mt-2 h-6 overflow-hidden w-48 text-center" id="loading-text">
-                        Initializing...
-                    </div>
-                </div>
-
-                <div class="glass-panel p-5 relative overflow-hidden group">
-                    <div class="absolute top-0 right-0 p-3 opacity-10">
-                        <i class="fa-solid fa-robot text-6xl text-white"></i>
-                    </div>
+                <div class="glass rounded-lg p-5 relative overflow-hidden min-h-[200px]">
+                    <div class="absolute top-2 right-3 text-[10px] font-mono text-gray-500">AI CONFIDENCE</div>
                     
-                    <div class="relative z-10">
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="text-[10px] font-bold text-gray-500 tracking-widest border border-gray-700 px-2 py-0.5 rounded">GEMINI DECISION</span>
-                            <span id="data-timestamp" class="text-[10px] text-gray-600 font-mono">--:--</span>
+                    <div class="flex items-center justify-between mt-4">
+                        <div>
+                            <div class="text-[10px] text-gray-400 mb-1">RECOMMENDATION</div>
+                            <div id="signal-display" class="text-5xl font-black font-cyber text-gray-600">WAIT</div>
                         </div>
-                        
-                        <div class="flex items-center gap-4 my-3">
-                            <div id="signal-text" class="text-4xl font-black font-display text-gray-500">WAIT</div>
-                            <div class="flex flex-col">
-                                <span class="text-[10px] text-gray-400">CONFIDENCE</span>
-                                <span id="confidence-val" class="text-2xl font-bold text-gray-500 font-cyber">0%</span>
-                            </div>
+                        <div class="text-right">
+                            <div id="conf-display" class="text-4xl font-bold font-mono text-gray-600">0%</div>
                         </div>
+                    </div>
 
-                        <div class="w-full bg-gray-800 h-2 rounded-full overflow-hidden mb-4">
-                            <div id="signal-meter" class="h-full bg-gray-600 w-0 transition-all duration-1000"></div>
-                        </div>
+                    <div class="w-full bg-gray-800 h-1 mt-4 rounded overflow-hidden">
+                        <div id="conf-bar" class="h-full bg-gray-600 w-0 transition-all duration-1000"></div>
+                    </div>
 
-                        <div class="grid grid-cols-2 gap-2">
-                            <div class="bg-red-500/10 border border-red-500/30 p-2 rounded relative overflow-hidden">
-                                <div class="text-[9px] text-red-400 font-bold mb-1">STOP LOSS</div>
-                                <div id="price-sl" class="text-sm font-mono font-bold text-white relative z-10">-</div>
-                            </div>
-                            <div class="bg-green-500/10 border border-green-500/30 p-2 rounded relative overflow-hidden">
-                                <div class="text-[9px] text-green-400 font-bold mb-1">TAKE PROFIT</div>
-                                <div id="price-tp" class="text-sm font-mono font-bold text-white relative z-10">-</div>
-                            </div>
+                    <div class="grid grid-cols-3 gap-2 mt-6">
+                        <div class="text-center p-2 bg-white/5 rounded border border-white/5">
+                            <div class="text-[9px] text-blue-400">ENTRY</div>
+                            <div id="p-entry" class="text-xs font-mono font-bold text-white mt-1">-</div>
+                        </div>
+                        <div class="text-center p-2 bg-red-500/10 rounded border border-red-500/20">
+                            <div class="text-[9px] text-red-400">STOP LOSS</div>
+                            <div id="p-sl" class="text-xs font-mono font-bold text-white mt-1">-</div>
+                        </div>
+                        <div class="text-center p-2 bg-green-500/10 rounded border border-green-500/20">
+                            <div class="text-[9px] text-green-400">TAKE PROFIT</div>
+                            <div id="p-tp" class="text-xs font-mono font-bold text-white mt-1">-</div>
                         </div>
                     </div>
                 </div>
 
-                <div class="glass-panel p-4 space-y-3">
-                    <div class="flex justify-between items-center bg-black/40 p-3 rounded border border-blue-500/20">
-                        <span class="text-[10px] text-blue-400 font-bold">ENTRY ZONE</span>
-                        <span id="price-entry" class="text-lg font-mono font-bold text-white">-</span>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3 mt-2">
-                        <div class="text-center p-2 bg-black/20 rounded border border-gray-800">
-                            <div class="text-[9px] text-gray-500">TIMEFRAME</div>
-                            <div class="text-xs font-bold text-white mt-1">H4 / D1</div>
-                        </div>
-                        <div class="text-center p-2 bg-black/20 rounded border border-gray-800">
-                            <div class="text-[9px] text-gray-500">RISK LEVEL</div>
-                            <div id="risk-val" class="text-xs font-bold text-white mt-1">-</div>
+                <div class="glass rounded-lg flex-1 flex flex-col overflow-hidden">
+                    <div class="bg-[#111] px-3 py-2 border-b border-white/10 flex justify-between items-center">
+                        <span class="text-[10px] font-mono text-neon"><i class="fa-solid fa-terminal mr-2"></i>GEMINI CONSOLE</span>
+                        <div class="flex gap-1.5">
+                            <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                            <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
                         </div>
                     </div>
-                </div>
-
-                <div class="glass-panel flex-1 flex flex-col p-0 overflow-hidden min-h-[150px]">
-                    <div class="bg-gray-900/80 px-3 py-1.5 border-b border-gray-700 flex justify-between items-center">
-                        <span class="text-[10px] font-mono text-gray-400">gemini-pro@analysis:~# log</span>
-                    </div>
-                    <div class="p-3 font-mono text-[11px] text-green-400 overflow-y-auto custom-scrollbar leading-relaxed h-full" id="terminal-reasoning">
-                        > System Initialized.<br>
-                        > Waiting for API Key configuration...
+                    <div id="terminal" class="flex-1 p-3 font-mono text-xs text-green-400 overflow-y-auto space-y-2 select-text">
+                        <div class="opacity-50">> System Initialized...</div>
+                        <div class="opacity-50">> Waiting for API Key...</div>
                     </div>
                 </div>
 
             </div>
         </div>
+
+        <div id="loader" class="hidden absolute inset-0 bg-black/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
+            <div class="w-20 h-20 border-4 border-neon border-t-transparent rounded-full animate-spin"></div>
+            <div class="mt-4 text-neon font-cyber tracking-widest animate-pulse">PROCESSING DATA</div>
+            <div id="loader-text" class="mt-2 text-xs font-mono text-gray-500">Connecting to Google Cloud...</div>
+        </div>
+
     </main>
 
-    <div id="settings-modal" class="hidden fixed inset-0 z-[60] modal-overlay flex items-center justify-center px-4">
-        <div class="bg-[#111] border border-gray-700 rounded-lg p-6 w-full max-w-md shadow-2xl relative">
-            <button onclick="closeSettings()" class="absolute top-4 right-4 text-gray-500 hover:text-white"><i class="fa-solid fa-times"></i></button>
+    <div id="modal" class="hidden fixed inset-0 z-[100] bg-black/80 backdrop-blur flex items-center justify-center">
+        <div class="glass w-96 p-6 rounded-lg border border-neon/30 shadow-[0_0_30px_rgba(0,255,204,0.1)]">
+            <h3 class="text-xl font-cyber font-bold text-white mb-4">SYSTEM CONFIG</h3>
+            <label class="text-xs text-gray-400 block mb-2">GOOGLE GEMINI API KEY</label>
+            <input type="password" id="api-input" class="w-full bg-black border border-gray-700 rounded p-2 text-white font-mono text-xs focus:border-neon outline-none mb-4" placeholder="AIzaSy...">
             
-            <h2 class="text-xl font-display font-bold text-white mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-key text-neon"></i> API CONFIGURATION
-            </h2>
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">GOOGLE GEMINI API KEY</label>
-                    <input type="password" id="api-key-input" class="w-full bg-black border border-gray-700 rounded p-2 text-white text-xs focus:border-neon outline-none font-mono" placeholder="Enter your key here (starts with AIza...)">
-                    <p class="text-[10px] text-gray-600 mt-1">Key is stored locally in your browser. Not sent to any server.</p>
-                </div>
-                
-                <button onclick="saveApiKey()" class="w-full bg-neon/80 hover:bg-neon text-black font-bold py-2 rounded transition font-display">
-                    SAVE & CONNECT
-                </button>
-                
-                <div class="text-[10px] text-gray-500 text-center">
-                    <a href="https://aistudio.google.com/app/apikey" target="_blank" class="underline hover:text-white">Get Gemini API Key Here</a>
-                </div>
+            <div class="flex gap-2">
+                <button onclick="saveKey()" class="flex-1 bg-neon text-black font-bold py-2 rounded hover:bg-white transition font-cyber">CONNECT</button>
+                <button onclick="closeModal()" class="flex-1 bg-gray-800 text-white font-bold py-2 rounded hover:bg-gray-700 transition font-cyber">CANCEL</button>
             </div>
+            <p class="mt-4 text-[10px] text-center text-gray-600">
+                Don't have a key? <a href="[https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)" target="_blank" class="text-neon hover:underline">Get it here</a>
+            </p>
         </div>
     </div>
 
     <script>
-        <script>
-        // --- DATA & STATE ---
-        const assets = [
-            { symbol: "XAUUSD", name: "GOLD", type: "COMMODITY", icon: "https://cdn-icons-png.flaticon.com/512/11520/11520626.png" },
-            { symbol: "BTCUSD", name: "BITCOIN", type: "CRYPTO", icon: "https://cryptologos.cc/logos/bitcoin-btc-logo.png?v=025" },
-            { symbol: "ETHUSD", name: "ETHEREUM", type: "CRYPTO", icon: "https://cryptologos.cc/logos/ethereum-eth-logo.png?v=025" },
-            { symbol: "EURUSD", name: "EURO/USD", type: "FOREX", icon: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Flag_of_Europe.svg/1200px-Flag_of_Europe.svg.png" },
-            { symbol: "GBPUSD", name: "GBP/USD", type: "FOREX", icon: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Flag_of_the_United_Kingdom_%281-2%29.svg/1200px-Flag_of_the_United_Kingdom_%281-2%29.svg.png" },
-            { symbol: "USDJPY", name: "USD/JPY", type: "FOREX", icon: "https://upload.wikimedia.org/wikipedia/en/thumb/9/9e/Flag_of_Japan.svg/1200px-Flag_of_Japan.svg.png" },
-            { symbol: "SOLUSD", name: "SOLANA", type: "CRYPTO", icon: "https://cryptologos.cc/logos/solana-sol-logo.png?v=025" }
+        // --- DATA ---
+        const pairs = [
+            { id: "XAUUSD", name: "Gold", type: "CMD", icon: "[https://cdn-icons-png.flaticon.com/512/11520/11520626.png](https://cdn-icons-png.flaticon.com/512/11520/11520626.png)" },
+            { id: "BTCUSD", name: "Bitcoin", type: "CRY", icon: "[https://cryptologos.cc/logos/bitcoin-btc-logo.png?v=025](https://cryptologos.cc/logos/bitcoin-btc-logo.png?v=025)" },
+            { id: "ETHUSD", name: "Ethereum", type: "CRY", icon: "[https://cryptologos.cc/logos/ethereum-eth-logo.png?v=025](https://cryptologos.cc/logos/ethereum-eth-logo.png?v=025)" },
+            { id: "EURUSD", name: "Euro/USD", type: "FX", icon: "[https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Flag_of_Europe.svg/1200px-Flag_of_Europe.svg.png](https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Flag_of_Europe.svg/1200px-Flag_of_Europe.svg.png)" },
+            { id: "GBPUSD", name: "GBP/USD", type: "FX", icon: "[https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Flag_of_the_United_Kingdom_%281-2%29.svg/1200px-Flag_of_the_United_Kingdom_%281-2%29.svg.png](https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Flag_of_the_United_Kingdom_%281-2%29.svg/1200px-Flag_of_the_United_Kingdom_%281-2%29.svg.png)" },
+            { id: "USDJPY", name: "USD/JPY", type: "FX", icon: "[https://upload.wikimedia.org/wikipedia/en/thumb/9/9e/Flag_of_Japan.svg/1200px-Flag_of_Japan.svg.png](https://upload.wikimedia.org/wikipedia/en/thumb/9/9e/Flag_of_Japan.svg/1200px-Flag_of_Japan.svg.png)" },
+            { id: "SOLUSD", name: "Solana", type: "CRY", icon: "[https://cryptologos.cc/logos/solana-sol-logo.png?v=025](https://cryptologos.cc/logos/solana-sol-logo.png?v=025)" }
         ];
 
-        let currentSymbol = null;
-        let GEMINI_API_KEY = localStorage.getItem('GEMINI_API_KEY') || "";
+        let currentPair = null;
+        let apiKey = localStorage.getItem("EIS_API_KEY") || "";
 
         // --- INIT ---
-        window.onload = function() {
-            renderPairList();
-            checkApiStatus();
-            if(assets.length > 0) selectPair(assets[0]);
+        window.onload = () => {
+            renderList();
+            checkStatus();
+            if (pairs.length > 0) selectPair(pairs[0]);
         };
 
-        // --- SETTINGS FUNCTIONS ---
-        function openSettings() {
-            document.getElementById('settings-modal').classList.remove('hidden');
-            document.getElementById('api-key-input').value = GEMINI_API_KEY;
-        }
-
-        function closeSettings() {
-            document.getElementById('settings-modal').classList.add('hidden');
-        }
-
-        function saveApiKey() {
-            const input = document.getElementById('api-key-input').value.trim();
-            if(input) {
-                GEMINI_API_KEY = input;
-                localStorage.setItem('GEMINI_API_KEY', input);
-                checkApiStatus();
-                closeSettings();
-                logToTerminal("> API Key Updated. Ready to scan.");
-            } else {
-                alert("Please enter a valid API Key");
-            }
-        }
-
-        function checkApiStatus() {
-            const statusEl = document.getElementById('api-status');
-            if(GEMINI_API_KEY && GEMINI_API_KEY.length > 10) {
-                statusEl.innerHTML = '<i class="fa-solid fa-circle text-green-500 mr-1"></i>API: ONLINE';
-            } else {
-                statusEl.innerHTML = '<i class="fa-solid fa-circle text-red-500 mr-1"></i>API: MISSING';
-                logToTerminal("> WARNING: API Key Missing. Please configure in settings.");
-            }
-        }
-
-        // --- PAIR & UI FUNCTIONS ---
-        function renderPairList() {
-            const list = document.getElementById('pair-list');
-            list.innerHTML = '';
-            assets.forEach(asset => {
-                const item = document.createElement('div');
-                item.className = `pair-item p-3 cursor-pointer flex items-center justify-between ${currentSymbol && asset.symbol === currentSymbol.symbol ? 'active' : ''}`;
-                item.onclick = () => selectPair(asset);
-                item.innerHTML = `
+        // --- CORE FUNCTIONS ---
+        function renderList() {
+            const list = document.getElementById("asset-list");
+            list.innerHTML = "";
+            pairs.forEach(p => {
+                const div = document.createElement("div");
+                div.className = `flex items-center justify-between p-3 rounded cursor-pointer hover:bg-white/5 transition border-l-2 border-transparent hover:border-neon ${currentPair && currentPair.id === p.id ? 'bg-white/10 border-neon' : ''}`;
+                div.onclick = () => selectPair(p);
+                div.innerHTML = `
                     <div class="flex items-center gap-3">
-                        <img src="${asset.icon}" class="w-6 h-6 rounded-full object-cover bg-white">
-                        <div>
-                            <div class="font-bold text-xs font-display tracking-wide text-white">${asset.symbol}</div>
-                            <div class="text-[9px] text-gray-500">${asset.name}</div>
-                        </div>
+                        <img src="${p.icon}" class="w-5 h-5 rounded-full bg-white object-cover">
+                        <span class="font-bold text-gray-200 tracking-wide">${p.id}</span>
                     </div>
-                    <div class="text-[9px] font-bold text-gray-600">${asset.type}</div>
+                    <span class="text-[9px] text-gray-500 font-bold">${p.type}</span>
                 `;
-                list.appendChild(item);
+                list.appendChild(div);
             });
         }
 
-        function selectPair(asset) {
-            currentSymbol = asset;
-            document.getElementById('pair-name').innerText = asset.symbol;
-            document.getElementById('current-pair-icon').src = asset.icon;
-            document.getElementById('current-pair-icon').classList.remove('hidden');
-            renderPairList(); 
-            loadChart(asset.symbol);
-            resetDashboard();
+        function selectPair(p) {
+            currentPair = p;
+            document.getElementById("curr-pair").innerText = p.id;
+            document.getElementById("curr-icon").src = p.icon;
+            document.getElementById("curr-icon").classList.remove("hidden");
+            renderList();
+            loadChart(p.id);
+            resetUI();
         }
 
         function loadChart(symbol) {
-            const tvSymbol = symbol.includes("USD") ? symbol : `BINANCE:${symbol}`; 
-            const container = document.getElementById('tv-chart-container');
-            container.innerHTML = ''; 
-            const script = document.createElement('script');
-            script.src = 'https://s3.tradingview.com/tv.js';
-            script.onload = () => {
+            const container = document.getElementById("tv-chart");
+            container.innerHTML = "";
+            const s = document.createElement("script");
+            s.src = "[https://s3.tradingview.com/tv.js](https://s3.tradingview.com/tv.js)";
+            s.onload = () => {
                 new TradingView.widget({
-                    "autosize": true, "symbol": symbol, "interval": "60", "timezone": "Etc/UTC", "theme": "dark",
-                    "style": "1", "locale": "en", "toolbar_bg": "#f1f3f6", "enable_publishing": false,
-                    "hide_top_toolbar": false, "container_id": "tv-chart-container", "studies": ["RSI@tv-basicstudies"]
+                    "autosize": true, "symbol": symbol.includes("USD") ? symbol : "BINANCE:"+symbol,
+                    "interval": "60", "timezone": "Etc/UTC", "theme": "dark", "style": "1",
+                    "locale": "en", "toolbar_bg": "#f1f3f6", "enable_publishing": false,
+                    "hide_top_toolbar": false, "container_id": "tv-chart", "studies": ["RSI@tv-basicstudies"]
                 });
             };
-            container.appendChild(script);
+            container.appendChild(s);
         }
 
-        function resetDashboard() {
-            document.getElementById('signal-text').innerText = "READY";
-            document.getElementById('signal-text').className = "text-4xl font-black font-display text-gray-500";
-            document.getElementById('confidence-val').innerText = "0%";
-            document.getElementById('signal-meter').style.width = "0%";
-            document.getElementById('price-entry').innerText = "-";
-            document.getElementById('price-sl').innerText = "-";
-            document.getElementById('price-tp').innerText = "-";
-            document.getElementById('terminal-reasoning').innerText = "> Ready to analyze " + currentSymbol.symbol;
+        function log(msg, type="info") {
+            const term = document.getElementById("terminal");
+            const time = new Date().toLocaleTimeString('en-US', {hour12:false});
+            const color = type === "error" ? "text-red-500" : (type === "success" ? "text-neon" : "text-green-400");
+            term.innerHTML += `<div class="${color} mb-1">> [${time}] ${msg}</div>`;
+            term.scrollTop = term.scrollHeight;
         }
 
-        // --- AI LOGIC (IMPROVED ERROR HANDLING) ---
-        async function runAIAnalysis() {
-            if(!currentSymbol) return;
-            if(!GEMINI_API_KEY) { openSettings(); return; }
-
-            const overlay = document.getElementById('ai-processing-overlay');
-            overlay.classList.remove('hidden');
-            overlay.classList.add('flex');
+        // --- API LOGIC (THE FIX) ---
+        async function runAnalysis() {
+            if (!apiKey) { openModal(); return; }
             
-            const loadingText = document.getElementById('loading-text');
-            loadingText.innerText = "Connecting to Satellite...";
+            // UI Loading
+            document.getElementById("loader").classList.remove("hidden");
+            document.getElementById("loader").classList.add("flex");
+            log(`Starting analysis for ${currentPair.id}...`);
 
             try {
+                // 1. Prepare Prompt
                 const prompt = `
-                    Act as an elite Forex AI Analyst. Analyze ${currentSymbol.symbol}.
-                    You must output ONLY valid JSON. Do not use Markdown blocks.
-                    Format: {"signal": "BUY"|"SELL"|"NEUTRAL", "confidence": 0-100, "entry": "price", "sl": "price", "tp": "price", "risk": "LOW"|"HIGH", "reasoning": "short text"}
-                    Mock realistic prices for ${currentSymbol.symbol} now.
+                    You are a professional Forex/Crypto trader. Analyze ${currentPair.id}.
+                    Current simulated market conditions: Volatility is moderate. Trend is forming.
+                    
+                    TASK: Return a JSON object ONLY. No Markdown. No Explanations.
+                    FORMAT:
+                    {
+                        "signal": "BUY" or "SELL" or "NEUTRAL",
+                        "confidence": number (0-100),
+                        "entry": "price range",
+                        "sl": "price",
+                        "tp": "price",
+                        "reason": "Short bullet point analysis (max 15 words)"
+                    }
+                    IMPORTANT: Mock realistic price values for ${currentPair.id} right now.
                 `;
 
-                // Add Safety Settings to prevent blocking
-                const requestBody = {
-                    contents: [{ parts: [{ text: prompt }] }],
-                    safetySettings: [
-                        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-                        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-                        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-                    ]
-                };
-
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                // 2. Call API (With Safety Settings Bypass)
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requestBody)
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        safetySettings: [
+                            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                        ]
+                    })
                 });
 
                 const data = await response.json();
+
+                // 3. Error Handling
+                if (data.error) throw new Error(data.error.message);
+                if (!data.candidates || !data.candidates[0].content) throw new Error("AI blocked the response.");
+
+                // 4. CLEAN JSON (The Fix)
+                let rawText = data.candidates[0].content.parts[0].text;
+                let jsonStr = rawText.substring(
+                    rawText.indexOf('{'),
+                    rawText.lastIndexOf('}') + 1
+                );
                 
-                // Hide Loader
-                overlay.classList.add('hidden');
-                overlay.classList.remove('flex');
+                const result = JSON.parse(jsonStr); // Try parsing cleaned JSON
 
-                // *** DEBUGGING POINT ***
-                // ถ้ามี error จาก Google โดยตรง (เช่น Key ผิด)
-                if (data.error) {
-                    throw new Error(`Google API Error: ${data.error.message}`);
-                }
+                // 5. Success
+                updateDashboard(result);
+                log("Analysis Success.", "success");
 
-                // ตรวจสอบว่ามี candidates หรือไม่
-                if(!data.candidates || !data.candidates[0].content) {
-                    console.log("Full Response:", data); // ดูใน Console F12
-                    throw new Error("No analysis generated (Safety Block or Empty).");
-                }
-
-                const rawText = data.candidates[0].content.parts[0].text;
-                
-                // *** SMART CLEANER ***
-                // หาปีกกาเปิดตัวแรก และปีกกาปิดตัวสุดท้าย เพื่อตัดขยะออก
-                const jsonStartIndex = rawText.indexOf('{');
-                const jsonEndIndex = rawText.lastIndexOf('}');
-                
-                if (jsonStartIndex === -1 || jsonEndIndex === -1) {
-                    throw new Error("AI did not return JSON format.");
-                }
-
-                const cleanJson = rawText.substring(jsonStartIndex, jsonEndIndex + 1);
-                const result = JSON.parse(cleanJson);
-                
-                updateUI(result);
-
-            } catch (error) {
-                overlay.classList.add('hidden');
-                overlay.classList.remove('flex');
-                alert("SYSTEM ERROR: " + error.message);
-                console.error("Full Error Detail:", error);
-                logToTerminal(`> CRITICAL ERROR: ${error.message}`);
+            } catch (err) {
+                log(`ERROR: ${err.message}`, "error");
+                alert("API Error: " + err.message);
+            } finally {
+                document.getElementById("loader").classList.add("hidden");
+                document.getElementById("loader").classList.remove("flex");
             }
         }
 
-        function updateUI(data) {
-            const signalText = document.getElementById('signal-text');
-            const meter = document.getElementById('signal-meter');
-            const confVal = document.getElementById('confidence-val');
+        function updateDashboard(data) {
+            const sigEl = document.getElementById("signal-display");
+            const confEl = document.getElementById("conf-display");
+            const barEl = document.getElementById("conf-bar");
+
+            // Styles
+            let color = data.signal === "BUY" ? "text-neon" : (data.signal === "SELL" ? "text-danger" : "text-gray-400");
+            let bg = data.signal === "BUY" ? "bg-neon" : (data.signal === "SELL" ? "bg-danger" : "bg-gray-600");
+
+            sigEl.innerText = data.signal;
+            sigEl.className = `text-5xl font-black font-cyber ${color} drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]`;
             
-            let colorClass = "text-gray-400";
-            let bgClass = "bg-gray-600";
-            let glow = "none";
+            confEl.innerText = data.confidence + "%";
+            confEl.className = `text-4xl font-bold font-mono ${color}`;
 
-            if(data.signal === "BUY") {
-                colorClass = "text-neon";
-                bgClass = "bg-neon";
-                glow = "0 0 20px #00ff9d";
-            } else if (data.signal === "SELL") {
-                colorClass = "text-red-500";
-                bgClass = "bg-red-500";
-                glow = "0 0 20px #ff0033";
-            }
+            barEl.className = `h-full transition-all duration-1000 ${bg}`;
+            barEl.style.width = data.confidence + "%";
 
-            signalText.innerText = data.signal;
-            signalText.className = `text-4xl font-black font-display drop-shadow-lg ${colorClass}`;
-            signalText.style.textShadow = glow;
+            document.getElementById("p-entry").innerText = data.entry;
+            document.getElementById("p-sl").innerText = data.sl;
+            document.getElementById("p-tp").innerText = data.tp;
 
-            confVal.innerText = data.confidence + "%";
-            confVal.className = `text-2xl font-bold font-cyber ${colorClass}`;
-            meter.className = `h-full transition-all duration-1000 ${bgClass}`;
-            meter.style.width = data.confidence + "%";
-
-            document.getElementById('price-entry').innerText = data.entry;
-            document.getElementById('price-sl').innerText = data.sl;
-            document.getElementById('price-tp').innerText = data.tp;
-            document.getElementById('risk-val').innerText = data.risk;
-
-            const terminal = document.getElementById('terminal-reasoning');
-            terminal.innerHTML = "";
-            const timestamp = new Date().toLocaleTimeString();
-            let fullText = `> [${timestamp}] Analysis Success.\n> SIGNAL: ${data.signal}\n> REASONING:\n${data.reasoning}`;
-            
-            let i = 0;
-            function typeWriter() {
-                if (i < fullText.length) {
-                    const char = fullText.charAt(i);
-                    terminal.innerHTML += char === '\n' ? '<br>' : char;
-                    i++;
-                    terminal.scrollTop = terminal.scrollHeight;
-                    setTimeout(typeWriter, 15);
-                }
-            }
-            typeWriter();
-            
-            document.getElementById('data-timestamp').innerText = "UPDATED: " + timestamp;
+            log(`Reason: ${data.reason}`);
         }
 
-        function logToTerminal(msg) {
-            const term = document.getElementById('terminal-reasoning');
-            term.innerHTML += `<br>${msg}`;
-            term.scrollTop = term.scrollHeight;
+        // --- SETTINGS ---
+        function openModal() { document.getElementById("modal").classList.remove("hidden"); document.getElementById("api-input").value = apiKey; }
+        function closeModal() { document.getElementById("modal").classList.add("hidden"); }
+        function saveKey() {
+            const k = document.getElementById("api-input").value.trim();
+            if (k) {
+                apiKey = k;
+                localStorage.setItem("EIS_API_KEY", k);
+                checkStatus();
+                closeModal();
+                log("API Key Saved.");
+            }
         }
-    </script>
-
+        function checkStatus() {
+            const ind = document.getElementById("status-indicator");
+            if (apiKey) {
+                ind.innerHTML = `● SYSTEM ONLINE`;
+                ind.className = "mt-2 text-[10px] font-mono text-neon bg-neon/10 py-1 rounded border border-neon/20";
+            } else {
+                ind.innerHTML = `● API KEY MISSING`;
+                ind.className = "mt-2 text-[10px] font-mono text-red-500 bg-red-500/10 py-1 rounded border border-red-500/20";
+            }
+        }
+        function resetUI() {
+            document.getElementById("signal-display").innerText = "WAIT";
+            document.getElementById("signal-display").className = "text-5xl font-black font-cyber text-gray-600";
+            document.getElementById("conf-bar").style.width = "0%";
+            document.getElementById("conf-display").innerText = "0%";
+        }
     </script>
 </body>
 </html>
