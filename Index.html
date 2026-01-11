@@ -259,6 +259,7 @@
     </div>
 
     <script>
+        <script>
         // --- DATA & STATE ---
         const assets = [
             { symbol: "XAUUSD", name: "GOLD", type: "COMMODITY", icon: "https://cdn-icons-png.flaticon.com/512/11520/11520626.png" },
@@ -277,8 +278,6 @@
         window.onload = function() {
             renderPairList();
             checkApiStatus();
-            
-            // Auto select first pair if available
             if(assets.length > 0) selectPair(assets[0]);
         };
 
@@ -342,14 +341,8 @@
             document.getElementById('pair-name').innerText = asset.symbol;
             document.getElementById('current-pair-icon').src = asset.icon;
             document.getElementById('current-pair-icon').classList.remove('hidden');
-            
-            // Re-render list to update active state
             renderPairList(); 
-            
-            // Load TV Chart
             loadChart(asset.symbol);
-            
-            // Reset Dashboard
             resetDashboard();
         }
 
@@ -357,23 +350,13 @@
             const tvSymbol = symbol.includes("USD") ? symbol : `BINANCE:${symbol}`; 
             const container = document.getElementById('tv-chart-container');
             container.innerHTML = ''; 
-            
             const script = document.createElement('script');
             script.src = 'https://s3.tradingview.com/tv.js';
             script.onload = () => {
                 new TradingView.widget({
-                    "autosize": true,
-                    "symbol": symbol,
-                    "interval": "60",
-                    "timezone": "Etc/UTC",
-                    "theme": "dark",
-                    "style": "1",
-                    "locale": "en",
-                    "toolbar_bg": "#f1f3f6",
-                    "enable_publishing": false,
-                    "hide_top_toolbar": false,
-                    "container_id": "tv-chart-container",
-                    "studies": ["RSI@tv-basicstudies"]
+                    "autosize": true, "symbol": symbol, "interval": "60", "timezone": "Etc/UTC", "theme": "dark",
+                    "style": "1", "locale": "en", "toolbar_bg": "#f1f3f6", "enable_publishing": false,
+                    "hide_top_toolbar": false, "container_id": "tv-chart-container", "studies": ["RSI@tv-basicstudies"]
                 });
             };
             container.appendChild(script);
@@ -390,86 +373,83 @@
             document.getElementById('terminal-reasoning').innerText = "> Ready to analyze " + currentSymbol.symbol;
         }
 
-        // --- AI LOGIC (GEMINI API) ---
+        // --- AI LOGIC (IMPROVED ERROR HANDLING) ---
         async function runAIAnalysis() {
             if(!currentSymbol) return;
-            if(!GEMINI_API_KEY) {
-                openSettings();
-                return;
-            }
+            if(!GEMINI_API_KEY) { openSettings(); return; }
 
-            // Show Overlay
             const overlay = document.getElementById('ai-processing-overlay');
             overlay.classList.remove('hidden');
             overlay.classList.add('flex');
-
-            // Simulate Steps
-            const loadingText = document.getElementById('loading-text');
-            const steps = ["Accessing Global Data...", "Analyzing Market Structure...", "Calculating Volatility...", "Generating Prediction..."];
             
-            // Animation loop
-            let stepIdx = 0;
-            const interval = setInterval(() => {
-                if(stepIdx < steps.length) {
-                    loadingText.innerText = steps[stepIdx];
-                    stepIdx++;
-                }
-            }, 800);
+            const loadingText = document.getElementById('loading-text');
+            loadingText.innerText = "Connecting to Satellite...";
 
             try {
-                // *** CALL GEMINI API ***
                 const prompt = `
-                    You are an expert Forex and Crypto trader AI. 
-                    Analyze the trading pair: ${currentSymbol.symbol}. 
-                    Based on general market structure knowledge and price action patterns (assume current date/time is relevant), provide a trading signal.
-                    
-                    CRITICAL: Return ONLY a JSON object. No Markdown. No extra text.
-                    Format:
-                    {
-                        "signal": "BUY" or "SELL" or "NEUTRAL",
-                        "confidence": number (0-100),
-                        "entry": "string price range",
-                        "sl": "string price",
-                        "tp": "string price",
-                        "risk": "LOW" or "MEDIUM" or "HIGH",
-                        "reasoning": "Short summarized bullet points of technical reasoning (max 30 words)."
-                    }
-                    Mock the prices to be realistic for ${currentSymbol.symbol}.
+                    Act as an elite Forex AI Analyst. Analyze ${currentSymbol.symbol}.
+                    You must output ONLY valid JSON. Do not use Markdown blocks.
+                    Format: {"signal": "BUY"|"SELL"|"NEUTRAL", "confidence": 0-100, "entry": "price", "sl": "price", "tp": "price", "risk": "LOW"|"HIGH", "reasoning": "short text"}
+                    Mock realistic prices for ${currentSymbol.symbol} now.
                 `;
+
+                // Add Safety Settings to prevent blocking
+                const requestBody = {
+                    contents: [{ parts: [{ text: prompt }] }],
+                    safetySettings: [
+                        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                    ]
+                };
 
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }]
-                    })
+                    body: JSON.stringify(requestBody)
                 });
 
                 const data = await response.json();
                 
-                clearInterval(interval);
+                // Hide Loader
                 overlay.classList.add('hidden');
                 overlay.classList.remove('flex');
 
-                // Parse Result
-                if(data.candidates && data.candidates[0].content) {
-                    const text = data.candidates[0].content.parts[0].text;
-                    // Clean markdown code blocks if present
-                    const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
-                    const result = JSON.parse(cleanJson);
-                    
-                    updateUI(result);
-                } else {
-                    throw new Error("Invalid API Response");
+                // *** DEBUGGING POINT ***
+                // ถ้ามี error จาก Google โดยตรง (เช่น Key ผิด)
+                if (data.error) {
+                    throw new Error(`Google API Error: ${data.error.message}`);
                 }
 
+                // ตรวจสอบว่ามี candidates หรือไม่
+                if(!data.candidates || !data.candidates[0].content) {
+                    console.log("Full Response:", data); // ดูใน Console F12
+                    throw new Error("No analysis generated (Safety Block or Empty).");
+                }
+
+                const rawText = data.candidates[0].content.parts[0].text;
+                
+                // *** SMART CLEANER ***
+                // หาปีกกาเปิดตัวแรก และปีกกาปิดตัวสุดท้าย เพื่อตัดขยะออก
+                const jsonStartIndex = rawText.indexOf('{');
+                const jsonEndIndex = rawText.lastIndexOf('}');
+                
+                if (jsonStartIndex === -1 || jsonEndIndex === -1) {
+                    throw new Error("AI did not return JSON format.");
+                }
+
+                const cleanJson = rawText.substring(jsonStartIndex, jsonEndIndex + 1);
+                const result = JSON.parse(cleanJson);
+                
+                updateUI(result);
+
             } catch (error) {
-                clearInterval(interval);
                 overlay.classList.add('hidden');
                 overlay.classList.remove('flex');
-                alert("AI Error: " + error.message);
-                console.error(error);
-                logToTerminal("> ERROR: Analysis Failed. Check API Key or Network.");
+                alert("SYSTEM ERROR: " + error.message);
+                console.error("Full Error Detail:", error);
+                logToTerminal(`> CRITICAL ERROR: ${error.message}`);
             }
         }
 
@@ -478,7 +458,6 @@
             const meter = document.getElementById('signal-meter');
             const confVal = document.getElementById('confidence-val');
             
-            // Colors
             let colorClass = "text-gray-400";
             let bgClass = "bg-gray-600";
             let glow = "none";
@@ -493,29 +472,24 @@
                 glow = "0 0 20px #ff0033";
             }
 
-            // Update Signal
             signalText.innerText = data.signal;
             signalText.className = `text-4xl font-black font-display drop-shadow-lg ${colorClass}`;
             signalText.style.textShadow = glow;
 
-            // Confidence
             confVal.innerText = data.confidence + "%";
             confVal.className = `text-2xl font-bold font-cyber ${colorClass}`;
             meter.className = `h-full transition-all duration-1000 ${bgClass}`;
             meter.style.width = data.confidence + "%";
 
-            // Prices
             document.getElementById('price-entry').innerText = data.entry;
             document.getElementById('price-sl').innerText = data.sl;
             document.getElementById('price-tp').innerText = data.tp;
             document.getElementById('risk-val').innerText = data.risk;
 
-            // Reasoning with Typewriter effect
             const terminal = document.getElementById('terminal-reasoning');
-            terminal.innerHTML = ""; // clear
-            
+            terminal.innerHTML = "";
             const timestamp = new Date().toLocaleTimeString();
-            let fullText = `> [${timestamp}] Analysis Complete.\n> PAIR: ${currentSymbol.symbol}\n> LOGIC:\n${data.reasoning}`;
+            let fullText = `> [${timestamp}] Analysis Success.\n> SIGNAL: ${data.signal}\n> REASONING:\n${data.reasoning}`;
             
             let i = 0;
             function typeWriter() {
@@ -535,7 +509,9 @@
         function logToTerminal(msg) {
             const term = document.getElementById('terminal-reasoning');
             term.innerHTML += `<br>${msg}`;
+            term.scrollTop = term.scrollHeight;
         }
+    </script>
 
     </script>
 </body>
