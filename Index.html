@@ -3,726 +3,922 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NamTrade AI - Ultimate Vision</title>
-    
+    <meta name="theme-color" content="#0f172a">
+    <title>NamTrade AI - Enterprise Platform</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Prompt:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Prompt:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
+        /* --- CORE VARIABLES --- */
         :root {
-            --bg-deep: #030712;
-            --bg-panel: rgba(17, 24, 39, 0.75);
-            --primary: #00f0ff;  /* Cyan Neon */
-            --secondary: #7000ff; /* Purple Neon */
-            --success: #00ffa3;
-            --danger: #ff003c;
-            --warning: #facc15;
-            --text-main: #f8fafc;
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --bg-dark: #020617;
+            --bg-panel: rgba(15, 23, 42, 0.65);
+            --primary: #06b6d4;  /* Cyan-500 */
+            --primary-glow: #22d3ee;
+            --accent: #8b5cf6;   /* Violet-500 */
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --font-tech: 'Rajdhani', sans-serif;
+            --font-body: 'Prompt', sans-serif;
         }
 
-        /* --- Global Setup --- */
+        /* --- GLOBAL RESET & TYPOGRAPHY --- */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
-            background-color: var(--bg-deep);
+            background-color: var(--bg-dark);
             color: var(--text-main);
-            font-family: 'Prompt', sans-serif;
+            font-family: var(--font-body);
             overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent;
+            min-height: 100vh;
+        }
+        h1, h2, h3, h4, h5, h6, .tech-font { font-family: var(--font-tech); }
+
+        /* --- CUSTOM SCROLLBAR --- */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+        /* --- BACKGROUND CANVAS --- */
+        #starfield {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; pointer-events: none;
+            background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
         }
 
-        .font-tech { font-family: 'Rajdhani', sans-serif; }
-
-        /* --- Scrollbar --- */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #0b0f19; }
-        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 10px; }
-
-        /* --- Background & Particles --- */
-        #canvas-bg {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: -1;
-            background: radial-gradient(circle at center, #111827 0%, #030712 100%);
-        }
-
-        /* --- Glassmorphism --- */
+        /* --- UTILITIES & GLASSMORPHISM --- */
         .glass {
             background: var(--bg-panel);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-glass);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
         }
-        .glass-hover:hover {
-            background: rgba(30, 41, 59, 0.9);
-            border-color: rgba(255, 255, 255, 0.2);
-            box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+        .glass-high {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
         }
-
-        /* --- Glitch Logo Effect --- */
-        .glitch-wrapper {
-            position: relative;
-            display: inline-block;
-        }
-        .glitch {
-            font-size: 2.5rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            position: relative;
-            color: white;
-            letter-spacing: 2px;
-        }
-        .glitch::before, .glitch::after {
-            content: attr(data-text);
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-        }
-        .glitch::before {
-            left: 2px;
-            text-shadow: -1px 0 #ff00c1;
-            clip: rect(44px, 450px, 56px, 0);
-            animation: glitch-anim 5s infinite linear alternate-reverse;
-        }
-        .glitch::after {
-            left: -2px;
-            text-shadow: -1px 0 #00fff9;
-            clip: rect(44px, 450px, 56px, 0);
-            animation: glitch-anim2 5s infinite linear alternate-reverse;
-        }
-        @keyframes glitch-anim {
-            0% { clip: rect(38px, 9999px, 81px, 0); }
-            20% { clip: rect(6px, 9999px, 14px, 0); }
-            40% { clip: rect(69px, 9999px, 3px, 0); }
-            60% { clip: rect(13px, 9999px, 76px, 0); }
-            80% { clip: rect(50px, 9999px, 20px, 0); }
-            100% { clip: rect(30px, 9999px, 93px, 0); }
-        }
-        @keyframes glitch-anim2 {
-            0% { clip: rect(15px, 9999px, 60px, 0); }
-            20% { clip: rect(80px, 9999px, 5px, 0); }
-            40% { clip: rect(20px, 9999px, 50px, 0); }
-            60% { clip: rect(2px, 9999px, 85px, 0); }
-            80% { clip: rect(60px, 9999px, 10px, 0); }
-            100% { clip: rect(40px, 9999px, 30px, 0); }
+        .border-gradient {
+            border-image: linear-gradient(to right, var(--primary), var(--accent)) 1;
         }
 
-        /* --- Auth Animations --- */
-        .auth-container {
-            transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-        .switch-enter { animation: slide-in 0.5s forwards; }
-        .switch-exit { animation: slide-out 0.5s forwards; }
+        /* --- ANIMATIONS --- */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 10px var(--primary-glow); } 50% { box-shadow: 0 0 25px var(--primary-glow); } }
+        @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         
-        @keyframes slide-in {
-            0% { opacity: 0; transform: translateX(50px); }
-            100% { opacity: 1; transform: translateX(0); }
+        .anim-fade { animation: fadeIn 0.5s ease-out forwards; }
+        .anim-slide { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .anim-pulse { animation: pulse-glow 2s infinite; }
+
+        /* --- LOADER --- */
+        .loader-wrapper {
+            position: fixed; inset: 0; z-index: 9999;
+            background: #020617; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
         }
-        @keyframes slide-out {
-            0% { opacity: 1; transform: translateX(0); }
-            100% { opacity: 0; transform: translateX(-50px); }
+        .hex-spinner {
+            width: 60px; height: 60px;
+            border: 4px solid rgba(6, 182, 212, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin-slow 1s linear infinite;
         }
 
-        /* --- Scanner Effect --- */
-        .scan-line {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 3px;
+        /* --- GLITCH TEXT EFFECT --- */
+        .glitch-text { position: relative; display: inline-block; }
+        .glitch-text::before, .glitch-text::after {
+            content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.8;
+        }
+        .glitch-text::before { color: #f0f; clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%); transform: translate(-2px, -2px); animation: glitch 3s infinite linear alternate-reverse; }
+        .glitch-text::after { color: #0ff; clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%); transform: translate(2px, 2px); animation: glitch 2s infinite linear alternate-reverse; }
+        @keyframes glitch { 0% { transform: translate(0); } 20% { transform: translate(-2px, 2px); } 40% { transform: translate(-2px, -2px); } 60% { transform: translate(2px, 2px); } 80% { transform: translate(2px, -2px); } 100% { transform: translate(0); } }
+
+        /* --- SCANNER EFFECT --- */
+        .scanner-container { position: relative; overflow: hidden; }
+        .scan-beam {
+            position: absolute; top: 0; left: 0; width: 100%; height: 4px;
             background: var(--primary);
             box-shadow: 0 0 15px var(--primary), 0 0 30px var(--primary);
-            opacity: 0.8;
             animation: scan 2s ease-in-out infinite;
-            display: none;
-            z-index: 20;
+            opacity: 0; z-index: 10;
         }
-        .scan-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to bottom, transparent, rgba(0, 240, 255, 0.2));
-            opacity: 0;
-            animation: pulse-scan 2s ease-in-out infinite;
-            display: none;
-            z-index: 10;
+        .scan-grid {
+            position: absolute; inset: 0;
+            background-image: linear-gradient(0deg, transparent 24%, rgba(6, 182, 212, .1) 25%, rgba(6, 182, 212, .1) 26%, transparent 27%, transparent 74%, rgba(6, 182, 212, .1) 75%, rgba(6, 182, 212, .1) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(6, 182, 212, .1) 25%, rgba(6, 182, 212, .1) 26%, transparent 27%, transparent 74%, rgba(6, 182, 212, .1) 75%, rgba(6, 182, 212, .1) 76%, transparent 77%, transparent);
+            background-size: 30px 30px;
+            opacity: 0; animation: fadeIn 0.5s forwards;
         }
-        @keyframes scan {
-            0%, 100% { top: 0%; opacity: 0; }
-            50% { opacity: 1; }
-            100% { top: 100%; opacity: 0; }
-        }
-        @keyframes pulse-scan { 0%, 100% { opacity: 0; } 50% { opacity: 0.3; } }
+        @keyframes scan { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
 
-        /* --- Buttons --- */
-        .btn-cyber {
-            position: relative;
-            background: transparent;
-            color: var(--primary);
-            border: 1px solid var(--primary);
-            overflow: hidden;
-            transition: 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 700;
-        }
-        .btn-cyber::before {
-            content: '';
-            position: absolute;
-            top: 0; left: -100%;
-            width: 100%; height: 100%;
-            background: var(--primary);
-            transition: 0.3s;
-            z-index: -1;
-        }
-        .btn-cyber:hover::before { left: 0; }
-        .btn-cyber:hover { color: #000; box-shadow: 0 0 20px var(--primary); }
-
-        .btn-action {
-            background: linear-gradient(135deg, var(--primary), #00aaff);
-            border: none;
-            color: #000;
-            font-weight: bold;
-            box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .btn-action:active { transform: scale(0.95); box-shadow: 0 0 5px rgba(0, 240, 255, 0.4); }
-
-        /* --- Result Cards --- */
-        .result-card {
-            border-left: 4px solid #555;
+        /* --- COMPONENTS --- */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), #0891b2);
+            color: white; font-weight: 600;
             transition: all 0.3s;
+            position: relative; overflow: hidden;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
         }
-        .result-card.buy { border-color: var(--success); background: linear-gradient(90deg, rgba(0,255,163,0.1), transparent); }
-        .result-card.sell { border-color: var(--danger); background: linear-gradient(90deg, rgba(255,0,60,0.1), transparent); }
-        .result-card.wait { border-color: var(--warning); background: linear-gradient(90deg, rgba(250,204,21,0.1), transparent); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(6, 182, 212, 0.5); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
 
+        .input-field {
+            background: rgba(2, 6, 23, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            color: white; transition: 0.3s;
+        }
+        .input-field:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 10px rgba(6, 182, 212, 0.2); }
+
+        .nav-item {
+            cursor: pointer; position: relative; color: var(--text-muted); transition: 0.3s;
+        }
+        .nav-item:hover, .nav-item.active { color: var(--primary); }
+        .nav-item.active::after {
+            content: ''; position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
+            width: 5px; height: 5px; background: var(--primary); border-radius: 50%;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        .history-row:hover { background: rgba(255,255,255,0.02); }
     </style>
 </head>
 <body>
 
-    <canvas id="canvas-bg"></canvas>
+    <canvas id="starfield"></canvas>
 
-    <section id="auth-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="w-full max-w-md perspective-1000">
+    <div id="loader" class="loader-wrapper">
+        <div class="hex-spinner mb-4"></div>
+        <div class="text-xl font-bold tech-font tracking-widest text-cyan-400 animate-pulse">SYSTEM INITIALIZING</div>
+        <div class="text-xs text-slate-500 mt-2 font-mono">Loading Firebase Core...</div>
+    </div>
+
+    <div id="toast-container" class="fixed top-5 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 w-full max-w-sm px-4"></div>
+
+    <section id="auth-page" class="min-h-screen flex items-center justify-center p-4 hidden anim-fade">
+        <div class="glass w-full max-w-4xl rounded-3xl overflow-hidden flex flex-col md:flex-row shadow-2xl relative">
             
-            <div class="text-center mb-8 animate-pulse">
-                <div class="glitch-wrapper">
-                    <h1 class="glitch font-tech" data-text="NAMTRADE">NAMTRADE</h1>
-                </div>
-                <p class="text-cyan-400 tracking-[0.5em] text-xs mt-2 uppercase">AI Vision Intelligence</p>
-            </div>
-
-            <div id="login-box" class="glass p-8 rounded-2xl auth-container relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent"></div>
-                <h2 class="text-2xl font-bold text-white mb-6 font-tech"><i class="fa-solid fa-lock text-cyan-400 mr-2"></i>ACCESS TERMINAL</h2>
-                
-                <form onsubmit="event.preventDefault(); Auth.login();" class="space-y-5">
-                    <div class="relative group">
-                        <i class="fa-solid fa-user absolute left-4 top-3.5 text-slate-500 group-focus-within:text-cyan-400 transition"></i>
-                        <input type="email" id="l-email" class="w-full bg-[#050911] border border-slate-700 rounded-lg py-3 pl-12 pr-4 text-white focus:border-cyan-500 focus:shadow-[0_0_10px_rgba(0,240,255,0.3)] outline-none transition" placeholder="Username / Email" required>
+            <div class="w-full md:w-1/2 bg-slate-900/50 p-10 flex flex-col justify-center items-center text-center relative overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 z-0"></div>
+                <div class="relative z-10">
+                    <div class="mb-6 inline-block">
+                        <i class="fa-solid fa-layer-group text-6xl text-cyan-400 drop-shadow-[0_0_15px_rgba(6,182,212,0.5)]"></i>
                     </div>
-                    <div class="relative group">
-                        <i class="fa-solid fa-key absolute left-4 top-3.5 text-slate-500 group-focus-within:text-cyan-400 transition"></i>
-                        <input type="password" id="l-pass" class="w-full bg-[#050911] border border-slate-700 rounded-lg py-3 pl-12 pr-4 text-white focus:border-cyan-500 focus:shadow-[0_0_10px_rgba(0,240,255,0.3)] outline-none transition" placeholder="Password" required>
+                    <h1 class="text-4xl font-bold tech-font mb-2 glitch-text" data-text="NAMTRADE AI">NAMTRADE AI</h1>
+                    <p class="text-slate-400 text-sm tracking-wide">ENTERPRISE MARKET ANALYSIS</p>
+                    <div class="mt-8 flex gap-2 justify-center">
+                        <span class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span>
+                        <span class="w-2 h-2 rounded-full bg-purple-500 animate-pulse delay-75"></span>
+                        <span class="w-2 h-2 rounded-full bg-pink-500 animate-pulse delay-150"></span>
                     </div>
-                    <button type="submit" class="btn-cyber w-full py-3.5 rounded-lg text-lg">
-                        LOGIN SYSTEM
-                    </button>
-                </form>
-
-                <div class="mt-6 text-center text-sm border-t border-white/10 pt-4">
-                    <span class="text-slate-400">Access Restricted? </span>
-                    <button onclick="Auth.toggle('register')" class="text-cyan-400 font-bold hover:text-white transition">Apply for Membership</button>
                 </div>
             </div>
 
-            <div id="register-box" class="glass p-8 rounded-2xl auth-container hidden relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-500 to-transparent"></div>
-                <h2 class="text-2xl font-bold text-white mb-6 font-tech"><i class="fa-solid fa-user-plus text-purple-400 mr-2"></i>NEW TRADER ID</h2>
+            <div class="w-full md:w-1/2 p-10 relative bg-black/40">
                 
-                <form onsubmit="event.preventDefault(); Auth.register();" class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <input type="text" class="bg-[#050911] border border-slate-700 rounded-lg py-3 px-4 text-white focus:border-purple-500 outline-none" placeholder="First Name" required>
-                        <input type="text" class="bg-[#050911] border border-slate-700 rounded-lg py-3 px-4 text-white focus:border-purple-500 outline-none" placeholder="Last Name">
-                    </div>
-                    <input type="email" id="r-email" class="w-full bg-[#050911] border border-slate-700 rounded-lg py-3 px-4 text-white focus:border-purple-500 outline-none" placeholder="Email Address" required>
-                    <input type="password" id="r-pass" class="w-full bg-[#050911] border border-slate-700 rounded-lg py-3 px-4 text-white focus:border-purple-500 outline-none" placeholder="Create Password" required>
+                <div id="login-form" class="auth-content">
+                    <h2 class="text-2xl font-bold mb-1 text-white lang" key="login_title">Welcome Back</h2>
+                    <p class="text-slate-400 text-sm mb-6 lang" key="login_subtitle">Access your trading dashboard</p>
                     
-                    <button type="submit" class="btn-cyber w-full py-3.5 rounded-lg text-lg !border-purple-500 !text-purple-400 hover:!text-black hover:bg-purple-500">
-                        INITIALIZE ACCOUNT
-                    </button>
-                </form>
-
-                <div class="mt-6 text-center text-sm border-t border-white/10 pt-4">
-                    <span class="text-slate-400">Already authorized? </span>
-                    <button onclick="Auth.toggle('login')" class="text-purple-400 font-bold hover:text-white transition">Return to Login</button>
+                    <form onsubmit="event.preventDefault(); Auth.login();">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs text-cyan-400 font-bold ml-1 mb-1 block lang" key="email">EMAIL ADDRESS</label>
+                                <input type="email" id="l-email" class="input-field w-full rounded-lg p-3 text-sm" placeholder="trader@example.com" required>
+                            </div>
+                            <div>
+                                <label class="text-xs text-cyan-400 font-bold ml-1 mb-1 block lang" key="password">PASSWORD</label>
+                                <input type="password" id="l-pass" class="input-field w-full rounded-lg p-3 text-sm" placeholder="••••••••" required>
+                            </div>
+                            <button type="submit" class="btn-primary w-full py-3 rounded-lg mt-2 flex items-center justify-center gap-2 group">
+                                <span class="lang" key="btn_login">SECURE LOGIN</span> <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition"></i>
+                            </button>
+                        </div>
+                    </form>
+                    <div class="mt-6 text-center text-sm">
+                        <span class="text-slate-500 lang" key="no_account">No account?</span>
+                        <button onclick="Auth.switch('register')" class="text-cyan-400 font-bold hover:underline lang" key="create_one">Create One</button>
+                    </div>
                 </div>
-            </div>
 
+                <div id="register-form" class="auth-content hidden">
+                    <h2 class="text-2xl font-bold mb-1 text-white lang" key="reg_title">New Trader ID</h2>
+                    <p class="text-slate-400 text-sm mb-6 lang" key="reg_subtitle">Join the AI-powered network</p>
+                    
+                    <form onsubmit="event.preventDefault(); Auth.register();">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs text-purple-400 font-bold ml-1 mb-1 block lang" key="email">EMAIL ADDRESS</label>
+                                <input type="email" id="r-email" class="input-field w-full rounded-lg p-3 text-sm" placeholder="newtrader@example.com" required>
+                            </div>
+                            <div>
+                                <label class="text-xs text-purple-400 font-bold ml-1 mb-1 block lang" key="password">CREATE PASSWORD</label>
+                                <input type="password" id="r-pass" class="input-field w-full rounded-lg p-3 text-sm" placeholder="Minimum 6 chars" required>
+                            </div>
+                            <button type="submit" class="btn-primary w-full py-3 rounded-lg mt-2 !bg-purple-600 !shadow-purple-500/30 border-none">
+                                <span class="lang" key="btn_register">INITIALIZE ACCOUNT</span>
+                            </button>
+                        </div>
+                    </form>
+                    <div class="mt-6 text-center text-sm">
+                        <span class="text-slate-500 lang" key="have_account">Have an account?</span>
+                        <button onclick="Auth.switch('login')" class="text-purple-400 font-bold hover:underline lang" key="login_here">Login Here</button>
+                    </div>
+                </div>
+
+            </div>
         </div>
     </section>
 
-    <div id="app-screen" class="hidden min-h-screen pb-24 transition-opacity duration-500 opacity-0">
+    <section id="app-page" class="hidden min-h-screen pb-20">
         
-        <header class="fixed top-0 w-full z-40 bg-[#030712]/80 backdrop-blur-md border-b border-white/10 px-4 h-16 flex items-center justify-between shadow-[0_4px_30px_rgba(0,240,255,0.1)]">
+        <header class="fixed top-0 w-full z-40 glass h-16 px-4 flex items-center justify-between border-b border-white/5">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-cyan-500/20 rounded flex items-center justify-center border border-cyan-500">
-                    <i class="fa-solid fa-eye text-cyan-400 text-sm"></i>
-                </div>
-                <div>
-                    <h1 class="font-tech font-bold text-lg leading-none tracking-wider">NAM<span class="text-cyan-400">VISION</span></h1>
-                    <span class="text-[9px] text-slate-400 bg-slate-800 px-1 rounded block w-fit mt-0.5">PRO V.3.0</span>
+                <div class="w-8 h-8 rounded bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg">N</div>
+                <div class="hidden sm:block">
+                    <h1 class="text-lg font-bold tech-font leading-none">NAM<span class="text-cyan-400">TRADE</span></h1>
+                    <span class="text-[10px] text-slate-400 tracking-wider">ENTERPRISE V.4.0</span>
                 </div>
             </div>
-            <div class="flex items-center gap-3">
-                <div class="text-right hidden sm:block">
-                    <div id="user-name-display" class="text-xs font-bold text-slate-200">Trader</div>
-                    <div class="text-[10px] text-green-400">● SYSTEM ONLINE</div>
-                </div>
-                <button onclick="Settings.open()" class="w-10 h-10 rounded-full bg-slate-800/50 hover:bg-slate-700 border border-slate-600 text-cyan-400 transition flex items-center justify-center">
-                    <i class="fa-solid fa-gear fa-spin-hover"></i>
+            
+            <div class="flex items-center gap-4">
+                <button onclick="Lang.toggle()" class="flex items-center gap-2 bg-slate-800/50 px-3 py-1.5 rounded-full border border-slate-700 hover:border-cyan-500 transition">
+                    <i class="fa-solid fa-globe text-cyan-400 text-xs"></i>
+                    <span id="current-lang" class="text-xs font-bold font-mono">TH</span>
                 </button>
+
+                <div class="relative group">
+                    <div class="flex items-center gap-2 cursor-pointer">
+                        <div class="text-right hidden sm:block">
+                            <div id="user-display" class="text-xs font-bold text-white">Trader</div>
+                            <div class="text-[9px] text-green-400">● ONLINE</div>
+                        </div>
+                        <div class="w-9 h-9 rounded-full bg-slate-700 overflow-hidden border border-slate-600">
+                            <img src="https://ui-avatars.com/api/?name=T&background=random" alt="Avatar" class="w-full h-full object-cover">
+                        </div>
+                    </div>
+                    <div class="absolute right-0 top-full mt-2 w-48 bg-[#0f172a] border border-slate-700 rounded-xl shadow-xl overflow-hidden hidden group-hover:block anim-fade">
+                        <button onclick="Settings.open()" class="w-full text-left px-4 py-3 text-sm hover:bg-slate-800 text-slate-300 hover:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-key"></i> <span class="lang" key="menu_api">API Settings</span>
+                        </button>
+                        <div class="h-px bg-slate-800"></div>
+                        <button onclick="Auth.logout()" class="w-full text-left px-4 py-3 text-sm hover:bg-red-900/20 text-red-400 flex items-center gap-2">
+                            <i class="fa-solid fa-power-off"></i> <span class="lang" key="menu_logout">Logout</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </header>
 
-        <main class="pt-24 px-4 max-w-lg mx-auto space-y-6">
-
-            <div id="api-alert" class="hidden bg-red-900/20 border border-red-500/50 p-3 rounded-lg flex items-center gap-3 animate-pulse cursor-pointer" onclick="Settings.open()">
-                <i class="fa-solid fa-triangle-exclamation text-red-500 text-xl"></i>
-                <div>
-                    <h3 class="font-bold text-red-400 text-sm">MISSING API KEY</h3>
-                    <p class="text-[10px] text-slate-300">Tap here to configure Gemini API Key.</p>
-                </div>
-            </div>
-
-            <div class="glass p-5 rounded-2xl relative overflow-hidden group">
-                <div class="absolute -right-4 -top-4 text-8xl text-white/5 font-tech select-none group-hover:text-cyan-400/5 transition">01</div>
-                <label class="text-xs text-cyan-400 font-bold tracking-widest uppercase mb-3 block"><i class="fa-solid fa-crosshairs mr-1"></i> Target Asset</label>
+        <main class="pt-24 px-4 max-w-6xl mx-auto flex flex-col lg:flex-row gap-6">
+            
+            <div class="w-full lg:w-1/3 space-y-6">
                 
-                <div class="grid grid-cols-3 gap-2">
-                    <button onclick="App.setPair('XAUUSD')" class="pair-btn active bg-slate-800 border border-cyan-500 text-cyan-400 rounded-lg p-2 text-sm font-bold shadow-[0_0_10px_rgba(0,240,255,0.2)]">XAUUSD</button>
-                    <button onclick="App.setPair('EURUSD')" class="pair-btn bg-slate-800/50 border border-slate-700 text-slate-400 hover:text-white rounded-lg p-2 text-sm font-bold">EURUSD</button>
-                    <button onclick="App.setPair('BTCUSD')" class="pair-btn bg-slate-800/50 border border-slate-700 text-slate-400 hover:text-white rounded-lg p-2 text-sm font-bold">BTCUSD</button>
-                </div>
-                
-                <div class="mt-3 relative">
-                     <select id="custom-pair" class="w-full bg-[#050911] border border-slate-700 rounded-lg p-2 text-xs text-slate-300 focus:border-cyan-500 outline-none" onchange="App.setPair(this.value, true)">
-                        <option value="">+ Select Other Asset</option>
+                <div class="glass p-6 rounded-2xl relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <i class="fa-solid fa-chart-line text-6xl text-white"></i>
+                    </div>
+                    <label class="text-xs text-cyan-400 font-bold uppercase tracking-wider mb-4 block lang" key="label_asset">1. SELECT ASSET</label>
+                    
+                    <div class="grid grid-cols-3 gap-2 mb-3">
+                        <button onclick="App.setPair('XAUUSD')" class="pair-btn active bg-slate-800 border border-cyan-500 text-cyan-400 p-3 rounded-xl font-bold text-sm shadow-[0_0_10px_rgba(6,182,212,0.2)]">XAUUSD</button>
+                        <button onclick="App.setPair('BTCUSD')" class="pair-btn bg-slate-800/50 border border-slate-700 text-slate-400 p-3 rounded-xl font-bold text-sm hover:bg-slate-700 transition">BTCUSD</button>
+                        <button onclick="App.setPair('EURUSD')" class="pair-btn bg-slate-800/50 border border-slate-700 text-slate-400 p-3 rounded-xl font-bold text-sm hover:bg-slate-700 transition">EURUSD</button>
+                    </div>
+                    <select id="custom-pair" class="w-full bg-[#020617] border border-slate-700 rounded-xl p-3 text-sm text-white focus:border-cyan-500 outline-none" onchange="App.setPair(this.value, true)">
+                        <option value="" class="lang" key="opt_custom">Or select custom...</option>
                         <option value="GBPUSD">GBPUSD</option>
                         <option value="USDJPY">USDJPY</option>
                         <option value="USDTTHB">USDTTHB</option>
                         <option value="ETHUSD">ETHUSD</option>
                     </select>
                 </div>
-            </div>
 
-            <div class="glass p-5 rounded-2xl relative">
-                <div class="absolute -right-4 -top-4 text-8xl text-white/5 font-tech select-none">02</div>
-                <label class="text-xs text-cyan-400 font-bold tracking-widest uppercase mb-3 block"><i class="fa-solid fa-eye mr-1"></i> Chart Vision</label>
-
-                <div id="drop-zone" class="border-2 border-dashed border-slate-600 rounded-xl h-60 relative overflow-hidden flex flex-col items-center justify-center transition-all bg-[#050911]/50 group hover:border-cyan-500/50 cursor-pointer">
-                    <input type="file" id="file-input" accept="image/*" class="absolute inset-0 opacity-0 z-20 cursor-pointer">
+                <div class="glass p-6 rounded-2xl">
+                    <label class="text-xs text-cyan-400 font-bold uppercase tracking-wider mb-4 block lang" key="label_vision">2. CHART VISION</label>
                     
-                    <div id="scanner-line" class="scan-line z-30"></div>
-                    <div id="scanner-overlay" class="scan-overlay z-20"></div>
-
-                    <div id="upload-ui" class="text-center transition-opacity duration-300">
-                        <div class="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mx-auto mb-3 shadow-inner group-hover:scale-110 transition">
-                            <i class="fa-solid fa-cloud-arrow-up text-2xl text-cyan-400"></i>
+                    <div id="drop-zone" class="border-2 border-dashed border-slate-600 rounded-xl h-56 relative overflow-hidden flex flex-col items-center justify-center transition-all bg-[#020617]/50 hover:border-cyan-500/50 cursor-pointer group">
+                        <input type="file" id="file-input" accept="image/*" class="absolute inset-0 opacity-0 z-20 cursor-pointer">
+                        
+                        <div id="upload-empty" class="text-center group-hover:scale-105 transition duration-300">
+                            <div class="w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center mx-auto mb-3 shadow-inner">
+                                <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-400 group-hover:text-cyan-400 transition"></i>
+                            </div>
+                            <h3 class="font-bold text-slate-200 lang" key="upload_title">Upload Chart</h3>
+                            <p class="text-[10px] text-slate-500 mt-1 lang" key="upload_desc">Support JPG, PNG (Max 5MB)</p>
                         </div>
-                        <h3 class="font-bold text-white">Upload Chart Image</h3>
-                        <p class="text-[10px] text-slate-400 mt-1">Tap or Drag & Drop (JPG/PNG)</p>
-                    </div>
 
-                    <img id="img-preview" class="absolute inset-0 w-full h-full object-contain hidden z-10 bg-black">
-                    <button id="btn-remove-img" onclick="App.clearImage()" class="absolute top-2 right-2 z-40 bg-red-500/80 text-white w-8 h-8 rounded-full hidden hover:bg-red-600"><i class="fa-solid fa-xmark"></i></button>
+                        <img id="img-preview" class="absolute inset-0 w-full h-full object-contain hidden z-10 bg-black">
+                        
+                        <div id="scan-fx" class="absolute inset-0 z-15 hidden scanner-container">
+                            <div class="scan-beam"></div>
+                            <div class="scan-grid"></div>
+                        </div>
+
+                        <button id="btn-clear" onclick="App.clearImage()" class="absolute top-2 right-2 z-30 bg-red-500/80 hover:bg-red-600 text-white w-8 h-8 rounded-full hidden items-center justify-center shadow-lg backdrop-blur">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
                 </div>
+
+                <button id="btn-analyze" onclick="AI.analyze()" class="w-full btn-primary py-5 rounded-2xl text-xl uppercase tracking-widest relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed group shadow-[0_0_30px_rgba(6,182,212,0.2)]">
+                    <span class="relative z-10 flex items-center justify-center gap-3">
+                        <i class="fa-solid fa-robot group-hover:animate-bounce"></i> <span class="lang" key="btn_analyze">START ANALYSIS</span>
+                    </span>
+                    <div class="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition duration-300"></div>
+                </button>
+
             </div>
 
-            <button id="btn-analyze" onclick="AI.analyze()" class="btn-action w-full py-4 rounded-xl text-xl uppercase tracking-widest relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed group">
-                <span class="relative z-10 flex items-center justify-center gap-3">
-                    <i class="fa-solid fa-microchip group-hover:animate-spin"></i> Analyze Market
-                </span>
-            </button>
-
-            <div id="result-container" class="hidden opacity-0 transform translate-y-10 transition-all duration-500">
+            <div class="w-full lg:w-2/3 space-y-6">
                 
-                <div class="flex justify-between items-center mb-2 px-2">
-                    <span class="text-xs text-slate-400">AI CONFIDENCE SCORE</span>
-                    <button onclick="AI.toggleLang()" class="text-[10px] border border-cyan-500 text-cyan-400 px-2 py-0.5 rounded uppercase hover:bg-cyan-500 hover:text-black transition">Switch Language</button>
+                <div class="flex gap-4 border-b border-slate-700/50 pb-1">
+                    <button onclick="UI.switchTab('result')" class="nav-item active px-4 py-2 font-bold text-sm uppercase lang" id="tab-res" key="tab_result">Live Result</button>
+                    <button onclick="UI.switchTab('history')" class="nav-item px-4 py-2 font-bold text-sm uppercase lang" id="tab-hist" key="tab_history">History Data</button>
                 </div>
 
-                <div class="glass p-0 rounded-2xl overflow-hidden shadow-2xl">
-                    <div id="res-header" class="p-6 text-center bg-gradient-to-b from-slate-800 to-transparent border-b border-white/5 relative">
-                        <div class="absolute top-0 left-0 w-full h-1 bg-slate-500" id="res-bar"></div>
-                        <div class="text-sm text-slate-400 tracking-widest font-tech mb-1" id="res-pair">XAUUSD</div>
-                        <h2 id="res-action" class="text-5xl font-bold font-tech text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">WAIT</h2>
-                        <div id="res-conf" class="mt-2 inline-block px-3 py-1 rounded-full bg-black/30 border border-white/10 text-xs text-cyan-400">0% Confidence</div>
+                <div id="view-result" class="anim-slide min-h-[400px]">
+                    
+                    <div id="res-placeholder" class="h-full flex flex-col items-center justify-center text-slate-600 py-20 border-2 border-dashed border-slate-800 rounded-3xl">
+                        <i class="fa-solid fa-microchip text-6xl mb-4 opacity-20"></i>
+                        <p class="text-sm font-light lang" key="waiting_data">Waiting for input data...</p>
                     </div>
 
-                    <div class="grid grid-cols-2 divide-x divide-white/10 border-b border-white/10">
-                        <div class="p-4 text-center">
-                            <span class="text-[10px] text-slate-500 uppercase block">Entry Zone</span>
-                            <span id="res-entry" class="text-lg font-bold font-mono text-white">-</span>
+                    <div id="res-content" class="hidden">
+                        <div class="glass p-0 rounded-3xl overflow-hidden shadow-2xl mb-6 relative">
+                            <div id="signal-bar" class="h-2 w-full bg-slate-600"></div>
+                            <div class="p-8 relative z-10">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <span id="res-pair" class="px-2 py-0.5 bg-white/10 rounded text-[10px] font-bold tracking-wider text-slate-300">XAUUSD</span>
+                                            <span class="text-[10px] text-slate-500">• H1 Timeframe</span>
+                                        </div>
+                                        <h2 id="res-action" class="text-6xl font-bold tech-font text-white drop-shadow-md mb-2">WAIT</h2>
+                                        <div class="flex items-center gap-2">
+                                            <div class="h-1.5 w-24 bg-slate-700 rounded-full overflow-hidden">
+                                                <div id="conf-bar" class="h-full bg-cyan-400 w-0 transition-all duration-1000"></div>
+                                            </div>
+                                            <span id="res-conf" class="text-xs text-cyan-400 font-bold">0% Confidence</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-[10px] text-slate-400 uppercase mb-1">Risk Ratio</div>
+                                        <div id="res-rr" class="text-2xl font-mono font-bold text-white">1:2.5</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-3 divide-x divide-white/5 border-t border-white/5 bg-black/20">
+                                <div class="p-4 text-center">
+                                    <span class="text-[10px] text-slate-400 uppercase block mb-1">ENTRY</span>
+                                    <span id="res-entry" class="font-mono font-bold text-white">-</span>
+                                </div>
+                                <div class="p-4 text-center bg-red-500/5">
+                                    <span class="text-[10px] text-red-400 uppercase block mb-1">STOP LOSS</span>
+                                    <span id="res-sl" class="font-mono font-bold text-red-400">-</span>
+                                </div>
+                                <div class="p-4 text-center bg-green-500/5">
+                                    <span class="text-[10px] text-green-400 uppercase block mb-1">TAKE PROFIT</span>
+                                    <span id="res-tp" class="font-mono font-bold text-green-400">-</span>
+                                </div>
+                            </div>
                         </div>
-                         <div class="p-4 text-center">
-                            <span class="text-[10px] text-slate-500 uppercase block">Risk Ratio</span>
-                            <span id="res-rr" class="text-lg font-bold font-mono text-white">-</span>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 divide-x divide-white/10 border-b border-white/10">
-                        <div class="p-4 text-center bg-red-500/5">
-                            <span class="text-[10px] text-red-400 uppercase block">Stop Loss</span>
-                            <span id="res-sl" class="text-lg font-bold font-mono text-red-400">-</span>
-                        </div>
-                         <div class="p-4 text-center bg-green-500/5">
-                            <span class="text-[10px] text-green-400 uppercase block">Take Profit</span>
-                            <span id="res-tp" class="text-lg font-bold font-mono text-green-400">-</span>
-                        </div>
-                    </div>
 
-                    <div class="grid grid-cols-2 text-[10px] border-b border-white/10">
-                        <div class="p-2 px-4 flex justify-between bg-green-900/10">
-                            <span class="text-green-500">BUY ZONE:</span>
-                            <span id="res-z-buy" class="text-slate-300">-</span>
+                        <div class="glass p-6 rounded-2xl border-l-4 border-cyan-500">
+                            <h4 class="text-sm font-bold text-cyan-400 mb-3 flex items-center gap-2">
+                                <i class="fa-solid fa-comment-dots"></i> <span class="lang" key="ai_reason">AI REASONING</span>
+                            </h4>
+                            <p id="res-reason" class="text-slate-300 font-light leading-relaxed text-sm">-</p>
                         </div>
-                         <div class="p-2 px-4 flex justify-between bg-red-900/10 border-l border-white/10">
-                            <span class="text-red-500">SELL ZONE:</span>
-                            <span id="res-z-sell" class="text-slate-300">-</span>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                            <div class="glass p-4 rounded-xl border-l-2 border-green-500 bg-green-900/10">
+                                <span class="text-[10px] text-green-500 font-bold uppercase block mb-1">STRONG BUY ZONE</span>
+                                <span id="res-z-buy" class="text-sm text-slate-200 font-mono">-</span>
+                            </div>
+                            <div class="glass p-4 rounded-xl border-l-2 border-red-500 bg-red-900/10">
+                                <span class="text-[10px] text-red-500 font-bold uppercase block mb-1">STRONG SELL ZONE</span>
+                                <span id="res-z-sell" class="text-sm text-slate-200 font-mono">-</span>
+                            </div>
                         </div>
-                    </div>
-
-                    <div class="p-5">
-                        <h4 class="text-xs font-bold text-cyan-400 mb-2"><i class="fa-solid fa-robot"></i> AI REASONING</h4>
-                        <p id="res-reason" class="text-sm text-slate-300 font-light leading-relaxed">-</p>
                     </div>
                 </div>
+
+                <div id="view-history" class="hidden anim-slide">
+                    <div class="glass rounded-2xl overflow-hidden">
+                        <div class="p-4 border-b border-white/5 bg-black/20 flex justify-between items-center">
+                            <h3 class="font-bold text-white lang" key="hist_title">Trade Log</h3>
+                            <button onclick="History.load()" class="text-xs text-cyan-400 hover:text-white"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="text-[10px] text-slate-500 uppercase bg-black/40 border-b border-white/5">
+                                        <th class="p-3">Time</th>
+                                        <th class="p-3">Pair</th>
+                                        <th class="p-3">Action</th>
+                                        <th class="p-3">Entry</th>
+                                        <th class="p-3">Result</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-table-body" class="text-xs text-slate-300 font-mono">
+                                    <tr><td colspan="5" class="p-6 text-center text-slate-500">Loading data...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
             </div>
-
         </main>
-    </div>
+    </section>
 
-    <div id="settings-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-fade-in">
-        <div class="glass w-full max-w-sm rounded-2xl p-6 border-cyan-500/30 shadow-[0_0_50px_rgba(0,240,255,0.1)]">
-            <h2 class="text-xl font-bold font-tech text-white mb-4"><i class="fa-solid fa-key text-cyan-400"></i> SYSTEM CONFIG</h2>
+    <div id="modal-settings" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 anim-fade">
+        <div class="glass w-full max-w-md rounded-2xl p-6 shadow-2xl border border-cyan-500/20">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold tech-font text-white"><i class="fa-solid fa-gear text-cyan-400 mr-2"></i> SYSTEM CONFIG</h3>
+                <button onclick="Settings.close()" class="text-slate-500 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
             
-            <div class="mb-4">
-                <label class="text-xs text-slate-400 block mb-2">GEMINI API KEY</label>
+            <div class="mb-6">
+                <label class="text-xs text-slate-400 block mb-2 font-bold">GEMINI API KEY</label>
                 <div class="relative">
-                     <i class="fa-brands fa-google absolute left-3 top-3 text-slate-500"></i>
-                    <input type="password" id="api-key-input" class="w-full bg-black/50 border border-slate-600 rounded-lg py-2.5 pl-10 pr-2 text-xs font-mono text-cyan-400 focus:border-cyan-500 outline-none" placeholder="Paste your key here...">
+                    <i class="fa-brands fa-google absolute left-3 top-3 text-slate-500"></i>
+                    <input type="password" id="set-api-key" class="w-full bg-black/50 border border-slate-600 rounded-lg py-2.5 pl-10 pr-2 text-xs font-mono text-cyan-400 focus:border-cyan-500 outline-none transition" placeholder="Paste AIza... key here">
                 </div>
-                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-[10px] text-cyan-600 hover:text-cyan-400 mt-1 inline-block underline">Get Free API Key</a>
+                <p class="text-[10px] text-slate-500 mt-2">Required for vision analysis. Key is stored locally.</p>
             </div>
 
-            <div class="flex gap-3 mt-6">
-                <button onclick="Settings.save()" class="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white py-2 rounded-lg font-bold shadow-lg shadow-cyan-500/20">SAVE</button>
-                <button onclick="Settings.close()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-lg">CANCEL</button>
-            </div>
+            <button onclick="Settings.save()" class="w-full btn-primary py-2.5 rounded-lg shadow-lg">SAVE CONFIGURATION</button>
         </div>
     </div>
 
-    <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-[110] w-max max-w-[90%]"></div>
-
     <script>
-        // --- 1. SOUND ENGINE (Synthesizer) ---
-        class SoundFX {
+        /**
+         * ------------------------------------------------------------------
+         * CONFIGURATION SECTION (USER MUST EDIT THIS)
+         * ------------------------------------------------------------------
+         */
+        const FIREBASE_CONFIG = {
+            // 🔴 REPLACE THIS OBJECT WITH YOUR FIREBASE CONFIG
+            apiKey: "YOUR_FIREBASE_API_KEY",
+            authDomain: "your-project.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456:web:abcdef"
+        };
+
+        /**
+         * ------------------------------------------------------------------
+         * 1. LANGUAGE DICTIONARY (i18n)
+         * ------------------------------------------------------------------
+         */
+        const TRANSLATIONS = {
+            en: {
+                login_title: "Welcome Back",
+                login_subtitle: "Access your trading dashboard",
+                email: "EMAIL ADDRESS",
+                password: "PASSWORD",
+                btn_login: "SECURE LOGIN",
+                no_account: "No account?",
+                create_one: "Create One",
+                reg_title: "New Trader ID",
+                reg_subtitle: "Join the AI-powered network",
+                btn_register: "INITIALIZE ACCOUNT",
+                have_account: "Have an account?",
+                login_here: "Login Here",
+                menu_api: "API Settings",
+                menu_logout: "Logout",
+                label_asset: "1. SELECT ASSET",
+                opt_custom: "Or select custom...",
+                label_vision: "2. CHART VISION",
+                upload_title: "Upload Chart",
+                upload_desc: "Support JPG, PNG (Max 5MB)",
+                btn_analyze: "START ANALYSIS",
+                tab_result: "Live Result",
+                tab_history: "History Data",
+                waiting_data: "Waiting for input data...",
+                ai_reason: "AI REASONING",
+                hist_title: "Trade Log",
+                toast_login_success: "Login Successful",
+                toast_reg_success: "Account Created",
+                toast_error: "Error Occurred",
+                toast_no_api: "Missing API Key",
+                toast_no_img: "Please upload image",
+                analyze_success: "Analysis Completed"
+            },
+            th: {
+                login_title: "ยินดีต้อนรับกลับ",
+                login_subtitle: "เข้าสู่ระบบเพื่อใช้งาน",
+                email: "อีเมล",
+                password: "รหัสผ่าน",
+                btn_login: "เข้าสู่ระบบ",
+                no_account: "ไม่มีบัญชี?",
+                create_one: "สร้างบัญชีใหม่",
+                reg_title: "สมัครสมาชิกใหม่",
+                reg_subtitle: "เข้าร่วมเครือข่าย AI เทรดเดอร์",
+                btn_register: "ยืนยันการสมัคร",
+                have_account: "มีบัญชีอยู่แล้ว?",
+                login_here: "เข้าสู่ระบบที่นี่",
+                menu_api: "ตั้งค่า API Key",
+                menu_logout: "ออกจากระบบ",
+                label_asset: "1. เลือกสินทรัพย์",
+                opt_custom: "หรือเลือกคู่อื่นๆ...",
+                label_vision: "2. วิเคราะห์กราฟภาพ",
+                upload_title: "อัปโหลดรูปกราฟ",
+                upload_desc: "รองรับ JPG, PNG (สูงสุด 5MB)",
+                btn_analyze: "เริ่มวิเคราะห์ด้วย AI",
+                tab_result: "ผลลัพธ์ล่าสุด",
+                tab_history: "ประวัติการเทรด",
+                waiting_data: "รอข้อมูลเพื่อประมวลผล...",
+                ai_reason: "เหตุผลประกอบจาก AI",
+                hist_title: "บันทึกการเทรด",
+                toast_login_success: "เข้าสู่ระบบสำเร็จ",
+                toast_reg_success: "สร้างบัญชีสำเร็จ",
+                toast_error: "เกิดข้อผิดพลาด",
+                toast_no_api: "ไม่พบ API Key",
+                toast_no_img: "กรุณาอัปโหลดรูปภาพ",
+                analyze_success: "วิเคราะห์เสร็จสิ้น"
+            }
+        };
+
+        /**
+         * ------------------------------------------------------------------
+         * 2. CORE SYSTEMS (Audio, Lang, UI)
+         * ------------------------------------------------------------------
+         */
+        
+        // --- Sound Engine (Web Audio API) ---
+        class SoundSystem {
             constructor() {
                 this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                this.enabled = true;
+                this.masterGain = this.ctx.createGain();
+                this.masterGain.gain.value = 0.3; // Volume control
+                this.masterGain.connect(this.ctx.destination);
             }
 
-            playTone(freq, type, duration, vol = 0.1) {
-                if (!this.enabled) return;
+            play(type = 'click') {
+                if(this.ctx.state === 'suspended') this.ctx.resume();
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
-                osc.type = type;
-                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
                 osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                osc.stop(this.ctx.currentTime + duration);
-            }
+                gain.connect(this.masterGain);
 
-            click() { this.playTone(800, 'sine', 0.1, 0.05); }
-            hover() { this.playTone(400, 'triangle', 0.05, 0.02); }
-            success() { 
-                this.playTone(600, 'sine', 0.1, 0.1);
-                setTimeout(() => this.playTone(1200, 'sine', 0.3, 0.1), 100);
-            }
-            error() { 
-                this.playTone(150, 'sawtooth', 0.3, 0.1);
-                setTimeout(() => this.playTone(100, 'sawtooth', 0.3, 0.1), 150);
-            }
-            scan() {
-                if (!this.enabled) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-                osc.frequency.linearRampToValueAtTime(200, this.ctx.currentTime + 2);
-                gain.gain.setValueAtTime(0.02, this.ctx.currentTime);
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                osc.stop(this.ctx.currentTime + 2);
-                return osc;
+                const now = this.ctx.currentTime;
+                
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, now);
+                    osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+                    gain.gain.setValueAtTime(0.5, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                } else if (type === 'success') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.setValueAtTime(880, now + 0.1);
+                    gain.gain.setValueAtTime(0.5, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'error') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+                    gain.gain.setValueAtTime(0.5, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                }
             }
         }
-        const SFX = new SoundFX();
+        const SFX = new SoundSystem();
 
-        // --- 2. PARTICLE BACKGROUND ---
-        class ParticleSystem {
-            constructor() {
-                this.canvas = document.getElementById('canvas-bg');
-                this.ctx = this.canvas.getContext('2d');
-                this.particles = [];
-                this.resize();
-                window.addEventListener('resize', () => this.resize());
-                this.init();
-                this.animate();
-            }
+        // --- Language Manager ---
+        const Lang = {
+            current: 'th',
+            toggle() {
+                SFX.play('click');
+                this.current = this.current === 'th' ? 'en' : 'th';
+                document.getElementById('current-lang').innerText = this.current.toUpperCase();
+                this.apply();
+                // Update dynamic content if exists
+                if(AI.lastResult) AI.render(AI.lastResult);
+            },
+            apply() {
+                document.querySelectorAll('.lang').forEach(el => {
+                    const key = el.getAttribute('key');
+                    if(TRANSLATIONS[this.current][key]) {
+                        el.innerText = TRANSLATIONS[this.current][key];
+                    }
+                });
+            },
+            get(key) { return TRANSLATIONS[this.current][key] || key; }
+        };
 
-            resize() {
-                this.canvas.width = window.innerWidth;
-                this.canvas.height = window.innerHeight;
+        // --- Toast Notification ---
+        const Toast = {
+            show(msgKey, type = 'info', rawText = null) {
+                const text = rawText || Lang.get(msgKey);
+                const container = document.getElementById('toast-container');
+                const el = document.createElement('div');
+                
+                let colors = 'border-cyan-500 bg-cyan-900/80';
+                if(type === 'success') colors = 'border-green-500 bg-green-900/80';
+                if(type === 'error') colors = 'border-red-500 bg-red-900/80';
+
+                el.className = `p-3 rounded-lg border-l-4 ${colors} text-white text-sm shadow-lg backdrop-blur flex items-center justify-between anim-slide`;
+                el.innerHTML = `<span>${text}</span>`;
+                
+                container.appendChild(el);
+                if(type === 'success') SFX.play('success');
+                if(type === 'error') SFX.play('error');
+
+                setTimeout(() => {
+                    el.style.opacity = '0';
+                    setTimeout(() => el.remove(), 300);
+                }, 3000);
             }
+        };
+
+        // --- UI Manager ---
+        const UI = {
+            switchTab(tab) {
+                SFX.play('click');
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
+
+                if(tab === 'result') {
+                    document.getElementById('tab-res').classList.add('active');
+                    document.getElementById('view-result').classList.remove('hidden');
+                } else {
+                    document.getElementById('tab-hist').classList.add('active');
+                    document.getElementById('view-history').classList.remove('hidden');
+                    History.load(); // Load data when tab switched
+                }
+            }
+        };
+
+        /**
+         * ------------------------------------------------------------------
+         * 3. FIREBASE MANAGER (Auth & Database)
+         * ------------------------------------------------------------------
+         */
+        let db, auth;
+
+        const Auth = {
+            user: null,
 
             init() {
-                const count = Math.min(window.innerWidth / 10, 100);
-                for(let i=0; i<count; i++) {
-                    this.particles.push({
-                        x: Math.random() * this.canvas.width,
-                        y: Math.random() * this.canvas.height,
-                        vx: (Math.random() - 0.5) * 0.5,
-                        vy: (Math.random() - 0.5) * 0.5,
-                        size: Math.random() * 2 + 1
+                try {
+                    // Initialize Firebase if user replaced config
+                    if(FIREBASE_CONFIG.apiKey !== "YOUR_FIREBASE_API_KEY") {
+                        firebase.initializeApp(FIREBASE_CONFIG);
+                        auth = firebase.auth();
+                        db = firebase.firestore();
+                        
+                        // Auth State Listener
+                        auth.onAuthStateChanged(user => {
+                            this.user = user;
+                            const loader = document.getElementById('loader');
+                            
+                            if (user) {
+                                // User logged in
+                                document.getElementById('auth-page').classList.add('hidden');
+                                document.getElementById('app-page').classList.remove('hidden');
+                                document.getElementById('user-display').innerText = user.email.split('@')[0];
+                            } else {
+                                // No user
+                                document.getElementById('auth-page').classList.remove('hidden');
+                                document.getElementById('app-page').classList.add('hidden');
+                            }
+                            
+                            // Hide loader
+                            setTimeout(() => loader.style.display = 'none', 500);
+                        });
+                    } else {
+                        console.warn("Firebase Config Not Set");
+                        document.getElementById('loader').style.display = 'none';
+                        alert("Please configure FIREBASE_CONFIG in the code first!");
+                    }
+                } catch (e) {
+                    console.error("Firebase Init Error:", e);
+                }
+            },
+
+            switch(mode) {
+                SFX.play('click');
+                if(mode === 'register') {
+                    document.getElementById('login-form').classList.add('hidden');
+                    document.getElementById('register-form').classList.remove('hidden');
+                    document.getElementById('register-form').classList.add('anim-fade');
+                } else {
+                    document.getElementById('register-form').classList.add('hidden');
+                    document.getElementById('login-form').classList.remove('hidden');
+                    document.getElementById('login-form').classList.add('anim-fade');
+                }
+            },
+
+            async login() {
+                const email = document.getElementById('l-email').value;
+                const pass = document.getElementById('l-pass').value;
+                try {
+                    await auth.signInWithEmailAndPassword(email, pass);
+                    Toast.show('toast_login_success', 'success');
+                } catch (error) {
+                    Toast.show('toast_error', 'error', error.message);
+                }
+            },
+
+            async register() {
+                const email = document.getElementById('r-email').value;
+                const pass = document.getElementById('r-pass').value;
+                try {
+                    await auth.createUserWithEmailAndPassword(email, pass);
+                    Toast.show('toast_reg_success', 'success');
+                } catch (error) {
+                    Toast.show('toast_error', 'error', error.message);
+                }
+            },
+
+            async logout() {
+                await auth.signOut();
+                SFX.play('click');
+            }
+        };
+
+        const History = {
+            async save(data) {
+                if(!Auth.user || !db) return;
+                try {
+                    await db.collection('trades').add({
+                        userId: Auth.user.uid,
+                        pair: data.pair,
+                        action: data.action,
+                        entry: data.entry,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        confidence: data.confidence,
+                        result: 'Pending' // Can be updated later
                     });
+                    console.log("Trade Saved to Firestore");
+                } catch (e) {
+                    console.error("Save Error", e);
                 }
-            }
+            },
 
-            animate() {
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                this.ctx.fillStyle = 'rgba(0, 240, 255, 0.5)';
-                this.ctx.strokeStyle = 'rgba(0, 240, 255, 0.1)';
+            async load() {
+                if(!Auth.user || !db) return;
+                const tbody = document.getElementById('history-table-body');
+                tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-500"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</td></tr>';
 
-                for (let i = 0; i < this.particles.length; i++) {
-                    let p = this.particles[i];
-                    p.x += p.vx;
-                    p.y += p.vy;
+                try {
+                    const snapshot = await db.collection('trades')
+                        .where('userId', '==', Auth.user.uid)
+                        .orderBy('timestamp', 'desc')
+                        .limit(20)
+                        .get();
 
-                    if (p.x < 0 || p.x > this.canvas.width) p.vx *= -1;
-                    if (p.y < 0 || p.y > this.canvas.height) p.vy *= -1;
-
-                    this.ctx.beginPath();
-                    this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                    this.ctx.fill();
-
-                    for (let j = i + 1; j < this.particles.length; j++) {
-                        let p2 = this.particles[j];
-                        let dx = p.x - p2.x;
-                        let dy = p.y - p2.y;
-                        let dist = Math.sqrt(dx*dx + dy*dy);
-
-                        if (dist < 100) {
-                            this.ctx.lineWidth = 1 - (dist/100);
-                            this.ctx.beginPath();
-                            this.ctx.moveTo(p.x, p.y);
-                            this.ctx.lineTo(p2.x, p2.y);
-                            this.ctx.stroke();
-                        }
+                    if(snapshot.empty) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-500">No history found</td></tr>';
+                        return;
                     }
-                }
-                requestAnimationFrame(() => this.animate());
-            }
-        }
-        new ParticleSystem();
 
-        // --- 3. LOGIC MODULES ---
+                    let html = '';
+                    snapshot.forEach(doc => {
+                        const d = doc.data();
+                        const time = d.timestamp ? new Date(d.timestamp.toDate()).toLocaleTimeString() : '-';
+                        let color = d.action === 'BUY' ? 'text-green-400' : (d.action === 'SELL' ? 'text-red-400' : 'text-slate-400');
+                        
+                        html += `
+                            <tr class="history-row border-b border-white/5 transition">
+                                <td class="p-3 text-slate-400">${time}</td>
+                                <td class="p-3 font-bold">${d.pair}</td>
+                                <td class="p-3 ${color} font-bold">${d.action}</td>
+                                <td class="p-3">${d.entry}</td>
+                                <td class="p-3 text-slate-500">${d.confidence}%</td>
+                            </tr>
+                        `;
+                    });
+                    tbody.innerHTML = html;
 
-        // Toast Notification
-        const Toast = {
-            show(msg, type = 'info') {
-                SFX.hover();
-                const box = document.getElementById('toast-container');
-                const el = document.createElement('div');
-                const colors = type === 'error' ? 'border-red-500 text-red-400' : (type === 'success' ? 'border-green-500 text-green-400' : 'border-cyan-500 text-cyan-400');
-                const icon = type === 'error' ? 'fa-circle-xmark' : (type === 'success' ? 'fa-circle-check' : 'fa-circle-info');
-                
-                el.className = `glass mb-2 px-4 py-3 rounded-lg border-l-4 ${colors} flex items-center gap-3 shadow-lg animate-[slide-in_0.3s_ease-out]`;
-                el.innerHTML = `<i class="fa-solid ${icon}"></i> <span class="text-sm font-semibold text-white">${msg}</span>`;
-                
-                box.appendChild(el);
-                setTimeout(() => el.remove(), 3000);
-            }
-        };
-
-        // Auth Logic (Simulation)
-        const Auth = {
-            toggle(target) {
-                SFX.click();
-                const login = document.getElementById('login-box');
-                const register = document.getElementById('register-box');
-
-                if (target === 'register') {
-                    login.classList.add('hidden');
-                    register.classList.remove('hidden');
-                    register.classList.add('switch-enter');
-                } else {
-                    register.classList.add('hidden');
-                    login.classList.remove('hidden');
-                    login.classList.add('switch-enter');
-                }
-            },
-            login() {
-                SFX.success();
-                // Simulate Login
-                document.getElementById('auth-screen').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('auth-screen').style.display = 'none';
-                    document.getElementById('app-screen').classList.remove('hidden');
-                    // Trigger reflow
-                    void document.getElementById('app-screen').offsetWidth;
-                    document.getElementById('app-screen').style.opacity = '1';
-                    
-                    // Check API
-                    if(!localStorage.getItem('gemini_api_key')) {
-                        document.getElementById('api-alert').classList.remove('hidden');
-                    }
-                }, 500);
-            },
-            register() {
-                SFX.success();
-                Toast.show('Account created successfully!', 'success');
-                this.toggle('login');
-            }
-        };
-
-        // Settings Logic
-        const Settings = {
-            open() {
-                SFX.click();
-                document.getElementById('settings-modal').classList.remove('hidden');
-                document.getElementById('api-key-input').value = localStorage.getItem('gemini_api_key') || '';
-            },
-            close() {
-                SFX.click();
-                document.getElementById('settings-modal').classList.add('hidden');
-            },
-            save() {
-                const key = document.getElementById('api-key-input').value.trim();
-                if(key) {
-                    localStorage.getItem('gemini_api_key', key);
-                    localStorage.setItem('gemini_api_key', key);
-                    Toast.show('API Key Saved!', 'success');
-                    document.getElementById('api-alert').classList.add('hidden');
-                    this.close();
-                } else {
-                    Toast.show('Please enter a valid key', 'error');
+                } catch (e) {
+                    console.error("Load History Error", e);
+                    tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-red-500">Error loading data</td></tr>';
                 }
             }
         };
 
-        // App State
+        /**
+         * ------------------------------------------------------------------
+         * 4. APP LOGIC & AI
+         * ------------------------------------------------------------------
+         */
         const App = {
             currentPair: 'XAUUSD',
-            currentImage: null,
+            imageBase64: null,
 
             setPair(pair, isCustom = false) {
-                SFX.click();
+                SFX.play('click');
                 this.currentPair = pair;
                 
-                // UI Update
+                // Update UI Buttons
                 document.querySelectorAll('.pair-btn').forEach(btn => {
-                    btn.classList.remove('bg-slate-800', 'border-cyan-500', 'text-cyan-400', 'shadow-[0_0_10px_rgba(0,240,255,0.2)]');
-                    btn.classList.add('bg-slate-800/50', 'border-slate-700', 'text-slate-400');
                     if(btn.innerText === pair) {
-                         btn.classList.remove('bg-slate-800/50', 'border-slate-700', 'text-slate-400');
-                         btn.classList.add('bg-slate-800', 'border-cyan-500', 'text-cyan-400', 'shadow-[0_0_10px_rgba(0,240,255,0.2)]');
+                        btn.classList.add('active', 'bg-slate-800', 'border-cyan-500', 'text-cyan-400', 'shadow-[0_0_10px_rgba(6,182,212,0.2)]');
+                        btn.classList.remove('bg-slate-800/50', 'border-slate-700', 'text-slate-400');
+                    } else {
+                        btn.classList.remove('active', 'bg-slate-800', 'border-cyan-500', 'text-cyan-400', 'shadow-[0_0_10px_rgba(6,182,212,0.2)]');
+                        btn.classList.add('bg-slate-800/50', 'border-slate-700', 'text-slate-400');
                     }
                 });
 
                 if(!isCustom && pair !== '') document.getElementById('custom-pair').value = "";
-                Toast.show(`Target set: ${pair}`);
             },
 
             handleFile(file) {
-                if(!file) return;
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    this.currentImage = e.target.result.split(',')[1];
+                    this.imageBase64 = e.target.result.split(',')[1];
                     const img = document.getElementById('img-preview');
                     img.src = e.target.result;
                     img.classList.remove('hidden');
-                    document.getElementById('upload-ui').classList.add('hidden');
-                    document.getElementById('btn-remove-img').classList.remove('hidden');
-                    SFX.success();
+                    document.getElementById('upload-empty').classList.add('hidden');
+                    document.getElementById('btn-clear').style.display = 'flex';
+                    SFX.play('success');
                 };
                 reader.readAsDataURL(file);
             },
 
             clearImage() {
-                SFX.click();
-                this.currentImage = null;
+                this.imageBase64 = null;
                 document.getElementById('img-preview').classList.add('hidden');
-                document.getElementById('upload-ui').classList.remove('hidden');
-                document.getElementById('file-input').value = '';
-                document.getElementById('btn-remove-img').classList.add('hidden');
+                document.getElementById('upload-empty').classList.remove('hidden');
+                document.getElementById('btn-clear').style.display = 'none';
+                SFX.play('click');
             }
         };
 
-        // File Input Listeners
-        document.getElementById('file-input').addEventListener('change', (e) => App.handleFile(e.target.files[0]));
-        // Drag & Drop
-        const dropZone = document.getElementById('drop-zone');
-        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-cyan-500'); });
-        dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('border-cyan-500'); });
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('border-cyan-500');
-            if(e.dataTransfer.files[0]) App.handleFile(e.dataTransfer.files[0]);
-        });
+        const Settings = {
+            open() {
+                document.getElementById('modal-settings').classList.remove('hidden');
+                document.getElementById('set-api-key').value = localStorage.getItem('gemini_api') || '';
+            },
+            close() {
+                document.getElementById('modal-settings').classList.add('hidden');
+            },
+            save() {
+                const key = document.getElementById('set-api-key').value.trim();
+                localStorage.setItem('gemini_api', key);
+                Toast.show('Configuration Saved', 'success', null);
+                this.close();
+            }
+        };
 
-
-        // --- 4. AI ENGINE (Gemini Vision) ---
         const AI = {
-            data: null, // Store result
-            lang: 'th',
+            lastResult: null,
 
             async analyze() {
-                const apiKey = localStorage.getItem('gemini_api_key');
-                if(!apiKey) return Settings.open();
-                if(!App.currentImage) return Toast.show('Please upload a chart image', 'error');
+                const apiKey = localStorage.getItem('gemini_api');
+                if(!apiKey) return Toast.show('toast_no_api', 'error');
+                if(!App.imageBase64) return Toast.show('toast_no_img', 'error');
 
-                SFX.click();
-                SFX.scan();
-                
-                // UI Loading
+                // Start Loading
                 const btn = document.getElementById('btn-analyze');
                 btn.disabled = true;
-                btn.innerHTML = '<span class="flex items-center gap-2"><i class="fa-solid fa-satellite-dish fa-spin"></i> CONNECTING AI...</span>';
-                document.getElementById('scanner-line').style.display = 'block';
-                document.getElementById('scanner-overlay').style.display = 'block';
-                document.getElementById('result-container').classList.add('hidden');
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> PROCESSING...';
+                
+                document.getElementById('scan-fx').classList.remove('hidden'); // Show scanner
+                SFX.play('click');
 
                 try {
                     const prompt = `
-                        Analyze this trading chart for ${App.currentPair}. You are a professional trader.
-                        Identify Trend, Entry, SL, TP, and Zones.
-                        Response strictly in JSON format (no markdown):
+                        Analyze this technical chart for ${App.currentPair}. Identify trend, key levels, and setup.
+                        Response strictly in JSON format ONLY:
                         {
-                            "action": "BUY" or "SELL" or "WAIT",
-                            "confidence": "80-99",
-                            "entry": "Price",
-                            "sl": "Price",
-                            "tp": "Price",
-                            "rr": "Risk:Reward (e.g. 1:2.5)",
-                            "buy_zone": "Price Range",
-                            "sell_zone": "Price Range",
-                            "reason_th": "Thai explanation (max 25 words)",
-                            "reason_en": "English explanation (max 25 words)"
+                            "action": "BUY" | "SELL" | "WAIT",
+                            "confidence": 85,
+                            "entry": "price",
+                            "sl": "price",
+                            "tp": "price",
+                            "rr": "1:2",
+                            "buy_zone": "range",
+                            "sell_zone": "range",
+                            "reason_th": "Thai explanation max 30 words",
+                            "reason_en": "English explanation max 30 words"
                         }
                     `;
 
@@ -733,97 +929,131 @@
                             contents: [{
                                 parts: [
                                     { text: prompt },
-                                    { inline_data: { mime_type: "image/jpeg", data: App.currentImage } }
+                                    { inline_data: { mime_type: "image/jpeg", data: App.imageBase64 } }
                                 ]
                             }]
                         })
                     });
 
-                    const json = await response.json();
+                    const data = await response.json();
                     
-                    // Parse Logic
-                    if(json.error) throw new Error(json.error.message);
+                    if(data.error) throw new Error(data.error.message);
+
+                    const text = data.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
+                    const json = JSON.parse(text);
+
+                    this.lastResult = json;
+                    this.render(json);
                     
-                    const text = json.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
-                    this.data = JSON.parse(text);
-                    
-                    this.render();
-                    SFX.success();
+                    // Save to Firebase
+                    History.save({
+                        pair: App.currentPair,
+                        action: json.action,
+                        entry: json.entry,
+                        confidence: json.confidence
+                    });
+
+                    Toast.show('analyze_success', 'success');
 
                 } catch (err) {
                     console.error(err);
-                    SFX.error();
-                    Toast.show('Analysis Failed. Check API Key or Image.', 'error');
+                    Toast.show('toast_error', 'error', err.message);
                 } finally {
                     btn.disabled = false;
-                    btn.innerHTML = '<span class="relative z-10 flex items-center justify-center gap-3"><i class="fa-solid fa-microchip"></i> Analyze Market</span>';
-                    document.getElementById('scanner-line').style.display = 'none';
-                    document.getElementById('scanner-overlay').style.display = 'none';
+                    btn.innerHTML = '<span class="relative z-10 flex items-center justify-center gap-3"><i class="fa-solid fa-robot"></i> <span class="lang" key="btn_analyze">START ANALYSIS</span></span>';
+                    Lang.apply(); // Re-apply lang to button
+                    document.getElementById('scan-fx').classList.add('hidden');
                 }
             },
 
-            render() {
-                if(!this.data) return;
-                
-                const d = this.data;
-                const container = document.getElementById('result-container');
-                const head = document.getElementById('res-header');
-                const bar = document.getElementById('res-bar');
-                
-                // Color mapping
-                let color = 'text-slate-200';
-                let glow = '0,0,0';
-                let barColor = 'bg-slate-500';
+            render(data) {
+                UI.switchTab('result');
+                document.getElementById('res-placeholder').classList.add('hidden');
+                document.getElementById('res-content').classList.remove('hidden');
 
-                if(d.action === 'BUY') { color = 'text-green-400'; glow = '0, 255, 163'; barColor = 'bg-green-500'; }
-                if(d.action === 'SELL') { color = 'text-red-400'; glow = '255, 0, 60'; barColor = 'bg-red-500'; }
-                if(d.action === 'WAIT') { color = 'text-yellow-400'; glow = '250, 204, 21'; barColor = 'bg-yellow-500'; }
-
-                // Inject Data
+                // Update Values
                 document.getElementById('res-pair').innerText = App.currentPair;
-                const actionEl = document.getElementById('res-action');
-                actionEl.innerText = d.action;
-                actionEl.className = `text-5xl font-bold font-tech ${color} drop-shadow-[0_0_15px_rgba(${glow},0.5)]`;
+                document.getElementById('res-action').innerText = data.action;
+                document.getElementById('res-conf').innerText = data.confidence + "% Confidence";
+                document.getElementById('res-rr').innerText = data.rr;
+                document.getElementById('res-entry').innerText = data.entry;
+                document.getElementById('res-sl').innerText = data.sl;
+                document.getElementById('res-tp').innerText = data.tp;
+                document.getElementById('res-z-buy').innerText = data.buy_zone;
+                document.getElementById('res-z-sell').innerText = data.sell_zone;
+                document.getElementById('res-reason').innerText = Lang.current === 'th' ? data.reason_th : data.reason_en;
+
+                // Dynamic Styling
+                const color = data.action === 'BUY' ? '#10b981' : (data.action === 'SELL' ? '#ef4444' : '#f59e0b');
+                const textClass = data.action === 'BUY' ? 'text-green-500' : (data.action === 'SELL' ? 'text-red-500' : 'text-yellow-500');
                 
-                document.getElementById('res-conf').innerText = d.confidence + "% Confidence";
-                document.getElementById('res-entry').innerText = d.entry;
-                document.getElementById('res-rr').innerText = d.rr;
-                document.getElementById('res-sl').innerText = d.sl;
-                document.getElementById('res-tp').innerText = d.tp;
-                document.getElementById('res-z-buy').innerText = d.buy_zone;
-                document.getElementById('res-z-sell').innerText = d.sell_zone;
-                
-                bar.className = `absolute top-0 left-0 w-full h-1 ${barColor} shadow-[0_0_10px_rgba(${glow},0.8)]`;
-
-                this.updateText();
-
-                // Show
-                container.classList.remove('hidden');
-                // Animation triggers
-                setTimeout(() => {
-                    container.classList.remove('opacity-0', 'translate-y-10');
-                    container.scrollIntoView({ behavior: 'smooth' });
-                }, 100);
-            },
-
-            toggleLang() {
-                SFX.click();
-                this.lang = this.lang === 'th' ? 'en' : 'th';
-                this.updateText();
-            },
-
-            updateText() {
-                if(!this.data) return;
-                const text = this.lang === 'th' ? this.data.reason_th : this.data.reason_en;
-                document.getElementById('res-reason').innerText = text;
+                document.getElementById('res-action').className = `text-6xl font-bold tech-font drop-shadow-md mb-2 ${textClass}`;
+                document.getElementById('signal-bar').style.backgroundColor = color;
+                document.getElementById('conf-bar').style.width = data.confidence + "%";
             }
         };
 
-        // --- INITIALIZE SOUND INTERACTION ---
-        // Browsers block audio context until user interacts
-        document.body.addEventListener('click', () => {
-            if (SFX.ctx.state === 'suspended') SFX.ctx.resume();
-        }, { once: true });
+        // --- Event Listeners ---
+        document.getElementById('file-input').addEventListener('change', (e) => App.handleFile(e.target.files[0]));
+        
+        // --- Init ---
+        window.onload = () => {
+            Lang.apply();
+            Auth.init();
+        };
+
+        /**
+         * ------------------------------------------------------------------
+         * 5. BACKGROUND PARTICLE SYSTEM (Canvas)
+         * ------------------------------------------------------------------
+         */
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2;
+                this.speedX = (Math.random() - 0.5) * 0.2;
+                this.speedY = (Math.random() - 0.5) * 0.2;
+                this.opacity = Math.random() * 0.5;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
+            }
+            draw() {
+                ctx.fillStyle = `rgba(148, 163, 184, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < 100; i++) particles.push(new Particle());
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+        animate();
 
     </script>
 </body>
