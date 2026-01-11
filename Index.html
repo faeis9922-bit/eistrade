@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>EISTRADE AI - Enterprise Platform</title>
+    <title>EISTRADE AI - Platinum Terminal</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -14,467 +14,280 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+
     <style>
-        /* --- CORE VARIABLES --- */
         :root {
             --bg-dark: #020617;
-            --bg-panel: rgba(15, 23, 42, 0.75);
-            --primary: #06b6d4;  /* Cyan */
-            --primary-glow: rgba(6, 182, 212, 0.5);
-            --accent: #8b5cf6;   /* Violet */
+            --primary: #06b6d4;
+            --accent: #8b5cf6;
             --success: #10b981;
             --danger: #ef4444;
-            --warning: #f59e0b;
-            --text-main: #f1f5f9;
-            --border-glass: rgba(255, 255, 255, 0.1);
             --font-tech: 'Rajdhani', sans-serif;
             --font-body: 'Prompt', sans-serif;
         }
 
-        /* --- GLOBAL & TYPOGRAPHY --- */
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            font-family: var(--font-body);
-            overflow-x: hidden;
-            min-height: 100vh;
-        }
-        h1, h2, h3, h4, .tech-font { font-family: var(--font-tech); text-transform: uppercase; }
+        body { background-color: var(--bg-dark); color: #f1f5f9; font-family: var(--font-body); overflow-x: hidden; }
+        .tech-font { font-family: var(--font-tech); text-transform: uppercase; }
 
-        /* --- BACKGROUND FX --- */
-        #starfield {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; pointer-events: none;
-            background: radial-gradient(circle at 50% 10%, #1e293b 0%, #020617 80%);
-        }
+        /* Background & Glass */
+        #starfield { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; background: radial-gradient(circle at 50% 10%, #1e293b 0%, #020617 80%); }
+        .glass { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); }
+        .glass-input { background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); color: white; transition: all 0.3s ease; }
+        .glass-input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 15px rgba(6, 182, 212, 0.2); }
 
-        /* --- GLASSMORPHISM --- */
-        .glass {
-            background: var(--bg-panel);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--border-glass);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-        .glass-input {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
-            transition: all 0.3s ease;
-        }
-        .glass-input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 15px rgba(6, 182, 212, 0.2);
-            outline: none;
-        }
-
-        /* --- ANIMATIONS --- */
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes pulse-border { 0% { border-color: rgba(6, 182, 212, 0.2); } 50% { border-color: rgba(6, 182, 212, 0.8); box-shadow: 0 0 15px var(--primary-glow); } 100% { border-color: rgba(6, 182, 212, 0.2); } }
-        
-        .anim-fade { animation: fadeIn 0.6s ease-out forwards; }
-        .anim-slide { animation: slideUp 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-        
-        /* --- COMPONENTS --- */
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), #0891b2);
-            color: white; font-weight: 700; letter-spacing: 1px;
-            transition: all 0.3s; position: relative; overflow: hidden;
-            box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
-        }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(6, 182, 212, 0.4); }
-        .btn-primary:active { transform: translateY(0); }
-        .btn-primary:disabled { filter: grayscale(1); opacity: 0.6; cursor: not-allowed; }
-
-        .nav-item {
-            position: relative; color: #64748b; cursor: pointer; transition: 0.3s;
-        }
-        .nav-item:hover, .nav-item.active { color: var(--primary); }
-        .nav-item.active::after {
-            content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
-            width: 4px; height: 4px; background: var(--primary); border-radius: 50%;
-            box-shadow: 0 0 8px var(--primary);
-        }
-
-        /* --- SCANNER EFFECT --- */
-        .scanner-line {
-            position: absolute; width: 100%; height: 2px; background: var(--primary);
-            box-shadow: 0 0 15px var(--primary); top: 0; opacity: 0; z-index: 10;
-        }
-        .scanning .scanner-line { animation: scan 2s ease-in-out infinite; opacity: 1; }
+        /* Animations */
         @keyframes scan { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
+        .scanner-line { position: absolute; width: 100%; height: 2px; background: var(--primary); box-shadow: 0 0 15px var(--primary); animation: scan 2s ease-in-out infinite; opacity: 0; }
+        .scanning .scanner-line { opacity: 1; }
+        .anim-fade { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- TABLE STYLE --- */
-        .custom-table th { font-weight: 600; color: #94a3b8; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
-        .custom-table td { color: #e2e8f0; font-family: 'Rajdhani', monospace; font-size: 0.95rem; }
-        .tr-hover:hover { background: rgba(255, 255, 255, 0.03); }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
-        /* --- TOAST --- */
-        #toast-box {
-            position: fixed; top: 20px; right: 20px; z-index: 9999;
-            display: flex; flex-direction: column; gap: 10px;
-        }
-        .toast {
-            min-width: 300px; padding: 16px; border-radius: 8px;
-            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px);
-            border-left: 4px solid var(--primary);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .toast.show { transform: translateX(0); }
+        /* Components */
+        .btn-primary { background: linear-gradient(135deg, var(--primary), #0891b2); color: white; font-weight: 700; transition: 0.3s; position: relative; overflow: hidden; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 20px rgba(6, 182, 212, 0.4); }
+        .asset-item { transition: all 0.2s; cursor: pointer; border: 1px solid transparent; }
+        .asset-item:hover { background: rgba(255,255,255,0.05); border-color: var(--primary); }
+        .asset-item.active { background: rgba(6, 182, 212, 0.1); border-color: var(--primary); box-shadow: 0 0 15px rgba(6,182,212,0.1); }
     </style>
 </head>
 <body>
 
     <canvas id="starfield"></canvas>
 
-    <div id="loader" class="fixed inset-0 z-[100] bg-[#020617] flex flex-col items-center justify-center transition-opacity duration-500">
-        <div class="relative w-24 h-24 mb-6">
-            <div class="absolute inset-0 border-4 border-cyan-500/20 rounded-full"></div>
-            <div class="absolute inset-0 border-4 border-cyan-500 rounded-full border-t-transparent animate-spin"></div>
-            <div class="absolute inset-4 bg-cyan-500/10 rounded-full animate-pulse"></div>
-        </div>
-        <h1 class="text-3xl font-bold text-white tracking-[0.2em] animate-pulse">EISTRADE</h1>
-        <p class="text-cyan-500 font-mono text-sm mt-2">SYSTEM INITIALIZING...</p>
+    <div id="loader" class="fixed inset-0 z-[100] bg-[#020617] flex flex-col items-center justify-center">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-cyan-500 border-r-4 border-transparent mb-4"></div>
+        <h1 class="text-2xl font-bold tech-font tracking-widest text-white">EISTRADE <span class="text-cyan-500">PLATINUM</span></h1>
     </div>
 
-    <div id="toast-box"></div>
+    <div id="toast-box" class="fixed top-5 right-5 z-[9999] flex flex-col gap-2"></div>
 
     <section id="auth-page" class="min-h-screen flex items-center justify-center p-4 hidden">
-        <div class="glass w-full max-w-5xl rounded-3xl overflow-hidden flex flex-col md:flex-row shadow-2xl relative border border-slate-800">
+        <div class="glass w-full max-w-md p-8 rounded-3xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 to-purple-600"></div>
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-white tech-font mb-1">EIS<span class="text-cyan-400">TRADE</span></h1>
+                <p class="text-slate-400 text-xs tracking-widest uppercase">AI Market Intelligence</p>
+            </div>
             
-            <div class="w-full md:w-5/12 bg-slate-900/60 p-12 flex flex-col justify-between relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent"></div>
-                
-                <div>
-                    <div class="w-12 h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center mb-6 border border-cyan-500/50">
-                        <i class="fa-solid fa-chart-simple text-2xl text-cyan-400"></i>
-                    </div>
-                    <h1 class="text-5xl font-bold text-white mb-2 leading-tight tech-font">EIS<br><span class="text-cyan-400">TRADE</span></h1>
-                    <p class="text-slate-400 text-sm tracking-wide mt-4">AI-POWERED MARKET INTELLIGENCE<br>VERSION 2.0 ENTERPRISE</p>
+            <form onsubmit="event.preventDefault(); Auth.login();" id="login-form">
+                <div class="space-y-4">
+                    <input type="email" id="l-email" class="glass-input w-full rounded-xl py-3 px-4" placeholder="Email Address" required>
+                    <input type="password" id="l-pass" class="glass-input w-full rounded-xl py-3 px-4" placeholder="Password" required>
+                    <button type="submit" class="btn-primary w-full py-3 rounded-xl shadow-lg">LOGIN TERMINAL</button>
                 </div>
-
-                <div class="space-y-4 mt-12">
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-cyan-400"><i class="fa-solid fa-robot"></i></div>
-                        <div>
-                            <div class="text-white font-bold text-sm">Gemini 1.5 Vision</div>
-                            <div class="text-slate-500 text-xs">Real-time Chart Analysis</div>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-purple-400"><i class="fa-solid fa-database"></i></div>
-                        <div>
-                            <div class="text-white font-bold text-sm">Cloud Sync</div>
-                            <div class="text-slate-500 text-xs">Secure Firebase Storage</div>
-                        </div>
-                    </div>
+                <div class="mt-4 text-center">
+                    <button type="button" onclick="Auth.switch('register')" class="text-cyan-400 text-sm hover:underline">Create Account</button>
                 </div>
-            </div>
+            </form>
 
-            <div class="w-full md:w-7/12 p-10 relative flex flex-col justify-center bg-black/20">
-                
-                <div id="login-form" class="auth-content anim-fade">
-                    <h2 class="text-2xl font-bold text-white mb-1 lang" key="login_title">ACCESS TERMINAL</h2>
-                    <p class="text-slate-400 text-sm mb-8 lang" key="login_subtitle">Please authenticate to continue.</p>
-
-                    <form onsubmit="event.preventDefault(); Auth.login();">
-                        <div class="space-y-5">
-                            <div>
-                                <label class="text-xs text-cyan-500 font-bold uppercase mb-2 block tracking-wider lang" key="email">Identity (Email)</label>
-                                <div class="relative">
-                                    <i class="fa-solid fa-envelope absolute left-4 top-3.5 text-slate-500"></i>
-                                    <input type="email" id="l-email" class="glass-input w-full rounded-xl py-3 pl-10 pr-4 text-sm" placeholder="trader@eistrade.com" required>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="text-xs text-cyan-500 font-bold uppercase mb-2 block tracking-wider lang" key="password">Passcode</label>
-                                <div class="relative">
-                                    <i class="fa-solid fa-lock absolute left-4 top-3.5 text-slate-500"></i>
-                                    <input type="password" id="l-pass" class="glass-input w-full rounded-xl py-3 pl-10 pr-4 text-sm" placeholder="••••••••" required>
-                                </div>
-                            </div>
-                            <button type="submit" class="btn-primary w-full py-4 rounded-xl mt-4 flex items-center justify-center gap-2 group">
-                                <span class="lang" key="btn_login">ESTABLISH CONNECTION</span> 
-                                <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition"></i>
-                            </button>
-                        </div>
-                    </form>
-
-                    <div class="mt-8 text-center pt-6 border-t border-slate-800">
-                        <p class="text-slate-500 text-sm mb-2 lang" key="no_account">New to the system?</p>
-                        <button onclick="Auth.switch('register')" class="text-cyan-400 font-bold hover:text-cyan-300 transition text-sm uppercase tracking-wider lang" key="create_one">Create Identity</button>
-                    </div>
+            <form onsubmit="event.preventDefault(); Auth.register();" id="register-form" class="hidden">
+                <div class="space-y-4">
+                    <input type="email" id="r-email" class="glass-input w-full rounded-xl py-3 px-4" placeholder="New Email" required>
+                    <input type="password" id="r-pass" class="glass-input w-full rounded-xl py-3 px-4" placeholder="Create Password" required>
+                    <button type="submit" class="btn-primary w-full py-3 rounded-xl bg-purple-600 !shadow-purple-500/30 border-none">REGISTER ID</button>
                 </div>
-
-                <div id="register-form" class="auth-content hidden">
-                    <h2 class="text-2xl font-bold text-white mb-1 lang" key="reg_title">NEW REGISTRATION</h2>
-                    <p class="text-slate-400 text-sm mb-8 lang" key="reg_subtitle">Join the trading network.</p>
-
-                    <form onsubmit="event.preventDefault(); Auth.register();">
-                        <div class="space-y-5">
-                            <div>
-                                <label class="text-xs text-purple-500 font-bold uppercase mb-2 block tracking-wider lang" key="email">Email Address</label>
-                                <input type="email" id="r-email" class="glass-input w-full rounded-xl py-3 px-4 text-sm" placeholder="email@example.com" required>
-                            </div>
-                            <div>
-                                <label class="text-xs text-purple-500 font-bold uppercase mb-2 block tracking-wider lang" key="password">Set Password</label>
-                                <input type="password" id="r-pass" class="glass-input w-full rounded-xl py-3 px-4 text-sm" placeholder="Min 6 characters" required>
-                            </div>
-                            <button type="submit" class="btn-primary w-full py-4 rounded-xl mt-4 !bg-purple-600 !shadow-purple-500/30 border-none">
-                                <span class="lang" key="btn_register">INITIALIZE ACCOUNT</span>
-                            </button>
-                        </div>
-                    </form>
-
-                    <div class="mt-8 text-center pt-6 border-t border-slate-800">
-                        <button onclick="Auth.switch('login')" class="text-slate-400 hover:text-white transition text-sm flex items-center justify-center gap-2 mx-auto">
-                            <i class="fa-solid fa-arrow-left"></i> <span class="lang" key="back_login">Back to Login</span>
-                        </button>
-                    </div>
+                <div class="mt-4 text-center">
+                    <button type="button" onclick="Auth.switch('login')" class="text-slate-400 text-sm hover:text-white">Back to Login</button>
                 </div>
-
-            </div>
+            </form>
         </div>
     </section>
 
-    <section id="app-page" class="hidden min-h-screen pb-20">
+    <section id="app-page" class="hidden min-h-screen flex flex-col">
         
-        <header class="fixed top-0 w-full z-40 glass h-16 px-6 flex items-center justify-between border-b border-white/5 bg-[#020617]/80 backdrop-blur-md">
+        <header class="h-16 glass z-40 fixed top-0 w-full flex items-center justify-between px-4 lg:px-8 border-b border-white/5 bg-[#0f172a]/90">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold shadow-lg">E</div>
-                <div>
-                    <h1 class="text-lg font-bold tracking-widest leading-none">EIS<span class="text-cyan-400">TRADE</span></h1>
-                </div>
+                <div class="w-8 h-8 bg-cyan-500 rounded flex items-center justify-center font-bold text-black">E</div>
+                <span class="font-bold tracking-widest hidden sm:block">EIS<span class="text-cyan-400">TRADE</span></span>
             </div>
-            
             <div class="flex items-center gap-4">
-                <button onclick="Lang.toggle()" class="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700 hover:border-cyan-500 transition group">
-                    <i class="fa-solid fa-globe text-cyan-500 group-hover:rotate-180 transition duration-500"></i>
-                    <span id="current-lang" class="text-xs font-bold text-slate-300">TH</span>
-                </button>
-
-                <div class="h-6 w-px bg-slate-700"></div>
-
-                <div class="relative group">
-                    <button class="flex items-center gap-3 hover:bg-slate-800/50 p-1.5 rounded-lg transition">
-                        <div class="text-right hidden sm:block">
-                            <div id="user-display" class="text-xs font-bold text-white">Trader</div>
-                            <div class="text-[9px] text-green-400 font-mono">● SECURE</div>
-                        </div>
-                        <div class="w-8 h-8 rounded-full bg-slate-700 overflow-hidden border border-slate-600">
-                            <img src="https://ui-avatars.com/api/?name=User&background=0f172a&color=fff" alt="User" class="w-full h-full object-cover">
-                        </div>
-                    </button>
-                    <div class="absolute right-0 top-full mt-2 w-48 bg-[#0f172a] border border-slate-700 rounded-xl shadow-2xl overflow-hidden hidden group-hover:block anim-fade">
-                        <button onclick="Settings.open()" class="w-full text-left px-4 py-3 text-xs hover:bg-slate-800 text-slate-300 hover:text-white flex items-center gap-2">
-                            <i class="fa-solid fa-key text-cyan-400"></i> <span class="lang" key="menu_api">API Configuration</span>
-                        </button>
-                        <div class="h-px bg-slate-800"></div>
-                        <button onclick="Auth.logout()" class="w-full text-left px-4 py-3 text-xs hover:bg-red-900/20 text-red-400 flex items-center gap-2">
-                            <i class="fa-solid fa-power-off"></i> <span class="lang" key="menu_logout">Disconnect</span>
-                        </button>
-                    </div>
+                <div class="text-right hidden sm:block">
+                    <div id="user-display" class="text-xs font-bold text-white">Trader</div>
+                    <div class="text-[9px] text-green-400">ONLINE</div>
                 </div>
+                <button onclick="Settings.open()" class="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-cyan-400 transition">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+                <button onclick="auth.signOut()" class="w-9 h-9 rounded-full bg-red-900/30 hover:bg-red-900/50 flex items-center justify-center text-red-400 transition">
+                    <i class="fa-solid fa-power-off"></i>
+                </button>
             </div>
         </header>
 
-        <main class="pt-24 px-4 max-w-7xl mx-auto flex flex-col lg:flex-row gap-6">
-            
-            <div class="w-full lg:w-4/12 space-y-6">
+        <main class="flex-1 pt-20 pb-10 px-4 max-w-[1600px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <div class="lg:col-span-7 space-y-6">
                 
-                <div class="glass p-6 rounded-2xl relative overflow-hidden">
-                    <div class="flex justify-between items-center mb-4">
-                        <label class="text-xs text-cyan-500 font-bold uppercase tracking-wider lang" key="label_asset">1. Target Asset</label>
-                        <i class="fa-solid fa-crosshairs text-slate-600"></i>
+                <div class="glass rounded-2xl overflow-hidden flex flex-col h-[500px]">
+                    <div class="p-3 bg-slate-900/50 border-b border-slate-700 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <button onclick="AssetModal.open()" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-1.5 rounded-lg border border-slate-600 transition group">
+                                <img id="curr-icon" src="https://cryptologos.cc/logos/gold-aux-logo.png?v=026" class="w-5 h-5 rounded-full bg-white object-contain">
+                                <span id="curr-pair-display" class="font-bold font-mono">XAUUSD</span>
+                                <i class="fa-solid fa-chevron-down text-xs text-slate-500 group-hover:text-cyan-400"></i>
+                            </button>
+                            <span class="text-xs text-slate-500 hidden sm:block">Real-time Data</span>
+                        </div>
+                        <div class="flex gap-2">
+                             <span class="px-2 py-1 rounded bg-green-500/10 text-green-400 text-[10px] border border-green-500/20 animate-pulse">● LIVE</span>
+                        </div>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-2 mb-3">
-                        <button onclick="App.setPair('XAUUSD')" class="pair-btn active bg-slate-800 border border-cyan-500 text-cyan-400 p-2.5 rounded-lg font-bold text-sm shadow-[0_0_10px_rgba(6,182,212,0.2)]">GOLD</button>
-                        <button onclick="App.setPair('BTCUSD')" class="pair-btn bg-slate-800/50 border border-slate-700 text-slate-400 p-2.5 rounded-lg font-bold text-sm hover:bg-slate-700 transition">BTC</button>
-                        <button onclick="App.setPair('EURUSD')" class="pair-btn bg-slate-800/50 border border-slate-700 text-slate-400 p-2.5 rounded-lg font-bold text-sm hover:bg-slate-700 transition">EUR</button>
-                    </div>
-                    <input type="text" id="custom-pair" class="glass-input w-full rounded-lg p-2.5 text-sm uppercase text-center font-bold tracking-widest" placeholder="CUSTOM PAIR (e.g. GBPJPY)" onkeyup="App.setPair(this.value, true)">
+                    <div id="tv-chart-container" class="flex-1 bg-black w-full h-full relative">
+                        </div>
                 </div>
 
-                <div class="glass p-6 rounded-2xl">
-                    <div class="flex justify-between items-center mb-4">
-                        <label class="text-xs text-cyan-500 font-bold uppercase tracking-wider lang" key="label_vision">2. Chart Data Input</label>
-                        <i class="fa-solid fa-eye text-slate-600"></i>
-                    </div>
-                    
-                    <div id="drop-zone" class="border-2 border-dashed border-slate-700 rounded-xl h-60 relative overflow-hidden flex flex-col items-center justify-center transition-all bg-[#020617]/50 hover:border-cyan-500/50 cursor-pointer group">
-                        <input type="file" id="file-input" accept="image/*" class="absolute inset-0 opacity-0 z-20 cursor-pointer">
-                        
-                        <div id="upload-empty" class="text-center group-hover:scale-105 transition duration-300">
-                            <div class="w-16 h-16 rounded-full bg-slate-800/80 flex items-center justify-center mx-auto mb-3 shadow-inner ring-1 ring-slate-700">
-                                <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-400 group-hover:text-cyan-400 transition"></i>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass p-5 rounded-2xl">
+                        <div class="flex justify-between items-center mb-3">
+                            <label class="text-xs text-cyan-500 font-bold uppercase">Source Image</label>
+                            <button id="btn-clear" onclick="App.clearImage()" class="text-xs text-red-400 hover:text-white hidden"><i class="fa-solid fa-trash"></i> Clear</button>
+                        </div>
+                        <div id="drop-zone" class="border-2 border-dashed border-slate-700 rounded-xl h-40 relative flex flex-col items-center justify-center bg-[#020617]/50 hover:border-cyan-500/50 cursor-pointer group transition overflow-hidden">
+                            <input type="file" id="file-input" accept="image/*" class="absolute inset-0 opacity-0 z-20 cursor-pointer">
+                            
+                            <div id="upload-empty" class="text-center">
+                                <i class="fa-solid fa-camera text-2xl text-slate-500 group-hover:text-cyan-400 mb-2 transition"></i>
+                                <p class="text-xs text-slate-400">Click to Upload / Capture</p>
                             </div>
-                            <h3 class="font-bold text-slate-200 text-sm lang" key="upload_title">Upload Chart Image</h3>
-                            <p class="text-[10px] text-slate-500 mt-1 lang" key="upload_desc">Max size 5MB (JPG/PNG)</p>
+                            
+                            <img id="img-preview" class="absolute inset-0 w-full h-full object-contain hidden z-10 bg-black">
+                            
+                            <div id="scan-fx" class="absolute inset-0 z-15 hidden">
+                                <div class="scanner-line"></div>
+                                <div class="absolute inset-0 bg-cyan-500/10 mix-blend-overlay"></div>
+                            </div>
                         </div>
+                    </div>
 
-                        <img id="img-preview" class="absolute inset-0 w-full h-full object-contain hidden z-10 bg-black">
-                        
-                        <div id="scan-fx" class="absolute inset-0 z-15 hidden">
-                            <div class="scanner-line"></div>
-                            <div class="absolute inset-0 bg-cyan-500/10 mix-blend-overlay"></div>
+                    <div class="glass p-5 rounded-2xl flex flex-col justify-between">
+                        <div>
+                            <label class="text-xs text-purple-500 font-bold uppercase mb-2 block">AI Execution</label>
+                            <p class="text-[10px] text-slate-400 mb-4">Gemini Vision 1.5 will analyze chart patterns, support/resistance, and indicators.</p>
                         </div>
-
-                        <button id="btn-clear" onclick="App.clearImage()" class="absolute top-2 right-2 z-30 bg-red-500/80 hover:bg-red-600 text-white w-8 h-8 rounded-full hidden items-center justify-center shadow-lg backdrop-blur hover:rotate-90 transition">
-                            <i class="fa-solid fa-xmark"></i>
+                        <button id="btn-analyze" onclick="AI.analyze()" class="btn-primary w-full py-4 rounded-xl text-lg tracking-widest flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fa-solid fa-microchip group-hover:animate-pulse"></i> ANALYZE
                         </button>
                     </div>
                 </div>
-
-                <button id="btn-analyze" onclick="AI.analyze()" class="w-full btn-primary py-5 rounded-2xl text-xl uppercase tracking-widest relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed group">
-                    <span class="relative z-10 flex items-center justify-center gap-3">
-                        <i class="fa-solid fa-microchip group-hover:animate-pulse"></i> 
-                        <span class="lang" key="btn_analyze">RUN ANALYSIS</span>
-                    </span>
-                    <div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition duration-500 ease-in-out"></div>
-                </button>
-
             </div>
 
-            <div class="w-full lg:w-8/12 flex flex-col gap-6">
+            <div class="lg:col-span-5 flex flex-col gap-6">
                 
-                <div class="flex gap-1 bg-slate-900/50 p-1 rounded-xl w-fit border border-slate-800">
-                    <button onclick="UI.switchTab('result')" id="tab-res" class="px-6 py-2 rounded-lg text-sm font-bold transition-all bg-slate-800 text-cyan-400 shadow-lg lang" key="tab_result">LIVE SIGNAL</button>
-                    <button onclick="UI.switchTab('history')" id="tab-hist" class="px-6 py-2 rounded-lg text-sm font-bold transition-all text-slate-400 hover:text-white lang" key="tab_history">DATABASE LOG</button>
+                <div class="flex gap-2 p-1 glass rounded-xl w-fit">
+                    <button onclick="UI.tab('result')" id="t-res" class="px-4 py-2 rounded-lg text-xs font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/50">LIVE SIGNAL</button>
+                    <button onclick="UI.tab('history')" id="t-hist" class="px-4 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white">HISTORY</button>
                 </div>
 
-                <div id="view-result" class="flex-1 min-h-[500px] anim-slide">
+                <div id="v-result" class="flex-1 space-y-4 anim-fade">
                     
-                    <div id="res-placeholder" class="h-full flex flex-col items-center justify-center text-slate-600 py-20 border border-slate-800 rounded-3xl bg-slate-900/20">
-                        <i class="fa-solid fa-satellite-dish text-7xl mb-6 opacity-20 animate-pulse"></i>
-                        <p class="text-sm font-light tracking-wider uppercase lang" key="waiting_data">Awaiting Data Stream...</p>
+                    <div id="res-wait" class="h-64 flex flex-col items-center justify-center border border-slate-800 rounded-2xl bg-slate-900/20">
+                        <i class="fa-solid fa-chart-line text-4xl text-slate-700 mb-3"></i>
+                        <p class="text-slate-500 text-xs uppercase tracking-wider">Ready for Analysis</p>
                     </div>
 
-                    <div id="res-content" class="hidden space-y-4">
-                        <div class="glass p-0 rounded-3xl overflow-hidden relative group">
-                            <div id="signal-bg" class="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900 to-slate-800 opacity-90 z-0"></div>
-                            
-                            <div id="signal-color-bar" class="absolute left-0 top-0 bottom-0 w-2 bg-slate-600 z-10"></div>
-
-                            <div class="p-8 relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div id="res-data" class="hidden space-y-4">
+                        <div class="glass p-6 rounded-2xl relative overflow-hidden border-t-4" id="sig-card">
+                            <div class="flex justify-between items-start mb-4">
                                 <div>
-                                    <div class="flex items-center gap-3 mb-2">
-                                        <span id="res-pair" class="px-2 py-0.5 bg-white/10 rounded text-[10px] font-bold tracking-wider text-slate-300 border border-white/5">XAUUSD</span>
-                                        <span class="text-[10px] text-slate-500 flex items-center gap-1"><i class="fa-solid fa-clock"></i> <span id="res-time">Just now</span></span>
-                                    </div>
-                                    <h2 id="res-action" class="text-7xl font-bold tech-font text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">WAIT</h2>
-                                    <div class="flex items-center gap-3 mt-2">
-                                        <div class="h-2 w-32 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
-                                            <div id="conf-bar" class="h-full bg-cyan-400 w-0 transition-all duration-1000 shadow-[0_0_10px_cyan]"></div>
-                                        </div>
-                                        <span id="res-conf" class="text-xs text-cyan-400 font-bold font-mono">0% AI CONFIDENCE</span>
+                                    <h2 id="r-action" class="text-5xl font-bold tech-font text-white">BUY</h2>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <div class="h-1.5 w-20 bg-slate-700 rounded-full overflow-hidden"><div id="r-bar" class="h-full bg-white w-0"></div></div>
+                                        <span id="r-conf" class="text-xs font-mono text-cyan-400">90%</span>
                                     </div>
                                 </div>
-                                
-                                <div class="grid grid-cols-3 gap-px bg-slate-700/50 rounded-xl overflow-hidden border border-slate-700">
-                                    <div class="bg-slate-900 p-4 text-center min-w-[100px]">
-                                        <div class="text-[10px] text-slate-500 uppercase mb-1">ENTRY</div>
-                                        <div id="res-entry" class="text-lg font-mono font-bold text-white">-</div>
-                                    </div>
-                                    <div class="bg-slate-900 p-4 text-center min-w-[100px]">
-                                        <div class="text-[10px] text-red-500 uppercase mb-1">STOP LOSS</div>
-                                        <div id="res-sl" class="text-lg font-mono font-bold text-red-400">-</div>
-                                    </div>
-                                    <div class="bg-slate-900 p-4 text-center min-w-[100px]">
-                                        <div class="text-[10px] text-green-500 uppercase mb-1">TAKE PROFIT</div>
-                                        <div id="res-tp" class="text-lg font-mono font-bold text-green-400">-</div>
-                                    </div>
+                                <div class="text-right">
+                                    <div class="text-[10px] text-slate-400 uppercase">ENTRY PRICE</div>
+                                    <div id="r-entry" class="text-xl font-mono font-bold text-white">2034.50</div>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="bg-red-500/10 border border-red-500/20 p-3 rounded-lg">
+                                    <div class="text-[10px] text-red-400 font-bold mb-1">STOP LOSS</div>
+                                    <div id="r-sl" class="font-mono text-white text-lg">-</div>
+                                </div>
+                                <div class="bg-green-500/10 border border-green-500/20 p-3 rounded-lg">
+                                    <div class="text-[10px] text-green-400 font-bold mb-1">TAKE PROFIT</div>
+                                    <div id="r-tp" class="font-mono text-white text-lg">-</div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="glass p-6 rounded-2xl border-l-4 border-cyan-500 relative overflow-hidden">
-                            <i class="fa-solid fa-quote-right absolute top-4 right-4 text-6xl text-white/5"></i>
-                            <h4 class="text-sm font-bold text-cyan-400 mb-3 flex items-center gap-2">
-                                <i class="fa-solid fa-brain"></i> <span class="lang" key="ai_reason">AI ANALYSIS REASONING</span>
-                            </h4>
-                            <p id="res-reason" class="text-slate-300 font-light leading-relaxed text-sm relative z-10">-</p>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="glass p-5 rounded-xl border border-green-500/20 bg-green-500/5">
-                                <div class="flex items-center gap-3 mb-2">
-                                    <div class="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center text-green-400"><i class="fa-solid fa-arrow-trend-up"></i></div>
-                                    <span class="text-xs font-bold text-green-400 uppercase">Strong Buy Zone</span>
-                                </div>
-                                <div id="res-z-buy" class="text-xl font-mono text-white pl-11">-</div>
-                            </div>
-                            <div class="glass p-5 rounded-xl border border-red-500/20 bg-red-500/5">
-                                <div class="flex items-center gap-3 mb-2">
-                                    <div class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center text-red-400"><i class="fa-solid fa-arrow-trend-down"></i></div>
-                                    <span class="text-xs font-bold text-red-400 uppercase">Strong Sell Zone</span>
-                                </div>
-                                <div id="res-z-sell" class="text-xl font-mono text-white pl-11">-</div>
-                            </div>
+                        <div class="glass p-5 rounded-2xl">
+                            <h3 class="text-xs font-bold text-cyan-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-brain"></i> AI REASONING</h3>
+                            <p id="r-reason" class="text-sm text-slate-300 font-light leading-relaxed">-</p>
                         </div>
                     </div>
                 </div>
 
-                <div id="view-history" class="hidden flex-1 anim-slide">
-                    <div class="glass rounded-2xl overflow-hidden min-h-[500px] flex flex-col">
-                        <div class="p-5 border-b border-slate-700 bg-slate-900/50 flex justify-between items-center">
-                            <h3 class="font-bold text-white flex items-center gap-2"><i class="fa-solid fa-list text-cyan-500"></i> <span class="lang" key="hist_title">TRANSACTION LOG</span></h3>
-                            <button onclick="History.load()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded text-white transition"><i class="fa-solid fa-rotate"></i> Refresh</button>
-                        </div>
-                        <div class="overflow-x-auto flex-1">
-                            <table class="w-full text-left custom-table">
-                                <thead class="bg-slate-900/80">
-                                    <tr>
-                                        <th class="p-4">Time</th>
-                                        <th class="p-4">Pair</th>
-                                        <th class="p-4">Signal</th>
-                                        <th class="p-4">Entry</th>
-                                        <th class="p-4 text-right">Confidence</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="history-table-body">
-                                    </tbody>
-                            </table>
-                        </div>
+                <div id="v-history" class="hidden flex-1 h-[500px] glass rounded-2xl overflow-hidden flex flex-col">
+                    <div class="p-4 border-b border-slate-700 bg-slate-900/50 flex justify-between">
+                        <span class="font-bold text-sm text-white">Past Signals</span>
+                        <button onclick="History.load()" class="text-xs text-cyan-400"><i class="fa-solid fa-rotate"></i></button>
                     </div>
+                    <div class="overflow-y-auto flex-1 p-2 space-y-2" id="hist-list">
+                        </div>
                 </div>
 
             </div>
         </main>
+
     </section>
 
-    <div id="modal-settings" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 anim-fade">
-        <div class="glass w-full max-w-md rounded-2xl p-6 shadow-2xl border border-cyan-500/30 relative">
-            <button onclick="Settings.close()" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-            
-            <h3 class="text-xl font-bold tech-font text-white mb-6 flex items-center gap-2">
-                <i class="fa-solid fa-gear text-cyan-400"></i> SYSTEM CONFIGURATION
-            </h3>
+    <div id="modal-asset" class="fixed inset-0 z-[60] hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass w-full max-w-lg rounded-2xl overflow-hidden flex flex-col max-h-[80vh]">
+            <div class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-900">
+                <h3 class="font-bold text-white">SELECT ASSET</h3>
+                <button onclick="AssetModal.close()" class="w-8 h-8 rounded-full hover:bg-slate-800 text-slate-400"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-4">
+                <div class="relative mb-4">
+                    <i class="fa-solid fa-search absolute left-3 top-3 text-slate-500"></i>
+                    <input type="text" id="asset-search" onkeyup="AssetModal.filter()" class="w-full bg-slate-800 border border-slate-600 rounded-lg py-2.5 pl-10 pr-4 text-sm text-white focus:border-cyan-500 outline-none" placeholder="Search Symbol (e.g. BTC, XAU, EUR)">
+                </div>
+                <div class="flex gap-2 mb-4 overflow-x-auto pb-2">
+                    <button onclick="AssetModal.filterType('all')" class="px-3 py-1 rounded-full text-xs font-bold bg-cyan-600 text-white">ALL</button>
+                    <button onclick="AssetModal.filterType('forex')" class="px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-400 hover:text-white">FOREX</button>
+                    <button onclick="AssetModal.filterType('crypto')" class="px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-400 hover:text-white">CRYPTO</button>
+                    <button onclick="AssetModal.filterType('index')" class="px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-400 hover:text-white">INDICES</button>
+                </div>
+            </div>
+            <div id="asset-list" class="flex-1 overflow-y-auto p-4 pt-0 grid grid-cols-1 gap-2">
+                </div>
+        </div>
+    </div>
+
+    <div id="modal-settings" class="fixed inset-0 z-[60] hidden bg-black/90 backdrop-blur flex items-center justify-center p-4">
+        <div class="glass w-full max-w-md rounded-2xl p-6 relative border border-cyan-500/30">
+            <button onclick="Settings.close()" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="text-xl font-bold tech-font text-white mb-6">CONFIGURATION</h3>
             
             <div class="mb-6">
-                <label class="text-xs text-slate-400 block mb-2 font-bold uppercase tracking-wider">Gemini API Key (Required for AI)</label>
+                <label class="text-xs text-slate-400 block mb-2 font-bold uppercase">Gemini API Key</label>
                 <div class="relative group">
-                    <i class="fa-brands fa-google absolute left-3 top-3 text-slate-500 group-focus-within:text-cyan-400 transition"></i>
-                    <input type="password" id="set-api-key" class="w-full bg-black/50 border border-slate-600 rounded-lg py-3 pl-10 pr-2 text-xs font-mono text-cyan-400 focus:border-cyan-500 outline-none transition shadow-inner" placeholder="Paste AIza... key here">
+                    <i class="fa-brands fa-google absolute left-3 top-3.5 text-slate-500"></i>
+                    <input type="password" id="set-api-key" class="w-full bg-black/50 border border-slate-600 rounded-lg py-3 pl-10 pr-10 text-xs font-mono text-cyan-400 focus:border-cyan-500 outline-none transition" placeholder="Paste AIza... key here">
+                    <button onclick="Settings.toggleEye()" class="absolute right-3 top-3 text-slate-500 hover:text-white focus:outline-none">
+                        <i id="eye-icon" class="fa-solid fa-eye-slash"></i>
+                    </button>
                 </div>
-                <p class="text-[10px] text-slate-500 mt-2">
-                    <i class="fa-solid fa-circle-info text-cyan-500"></i> 
-                    Key is stored locally in your browser. <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-cyan-400 underline">Get Key Here</a>
-                </p>
+                <p class="text-[10px] text-slate-500 mt-2">Key is stored locally. Never shared.</p>
             </div>
 
-            <button onclick="Settings.save()" class="w-full btn-primary py-3 rounded-lg shadow-lg text-sm">SAVE & CLOSE</button>
+            <button onclick="Settings.save()" class="w-full btn-primary py-3 rounded-lg shadow-lg text-sm">SAVE SETTINGS</button>
         </div>
     </div>
 
     <script>
-        /**
-         * ------------------------------------------------------------------
-         * CONFIGURATION - ใส่ Firebase Config ที่คุณให้มาแล้วเรียบร้อย
-         * ------------------------------------------------------------------
-         */
+        // --- CONFIG ---
         const FIREBASE_CONFIG = {
             apiKey: "AIzaSyADXGuFyQ-hVkMYCZVy1GHPB218iztS1Ag",
             authDomain: "eistrade.firebaseapp.com",
@@ -485,182 +298,59 @@
             measurementId: "G-R0WF2FVMT2"
         };
 
-        // Initialize Firebase
-        try {
-            if (!firebase.apps.length) {
-                firebase.initializeApp(FIREBASE_CONFIG);
-            }
-        } catch(e) { console.error("Firebase Init Error:", e); }
+        // --- ASSET DATABASE ---
+        const ASSETS = [
+            { s: 'XAUUSD', n: 'Gold / US Dollar', t: 'forex', i: 'https://cryptologos.cc/logos/gold-aux-logo.png?v=026' },
+            { s: 'EURUSD', n: 'Euro / US Dollar', t: 'forex', i: 'https://upload.wikimedia.org/wikipedia/commons/b/b7/Flag_of_Europe.svg' },
+            { s: 'GBPUSD', n: 'British Pound / US Dollar', t: 'forex', i: 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Flag_of_the_United_Kingdom.svg' },
+            { s: 'USDJPY', n: 'US Dollar / Japanese Yen', t: 'forex', i: 'https://upload.wikimedia.org/wikipedia/en/9/9e/Flag_of_Japan.svg' },
+            { s: 'BTCUSD', n: 'Bitcoin', t: 'crypto', i: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png' },
+            { s: 'ETHUSD', n: 'Ethereum', t: 'crypto', i: 'https://cryptologos.cc/logos/ethereum-eth-logo.png' },
+            { s: 'SOLUSD', n: 'Solana', t: 'crypto', i: 'https://cryptologos.cc/logos/solana-sol-logo.png' },
+            { s: 'US30', n: 'Dow Jones 30', t: 'index', i: 'https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg' },
+            { s: 'NAS100', n: 'Nasdaq 100', t: 'index', i: 'https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg' },
+        ];
 
-        const db = firebase.firestore();
+        // --- INIT FIREBASE ---
+        try { if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG); } catch(e){}
         const auth = firebase.auth();
+        const db = firebase.firestore();
 
-        /**
-         * ------------------------------------------------------------------
-         * TRANSLATION DATA
-         * ------------------------------------------------------------------
-         */
-        const DICT = {
-            en: {
-                login_title: "ACCESS TERMINAL", login_subtitle: "Please authenticate to continue.", email: "IDENTITY (EMAIL)", password: "PASSCODE",
-                btn_login: "ESTABLISH CONNECTION", no_account: "New to the system?", create_one: "Create Identity",
-                reg_title: "NEW REGISTRATION", reg_subtitle: "Join the trading network.", btn_register: "INITIALIZE ACCOUNT", back_login: "Back to Login",
-                menu_api: "API Configuration", menu_logout: "Disconnect", label_asset: "1. Target Asset", label_vision: "2. Chart Data Input",
-                upload_title: "Upload Chart Image", upload_desc: "Max size 5MB (JPG/PNG)", btn_analyze: "RUN ANALYSIS",
-                tab_result: "LIVE SIGNAL", tab_history: "DATABASE LOG", waiting_data: "Awaiting Data Stream...", ai_reason: "AI ANALYSIS REASONING",
-                hist_title: "TRANSACTION LOG", toast_success: "Operation Successful", toast_error: "System Error", toast_welcome: "Welcome, Trader."
-            },
-            th: {
-                login_title: "เข้าสู่ระบบ", login_subtitle: "กรุณายืนยันตัวตนเพื่อเข้าใช้งาน", email: "อีเมล", password: "รหัสผ่าน",
-                btn_login: "เข้าสู่ระบบทันที", no_account: "ยังไม่มีบัญชี?", create_one: "สมัครสมาชิก",
-                reg_title: "สมัครสมาชิกใหม่", reg_subtitle: "เข้าร่วมเครือข่าย EISTRADE", btn_register: "ยืนยันการสมัคร", back_login: "กลับไปหน้าเข้าสู่ระบบ",
-                menu_api: "ตั้งค่า API Key", menu_logout: "ออกจากระบบ", label_asset: "1. เลือกสินทรัพย์", label_vision: "2. ข้อมูลกราฟ",
-                upload_title: "อัปโหลดรูปกราฟ", upload_desc: "รองรับ JPG/PNG (สูงสุด 5MB)", btn_analyze: "เริ่มวิเคราะห์ AI",
-                tab_result: "ผลวิเคราะห์ล่าสุด", tab_history: "ประวัติย้อนหลัง", waiting_data: "รอข้อมูลเพื่อประมวลผล...", ai_reason: "เหตุผลการวิเคราะห์จาก AI",
-                hist_title: "บันทึกธุรกรรม", toast_success: "ดำเนินการสำเร็จ", toast_error: "เกิดข้อผิดพลาด", toast_welcome: "ยินดีต้อนรับ เทรดเดอร์"
-            }
-        };
-
-        /**
-         * ------------------------------------------------------------------
-         * CORE APP LOGIC
-         * ------------------------------------------------------------------
-         */
-        
-        // 1. Language System
-        const Lang = {
-            curr: 'th',
-            toggle() {
-                this.curr = this.curr === 'th' ? 'en' : 'th';
-                document.getElementById('current-lang').innerText = this.curr.toUpperCase();
-                this.render();
-                // If result exists, re-render it to switch text
-                if(AI.data) AI.display(AI.data); 
-            },
-            render() {
-                document.querySelectorAll('.lang').forEach(el => {
-                    const k = el.getAttribute('key');
-                    if(DICT[this.curr][k]) el.innerText = DICT[this.curr][k];
-                });
-            },
-            get(k) { return DICT[this.curr][k] || k; }
-        };
-
-        // 2. Auth System
-        const Auth = {
-            user: null,
-            init() {
-                auth.onAuthStateChanged(u => {
-                    this.user = u;
-                    const loader = document.getElementById('loader');
-                    if(u) {
-                        document.getElementById('auth-page').classList.add('hidden');
-                        document.getElementById('app-page').classList.remove('hidden');
-                        document.getElementById('user-display').innerText = u.email.split('@')[0];
-                        Toast.show(Lang.get('toast_welcome'), 'success');
-                        History.load(); // Auto load history
-                    } else {
-                        document.getElementById('auth-page').classList.remove('hidden');
-                        document.getElementById('app-page').classList.add('hidden');
-                    }
-                    setTimeout(()=> loader.classList.add('opacity-0'), 1000);
-                    setTimeout(()=> loader.style.display = 'none', 1500);
-                });
-            },
-            switch(page) {
-                if(page === 'register') {
-                    document.getElementById('login-form').classList.add('hidden');
-                    document.getElementById('register-form').classList.remove('hidden');
-                    document.getElementById('register-form').classList.add('anim-fade');
-                } else {
-                    document.getElementById('register-form').classList.add('hidden');
-                    document.getElementById('login-form').classList.remove('hidden');
-                    document.getElementById('login-form').classList.add('anim-fade');
-                }
-            },
-            async login() {
-                const e = document.getElementById('l-email').value;
-                const p = document.getElementById('l-pass').value;
-                try { await auth.signInWithEmailAndPassword(e, p); }
-                catch(err) { Toast.show(err.message, 'error'); }
-            },
-            async register() {
-                const e = document.getElementById('r-email').value;
-                const p = document.getElementById('r-pass').value;
-                try { await auth.createUserWithEmailAndPassword(e, p); }
-                catch(err) { Toast.show(err.message, 'error'); }
-            },
-            logout() { auth.signOut(); }
-        };
-
-        // 3. UI Manager
-        const UI = {
-            switchTab(t) {
-                const btnRes = document.getElementById('tab-res');
-                const btnHist = document.getElementById('tab-hist');
-                const viewRes = document.getElementById('view-result');
-                const viewHist = document.getElementById('view-history');
-
-                if(t === 'result') {
-                    btnRes.classList.replace('text-slate-400','text-cyan-400');
-                    btnRes.classList.add('bg-slate-800','shadow-lg');
-                    btnHist.classList.remove('bg-slate-800','shadow-lg','text-cyan-400');
-                    btnHist.classList.add('text-slate-400');
-                    
-                    viewRes.classList.remove('hidden');
-                    viewHist.classList.add('hidden');
-                } else {
-                    btnHist.classList.replace('text-slate-400','text-cyan-400');
-                    btnHist.classList.add('bg-slate-800','shadow-lg');
-                    btnRes.classList.remove('bg-slate-800','shadow-lg','text-cyan-400');
-                    btnRes.classList.add('text-slate-400');
-
-                    viewHist.classList.remove('hidden');
-                    viewRes.classList.add('hidden');
-                    History.load();
-                }
-            }
-        };
-
-        // 4. Toast System
-        const Toast = {
-            show(msg, type='info') {
-                const box = document.getElementById('toast-box');
-                const el = document.createElement('div');
-                const color = type === 'success' ? 'var(--success)' : (type === 'error' ? 'var(--danger)' : 'var(--primary)');
-                el.className = 'toast';
-                el.style.borderLeftColor = color;
-                el.innerHTML = `<div class="font-bold text-white text-sm">${type.toUpperCase()}</div><div class="text-slate-300 text-xs">${msg}</div>`;
-                box.appendChild(el);
-                
-                requestAnimationFrame(() => el.classList.add('show'));
-                setTimeout(() => {
-                    el.classList.remove('show');
-                    setTimeout(() => el.remove(), 300);
-                }, 3000);
-            }
-        };
-
-        // 5. Application Logic
+        // --- APP LOGIC ---
         const App = {
             pair: 'XAUUSD',
             imgData: null,
             
-            setPair(v, custom=false) {
-                this.pair = v.toUpperCase();
-                if(!custom) {
-                    document.getElementById('custom-pair').value = '';
-                    document.querySelectorAll('.pair-btn').forEach(b => {
-                        b.classList.remove('active', 'bg-slate-800', 'border-cyan-500', 'text-cyan-400', 'shadow-[0_0_10px_rgba(6,182,212,0.2)]');
-                        b.classList.add('bg-slate-800/50', 'border-slate-700', 'text-slate-400');
-                        if(b.innerText.includes(v.substring(0,3))) {
-                            b.classList.add('active', 'bg-slate-800', 'border-cyan-500', 'text-cyan-400', 'shadow-[0_0_10px_rgba(6,182,212,0.2)]');
-                            b.classList.remove('bg-slate-800/50', 'border-slate-700', 'text-slate-400');
-                        }
-                    });
-                }
+            init() {
+                this.loadChart('XAUUSD');
+                Auth.init();
+                AssetModal.init();
             },
-            
+
+            loadChart(symbol) {
+                this.pair = symbol;
+                // Update UI Header
+                document.getElementById('curr-pair-display').innerText = symbol;
+                const asset = ASSETS.find(a => a.s === symbol);
+                if(asset) document.getElementById('curr-icon').src = asset.i;
+
+                // Load TradingView Widget
+                document.getElementById('tv-chart-container').innerHTML = '';
+                new TradingView.widget({
+                    "autosize": true,
+                    "symbol": symbol.includes('USD') || symbol.includes('JPY') ? symbol : `BINANCE:${symbol}`,
+                    "interval": "15",
+                    "timezone": "Asia/Bangkok",
+                    "theme": "dark",
+                    "style": "1",
+                    "locale": "en",
+                    "toolbar_bg": "#f1f3f6",
+                    "enable_publishing": false,
+                    "hide_top_toolbar": false,
+                    "container_id": "tv-chart-container"
+                });
+            },
+
             handleFile(f) {
                 if(!f) return;
                 const r = new FileReader();
@@ -669,7 +359,7 @@
                     document.getElementById('img-preview').src = e.target.result;
                     document.getElementById('img-preview').classList.remove('hidden');
                     document.getElementById('upload-empty').classList.add('hidden');
-                    document.getElementById('btn-clear').style.display = 'flex';
+                    document.getElementById('btn-clear').classList.remove('hidden');
                 };
                 r.readAsDataURL(f);
             },
@@ -678,27 +368,88 @@
                 this.imgData = null;
                 document.getElementById('img-preview').classList.add('hidden');
                 document.getElementById('upload-empty').classList.remove('hidden');
-                document.getElementById('btn-clear').style.display = 'none';
+                document.getElementById('btn-clear').classList.add('hidden');
                 document.getElementById('file-input').value = '';
             }
         };
 
-        // 6. AI Engine (Gemini)
+        const AssetModal = {
+            init() { this.render(ASSETS); },
+            open() { document.getElementById('modal-asset').classList.remove('hidden'); },
+            close() { document.getElementById('modal-asset').classList.add('hidden'); },
+            
+            render(list) {
+                const con = document.getElementById('asset-list');
+                con.innerHTML = '';
+                list.forEach(a => {
+                    const div = document.createElement('div');
+                    div.className = `asset-item flex items-center gap-3 p-3 rounded-xl bg-slate-800/50 border border-slate-700 ${App.pair === a.s ? 'active' : ''}`;
+                    div.onclick = () => { App.loadChart(a.s); this.close(); };
+                    div.innerHTML = `
+                        <img src="${a.i}" class="w-8 h-8 rounded-full bg-white object-contain p-0.5">
+                        <div>
+                            <div class="font-bold text-sm text-white">${a.s}</div>
+                            <div class="text-[10px] text-slate-400">${a.n}</div>
+                        </div>
+                        <div class="ml-auto text-[10px] uppercase font-bold text-slate-500 bg-slate-900 px-2 py-1 rounded border border-slate-700">${a.t}</div>
+                    `;
+                    con.appendChild(div);
+                });
+            },
+            
+            filter() {
+                const q = document.getElementById('asset-search').value.toUpperCase();
+                const filtered = ASSETS.filter(a => a.s.includes(q) || a.n.toUpperCase().includes(q));
+                this.render(filtered);
+            },
+            
+            filterType(t) {
+                const filtered = t === 'all' ? ASSETS : ASSETS.filter(a => a.t === t);
+                this.render(filtered);
+            }
+        };
+
+        const Settings = {
+            open() {
+                document.getElementById('modal-settings').classList.remove('hidden');
+                document.getElementById('set-api-key').value = localStorage.getItem('gemini_api_key') || '';
+            },
+            close() { document.getElementById('modal-settings').classList.add('hidden'); },
+            
+            toggleEye() {
+                const input = document.getElementById('set-api-key');
+                const icon = document.getElementById('eye-icon');
+                if(input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.replace('fa-eye-slash', 'fa-eye');
+                    icon.classList.add('text-cyan-400');
+                } else {
+                    input.type = 'password';
+                    icon.classList.replace('fa-eye', 'fa-eye-slash');
+                    icon.classList.remove('text-cyan-400');
+                }
+            },
+            
+            save() {
+                localStorage.setItem('gemini_api_key', document.getElementById('set-api-key').value.trim());
+                Toast.show('Configuration Saved');
+                this.close();
+            }
+        };
+
         const AI = {
-            data: null,
             async analyze() {
                 const key = localStorage.getItem('gemini_api_key');
-                if(!key) return Toast.show('Please set API Key in Settings first!', 'error');
-                if(!App.imgData) return Toast.show('Please upload an image!', 'error');
+                if(!key) return Toast.show('Please set API Key first!', 'error');
+                if(!App.imgData) return Toast.show('No image uploaded!', 'error');
 
                 const btn = document.getElementById('btn-analyze');
                 btn.disabled = true;
-                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> PROCESSING DATA...';
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> SCANNING...';
                 document.getElementById('scan-fx').classList.remove('hidden');
-                document.getElementById('drop-zone').classList.add('scanning');
 
                 try {
-                    const prompt = `Analyze this chart for ${App.pair}. Respond in JSON ONLY: {"action":"BUY/SELL/WAIT", "confidence":80, "entry":"1234", "sl":"1230", "tp":"1250", "reason_th":"...", "reason_en":"...", "zone_buy":"...", "zone_sell":"..."}`;
+                    const prompt = `Analyze chart for ${App.pair}. Return JSON ONLY: {"action":"BUY/SELL/WAIT", "confidence":85, "entry":"1.2345", "sl":"1.2300", "tp":"1.2400", "reason":"Brief technical reason in Thai language."}`;
                     
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
                         method: 'POST',
@@ -712,71 +463,57 @@
                     if(raw.error) throw new Error(raw.error.message);
                     
                     const txt = raw.candidates[0].content.parts[0].text.replace(/```json|```/g,'').trim();
-                    this.data = JSON.parse(txt);
+                    const data = JSON.parse(txt);
                     
-                    // Display & Save
-                    this.display(this.data);
-                    History.save(this.data);
-                    Toast.show(Lang.get('toast_success'), 'success');
+                    this.display(data);
+                    History.save(data);
+                    Toast.show('Analysis Complete');
 
                 } catch(e) {
-                    console.error(e);
                     Toast.show(e.message, 'error');
                 } finally {
                     btn.disabled = false;
-                    btn.innerHTML = `<span class="relative z-10 flex items-center justify-center gap-3"><i class="fa-solid fa-microchip"></i> <span>${Lang.get('btn_analyze')}</span></span><div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition duration-500 ease-in-out"></div>`;
+                    btn.innerHTML = '<i class="fa-solid fa-microchip"></i> ANALYZE';
                     document.getElementById('scan-fx').classList.add('hidden');
-                    document.getElementById('drop-zone').classList.remove('scanning');
                 }
             },
             display(d) {
-                UI.switchTab('result');
-                document.getElementById('res-placeholder').classList.add('hidden');
-                document.getElementById('res-content').classList.remove('hidden');
+                UI.tab('result');
+                document.getElementById('res-wait').classList.add('hidden');
+                document.getElementById('res-data').classList.remove('hidden');
                 
                 const isBuy = d.action === 'BUY';
                 const isSell = d.action === 'SELL';
-                const color = isBuy ? '#10b981' : (isSell ? '#ef4444' : '#64748b');
-                
-                document.getElementById('res-pair').innerText = App.pair;
-                document.getElementById('res-time').innerText = new Date().toLocaleTimeString();
-                
-                const actEl = document.getElementById('res-action');
-                actEl.innerText = d.action;
-                actEl.className = `text-7xl font-bold tech-font drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] ${isBuy ? 'text-green-500' : (isSell ? 'text-red-500' : 'text-slate-400')}`;
-                
-                document.getElementById('signal-color-bar').style.backgroundColor = color;
-                document.getElementById('conf-bar').style.width = d.confidence + '%';
-                document.getElementById('res-conf').innerText = d.confidence + '% CONFIDENCE';
-                
-                document.getElementById('res-entry').innerText = d.entry;
-                document.getElementById('res-sl').innerText = d.sl;
-                document.getElementById('res-tp').innerText = d.tp;
-                document.getElementById('res-reason').innerText = Lang.curr === 'th' ? d.reason_th : d.reason_en;
-                document.getElementById('res-z-buy').innerText = d.zone_buy || '-';
-                document.getElementById('res-z-sell').innerText = d.zone_sell || '-';
+                const color = isBuy ? 'text-green-400' : (isSell ? 'text-red-400' : 'text-slate-400');
+                const borderColor = isBuy ? 'border-green-500' : (isSell ? 'border-red-500' : 'border-slate-500');
+
+                document.getElementById('sig-card').className = `glass p-6 rounded-2xl relative overflow-hidden border-t-4 ${borderColor}`;
+                document.getElementById('r-action').innerText = d.action;
+                document.getElementById('r-action').className = `text-5xl font-bold tech-font ${color}`;
+                document.getElementById('r-conf').innerText = d.confidence + '%';
+                document.getElementById('r-bar').style.width = d.confidence + '%';
+                document.getElementById('r-entry').innerText = d.entry;
+                document.getElementById('r-sl').innerText = d.sl;
+                document.getElementById('r-tp').innerText = d.tp;
+                document.getElementById('r-reason').innerText = d.reason;
             }
         };
 
-        // 7. History System (Firestore)
         const History = {
             async save(d) {
                 if(!Auth.user) return;
-                try {
-                    await db.collection('analysis_logs').add({
-                        uid: Auth.user.uid,
-                        pair: App.pair,
-                        action: d.action,
-                        entry: d.entry,
-                        confidence: d.confidence,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                } catch(e) { console.error("Save failed", e); }
+                await db.collection('analysis_logs').add({
+                    uid: Auth.user.uid,
+                    pair: App.pair,
+                    action: d.action,
+                    entry: d.entry,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
             },
             async load() {
                 if(!Auth.user) return;
-                const tbody = document.getElementById('history-table-body');
-                tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-500"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</td></tr>';
+                const list = document.getElementById('hist-list');
+                list.innerHTML = '<div class="text-center p-4 text-slate-500"><i class="fa-solid fa-spinner fa-spin"></i></div>';
                 
                 try {
                     const snap = await db.collection('analysis_logs')
@@ -785,82 +522,112 @@
                         .limit(20)
                         .get();
                         
+                    list.innerHTML = '';
                     if(snap.empty) {
-                        tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-500">No data found</td></tr>';
+                        list.innerHTML = '<div class="text-center p-4 text-slate-500 text-xs">No Data</div>';
                         return;
                     }
                     
-                    let h = '';
                     snap.forEach(doc => {
                         const r = doc.data();
-                        const time = r.timestamp ? new Date(r.timestamp.toDate()).toLocaleTimeString() : '-';
                         const color = r.action === 'BUY' ? 'text-green-400' : (r.action === 'SELL' ? 'text-red-400' : 'text-slate-400');
-                        h += `<tr class="tr-hover border-b border-white/5 transition">
-                            <td class="p-4 text-slate-400">${time}</td>
-                            <td class="p-4 font-bold text-white">${r.pair}</td>
-                            <td class="p-4 ${color} font-bold">${r.action}</td>
-                            <td class="p-4 font-mono">${r.entry}</td>
-                            <td class="p-4 text-right font-mono text-cyan-500">${r.confidence}%</td>
-                        </tr>`;
+                        const time = r.timestamp ? new Date(r.timestamp.toDate()).toLocaleTimeString() : '-';
+                        
+                        const div = document.createElement('div');
+                        div.className = 'flex justify-between items-center p-3 rounded-lg bg-slate-800/40 border border-white/5 hover:bg-slate-800 transition';
+                        div.innerHTML = `
+                            <div>
+                                <div class="font-bold text-white text-sm">${r.pair}</div>
+                                <div class="text-[10px] text-slate-500">${time}</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="${color} font-bold text-sm">${r.action}</div>
+                                <div class="text-[10px] text-slate-400 font-mono">${r.entry}</div>
+                            </div>
+                        `;
+                        list.appendChild(div);
                     });
-                    tbody.innerHTML = h;
                 } catch(e) {
-                    console.error(e);
-                    // Handle Indexing Error (Required composite index in Firestore)
-                    tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-red-400 text-xs">Error: Firestore Index Required or Permission Denied.</td></tr>';
+                    list.innerHTML = '<div class="text-center text-red-400 text-xs p-2">Index Required</div>';
                 }
             }
         };
 
-        // 8. Settings Logic
-        const Settings = {
-            open() {
-                document.getElementById('modal-settings').classList.remove('hidden');
-                document.getElementById('set-api-key').value = localStorage.getItem('gemini_api_key') || '';
+        const Auth = {
+            user: null,
+            init() {
+                auth.onAuthStateChanged(u => {
+                    this.user = u;
+                    const loader = document.getElementById('loader');
+                    if(u) {
+                        document.getElementById('auth-page').classList.add('hidden');
+                        document.getElementById('app-page').classList.remove('hidden');
+                        document.getElementById('user-display').innerText = u.email.split('@')[0];
+                        History.load();
+                    } else {
+                        document.getElementById('auth-page').classList.remove('hidden');
+                        document.getElementById('app-page').classList.add('hidden');
+                    }
+                    setTimeout(()=>loader.remove(), 1000);
+                });
             },
-            close() { document.getElementById('modal-settings').classList.add('hidden'); },
-            save() {
-                const k = document.getElementById('set-api-key').value.trim();
-                localStorage.setItem('gemini_api_key', k);
-                Toast.show('Configuration Saved', 'success');
-                this.close();
+            async login() {
+                try { await auth.signInWithEmailAndPassword(document.getElementById('l-email').value, document.getElementById('l-pass').value); }
+                catch(e) { Toast.show(e.message, 'error'); }
+            },
+            async register() {
+                try { await auth.createUserWithEmailAndPassword(document.getElementById('r-email').value, document.getElementById('r-pass').value); }
+                catch(e) { Toast.show(e.message, 'error'); }
+            },
+            switch(p) {
+                if(p==='register') { document.getElementById('login-form').classList.add('hidden'); document.getElementById('register-form').classList.remove('hidden'); }
+                else { document.getElementById('register-form').classList.add('hidden'); document.getElementById('login-form').classList.remove('hidden'); }
             }
         };
 
-        // 9. Particle Background
-        const canvas = document.getElementById('starfield');
-        const ctx = canvas.getContext('2d');
-        let particles = [];
-        
-        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        window.addEventListener('resize', resize);
-        resize();
-        
-        class Particle {
-            constructor() { this.reset(); }
-            reset() {
-                this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 1.5; this.speed = Math.random() * 0.2; this.op = Math.random() * 0.5;
+        const UI = {
+            tab(t) {
+                if(t==='result') {
+                    document.getElementById('v-result').classList.remove('hidden');
+                    document.getElementById('v-history').classList.add('hidden');
+                    document.getElementById('t-res').classList.replace('text-slate-400','text-cyan-400');
+                    document.getElementById('t-res').classList.add('bg-cyan-500/20');
+                    document.getElementById('t-hist').classList.remove('text-cyan-400','bg-cyan-500/20');
+                } else {
+                    document.getElementById('v-history').classList.remove('hidden');
+                    document.getElementById('v-result').classList.add('hidden');
+                    document.getElementById('t-hist').classList.add('text-cyan-400','bg-cyan-500/20');
+                    document.getElementById('t-res').classList.remove('text-cyan-400','bg-cyan-500/20');
+                    History.load();
+                }
             }
-            update() {
-                this.y -= this.speed;
-                if(this.y < 0) this.reset();
-                ctx.fillStyle = `rgba(100, 116, 139, ${this.op})`;
-                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill();
+        };
+
+        const Toast = {
+            show(msg, type='info') {
+                const box = document.getElementById('toast-box');
+                const div = document.createElement('div');
+                div.className = `glass px-4 py-3 rounded-lg border-l-4 ${type==='error'?'border-red-500':'border-green-500'} text-xs text-white shadow-xl animate-bounce`;
+                div.innerText = msg;
+                box.appendChild(div);
+                setTimeout(()=>div.remove(), 3000);
             }
-        }
-        for(let i=0; i<80; i++) particles.push(new Particle());
-        function anim() {
-            ctx.clearRect(0,0,canvas.width,canvas.height);
-            particles.forEach(p => p.update());
+        };
+
+        // Starfield
+        const cvs = document.getElementById('starfield'), ctx = cvs.getContext('2d');
+        cvs.width=window.innerWidth; cvs.height=window.innerHeight;
+        let pts = Array(100).fill().map(()=>({x:Math.random()*cvs.width,y:Math.random()*cvs.height,s:Math.random()*2,sp:Math.random()*0.5}));
+        function anim(){
+            ctx.clearRect(0,0,cvs.width,cvs.height);
+            ctx.fillStyle='rgba(255,255,255,0.3)';
+            pts.forEach(p=>{ p.y-=p.sp; if(p.y<0)p.y=cvs.height; ctx.beginPath(); ctx.arc(p.x,p.y,p.s,0,Math.PI*2); ctx.fill(); });
             requestAnimationFrame(anim);
         }
         anim();
 
-        // 10. Event Listeners
         document.getElementById('file-input').addEventListener('change', e => App.handleFile(e.target.files[0]));
-        window.onload = () => { Lang.render(); Auth.init(); };
-
+        window.onload = () => App.init();
     </script>
 </body>
 </html>
