@@ -1,632 +1,661 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#0f172a">
-    <title>EISTRADE AI - Platinum Terminal</title>
-
+    <title>NAMTRADE ENTERPRISE | AI Terminal</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Prompt:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
+    
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 
     <style>
         :root {
-            --bg-dark: #020617;
-            --primary: #06b6d4;
-            --accent: #8b5cf6;
+            --bg-main: #0b0e14;
+            --bg-sec: #151a23;
+            --accent: #3b82f6;
             --success: #10b981;
             --danger: #ef4444;
-            --font-tech: 'Rajdhani', sans-serif;
-            --font-body: 'Prompt', sans-serif;
+            --text-main: #e2e8f0;
+            --text-sec: #94a3b8;
+            --glass: rgba(21, 26, 35, 0.85);
         }
+        body { background-color: var(--bg-main); color: var(--text-main); font-family: 'Inter', sans-serif; overflow: hidden; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Layout */
+        .app-grid { display: grid; grid-template-columns: 260px 1fr; height: 100vh; }
+        @media (max-width: 1024px) { .app-grid { grid-template-columns: 1fr; grid-template-rows: 1fr 70px; } }
+        
+        /* Sidebar */
+        .sidebar { background: var(--bg-sec); border-right: 1px solid #2d3748; display: flex; flex-direction: column; padding: 1.5rem; z-index: 50; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; color: var(--text-sec); cursor: pointer; transition: all 0.2s; font-weight: 500; margin-bottom: 4px; }
+        .nav-item:hover, .nav-item.active { background: rgba(59, 130, 246, 0.1); color: var(--accent); }
+        .nav-item.active { border-left: 3px solid var(--accent); }
+        
+        /* Mobile Nav */
+        .mobile-nav { display: none; background: var(--bg-sec); border-top: 1px solid #2d3748; justify-content: space-around; align-items: center; padding: 0 1rem; z-index: 50; }
+        @media (max-width: 1024px) { .sidebar { display: none; } .mobile-nav { display: flex; } }
 
-        body { background-color: var(--bg-dark); color: #f1f5f9; font-family: var(--font-body); overflow-x: hidden; }
-        .tech-font { font-family: var(--font-tech); text-transform: uppercase; }
-
-        /* Background & Glass */
-        #starfield { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; background: radial-gradient(circle at 50% 10%, #1e293b 0%, #020617 80%); }
-        .glass { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); }
-        .glass-input { background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); color: white; transition: all 0.3s ease; }
-        .glass-input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 15px rgba(6, 182, 212, 0.2); }
-
-        /* Animations */
-        @keyframes scan { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
-        .scanner-line { position: absolute; width: 100%; height: 2px; background: var(--primary); box-shadow: 0 0 15px var(--primary); animation: scan 2s ease-in-out infinite; opacity: 0; }
-        .scanning .scanner-line { opacity: 1; }
-        .anim-fade { animation: fadeIn 0.5s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+        /* Main Content */
+        .main-area { overflow-y: auto; position: relative; padding: 2rem; }
+        @media (max-width: 768px) { .main-area { padding: 1rem; padding-bottom: 100px; } }
 
         /* Components */
-        .btn-primary { background: linear-gradient(135deg, var(--primary), #0891b2); color: white; font-weight: 700; transition: 0.3s; position: relative; overflow: hidden; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 20px rgba(6, 182, 212, 0.4); }
-        .asset-item { transition: all 0.2s; cursor: pointer; border: 1px solid transparent; }
-        .asset-item:hover { background: rgba(255,255,255,0.05); border-color: var(--primary); }
-        .asset-item.active { background: rgba(6, 182, 212, 0.1); border-color: var(--primary); box-shadow: 0 0 15px rgba(6,182,212,0.1); }
+        .card { background: var(--bg-sec); border: 1px solid #2d3748; border-radius: 16px; padding: 1.5rem; position: relative; overflow: hidden; }
+        .btn { background: var(--accent); color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; justify-content: center; }
+        .btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-outline { background: transparent; border: 1px solid #2d3748; color: var(--text-sec); }
+        .btn-outline:hover { border-color: var(--text-main); color: var(--text-main); }
+        
+        .input-group { position: relative; }
+        .input-field { width: 100%; background: #0f131a; border: 1px solid #2d3748; padding: 12px 16px; border-radius: 8px; color: white; outline: none; transition: 0.2s; }
+        .input-field:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-main); }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+
+        /* Animations */
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Session Clock */
+        .clock-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .clock-active { background-color: var(--success); box-shadow: 0 0 8px var(--success); }
+        .clock-inactive { background-color: #475569; }
+
     </style>
 </head>
 <body>
 
-    <canvas id="starfield"></canvas>
-
-    <div id="loader" class="fixed inset-0 z-[100] bg-[#020617] flex flex-col items-center justify-center">
-        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-cyan-500 border-r-4 border-transparent mb-4"></div>
-        <h1 class="text-2xl font-bold tech-font tracking-widest text-white">EISTRADE <span class="text-cyan-500">PLATINUM</span></h1>
+    <div id="auth-screen" class="fixed inset-0 z-[100] bg-[#0b0e14] flex flex-col items-center justify-center p-4">
+        <div class="w-full max-w-md card fade-in">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold tracking-tight text-white mb-2">NAM<span class="text-blue-500">TRADE</span> <span class="text-xs align-top bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded border border-blue-500/30">ENT</span></h1>
+                <p class="text-sm text-slate-400">Professional AI Analytics Terminal</p>
+            </div>
+            <form onsubmit="event.preventDefault(); Auth.submit();" class="space-y-4">
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase ml-1">Email</label>
+                    <input type="email" id="auth-email" class="input-field mt-1" placeholder="trader@example.com" required>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase ml-1">Password</label>
+                    <input type="password" id="auth-pass" class="input-field mt-1" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn w-full py-3 text-lg shadow-lg shadow-blue-500/20">ACCESS TERMINAL</button>
+            </form>
+            <div class="mt-6 text-center">
+                <button onclick="Auth.toggleMode()" id="auth-switch-btn" class="text-sm text-slate-500 hover:text-white transition">Don't have an account? Register</button>
+            </div>
+        </div>
     </div>
 
-    <div id="toast-box" class="fixed top-5 right-5 z-[9999] flex flex-col gap-2"></div>
-
-    <section id="auth-page" class="min-h-screen flex items-center justify-center p-4 hidden">
-        <div class="glass w-full max-w-md p-8 rounded-3xl relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 to-purple-600"></div>
-            <div class="text-center mb-8">
-                <h1 class="text-4xl font-bold text-white tech-font mb-1">EIS<span class="text-cyan-400">TRADE</span></h1>
-                <p class="text-slate-400 text-xs tracking-widest uppercase">AI Market Intelligence</p>
-            </div>
-            
-            <form onsubmit="event.preventDefault(); Auth.login();" id="login-form">
-                <div class="space-y-4">
-                    <input type="email" id="l-email" class="glass-input w-full rounded-xl py-3 px-4" placeholder="Email Address" required>
-                    <input type="password" id="l-pass" class="glass-input w-full rounded-xl py-3 px-4" placeholder="Password" required>
-                    <button type="submit" class="btn-primary w-full py-3 rounded-xl shadow-lg">LOGIN TERMINAL</button>
-                </div>
-                <div class="mt-4 text-center">
-                    <button type="button" onclick="Auth.switch('register')" class="text-cyan-400 text-sm hover:underline">Create Account</button>
-                </div>
-            </form>
-
-            <form onsubmit="event.preventDefault(); Auth.register();" id="register-form" class="hidden">
-                <div class="space-y-4">
-                    <input type="email" id="r-email" class="glass-input w-full rounded-xl py-3 px-4" placeholder="New Email" required>
-                    <input type="password" id="r-pass" class="glass-input w-full rounded-xl py-3 px-4" placeholder="Create Password" required>
-                    <button type="submit" class="btn-primary w-full py-3 rounded-xl bg-purple-600 !shadow-purple-500/30 border-none">REGISTER ID</button>
-                </div>
-                <div class="mt-4 text-center">
-                    <button type="button" onclick="Auth.switch('login')" class="text-slate-400 text-sm hover:text-white">Back to Login</button>
-                </div>
-            </form>
-        </div>
-    </section>
-
-    <section id="app-page" class="hidden min-h-screen flex flex-col">
+    <div id="app-layout" class="app-grid hidden">
         
-        <header class="h-16 glass z-40 fixed top-0 w-full flex items-center justify-between px-4 lg:px-8 border-b border-white/5 bg-[#0f172a]/90">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-cyan-500 rounded flex items-center justify-center font-bold text-black">E</div>
-                <span class="font-bold tracking-widest hidden sm:block">EIS<span class="text-cyan-400">TRADE</span></span>
-            </div>
-            <div class="flex items-center gap-4">
-                <div class="text-right hidden sm:block">
-                    <div id="user-display" class="text-xs font-bold text-white">Trader</div>
-                    <div class="text-[9px] text-green-400">ONLINE</div>
+        <aside class="sidebar">
+            <div class="flex items-center gap-3 mb-10 px-2">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                    <i class="fa-solid fa-layer-group text-white text-lg"></i>
                 </div>
-                <button onclick="Settings.open()" class="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-cyan-400 transition">
-                    <i class="fa-solid fa-gear"></i>
-                </button>
-                <button onclick="auth.signOut()" class="w-9 h-9 rounded-full bg-red-900/30 hover:bg-red-900/50 flex items-center justify-center text-red-400 transition">
-                    <i class="fa-solid fa-power-off"></i>
-                </button>
+                <div>
+                    <h2 class="font-bold text-lg leading-tight">NAMTRADE</h2>
+                    <p class="text-[10px] text-slate-400 tracking-wider">ENTERPRISE</p>
+                </div>
             </div>
-        </header>
 
-        <main class="flex-1 pt-20 pb-10 px-4 max-w-[1600px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <nav class="flex-1 space-y-1">
+                <div class="nav-item active" onclick="Router.go('dashboard')"><i class="fa-solid fa-grid-2 w-6"></i> Dashboard</div>
+                <div class="nav-item" onclick="Router.go('terminal')"><i class="fa-solid fa-chart-line w-6"></i> AI Terminal</div>
+                <div class="nav-item" onclick="Router.go('journal')"><i class="fa-solid fa-book w-6"></i> Trade Journal</div>
+                <div class="nav-item" onclick="Router.go('calculator')"><i class="fa-solid fa-calculator w-6"></i> Tools & Calc</div>
+            </nav>
 
-            <div class="lg:col-span-7 space-y-6">
-                
-                <div class="glass rounded-2xl overflow-hidden flex flex-col h-[500px]">
-                    <div class="p-3 bg-slate-900/50 border-b border-slate-700 flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <button onclick="AssetModal.open()" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-1.5 rounded-lg border border-slate-600 transition group">
-                                <img id="curr-icon" src="https://cryptologos.cc/logos/gold-aux-logo.png?v=026" class="w-5 h-5 rounded-full bg-white object-contain">
-                                <span id="curr-pair-display" class="font-bold font-mono">XAUUSD</span>
-                                <i class="fa-solid fa-chevron-down text-xs text-slate-500 group-hover:text-cyan-400"></i>
+            <div class="mt-auto pt-6 border-t border-slate-800">
+                <div class="nav-item" onclick="Router.go('settings')"><i class="fa-solid fa-gear w-6"></i> Settings</div>
+                <div class="nav-item text-red-400 hover:bg-red-500/10 hover:text-red-400" onclick="Auth.logout()"><i class="fa-solid fa-power-off w-6"></i> Logout</div>
+            </div>
+        </aside>
+
+        <main class="main-area bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#0b0e14] to-[#0b0e14]">
+            
+            <div class="lg:hidden flex justify-between items-center mb-6">
+                <span class="font-bold text-xl">NAM<span class="text-blue-500">TRADE</span></span>
+                <button onclick="Auth.logout()" class="text-slate-400"><i class="fa-solid fa-power-off"></i></button>
+            </div>
+
+            <div id="view-dashboard" class="page-view fade-in">
+                <div class="flex justify-between items-end mb-6">
+                    <div>
+                        <h1 class="text-2xl font-bold text-white">Market Overview</h1>
+                        <p class="text-slate-400 text-sm">Welcome back, <span id="user-name" class="text-blue-400">Trader</span></p>
+                    </div>
+                    <div class="flex gap-2 text-xs font-mono bg-slate-800/50 p-2 rounded-lg border border-slate-700">
+                        <div class="flex items-center"><span id="session-tokyo" class="clock-dot clock-inactive"></span> TOKYO</div>
+                        <div class="flex items-center"><span id="session-london" class="clock-dot clock-inactive"></span> LONDON</div>
+                        <div class="flex items-center"><span id="session-ny" class="clock-dot clock-inactive"></span> NEW YORK</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="card bg-gradient-to-br from-slate-800 to-slate-900">
+                        <div class="text-slate-400 text-xs uppercase font-bold mb-2">Total Signals</div>
+                        <div class="text-4xl font-bold text-white" id="dash-total">0</div>
+                    </div>
+                    <div class="card bg-gradient-to-br from-slate-800 to-slate-900">
+                        <div class="text-slate-400 text-xs uppercase font-bold mb-2">Win Rate (Est.)</div>
+                        <div class="text-4xl font-bold text-green-400" id="dash-win">0%</div>
+                    </div>
+                    <div class="card bg-gradient-to-br from-blue-900/40 to-slate-900 border-blue-500/30">
+                        <div class="text-blue-400 text-xs uppercase font-bold mb-2">Last Action</div>
+                        <div class="text-xl font-bold text-white truncate" id="dash-last">-</div>
+                        <div class="text-xs text-slate-500 mt-1" id="dash-last-time">Waiting for data...</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card h-80">
+                        <h3 class="font-bold mb-4">Signal Distribution</h3>
+                        <canvas id="chart-signals"></canvas>
+                    </div>
+                    <div class="card h-80 overflow-y-auto">
+                        <h3 class="font-bold mb-4">Recent Alerts</h3>
+                        <div id="dash-logs" class="space-y-3">
+                            </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-terminal" class="page-view hidden fade-in h-full flex flex-col">
+                <div class="flex flex-wrap gap-3 mb-4">
+                    <button onclick="Terminal.setPair('XAUUSD')" class="btn-outline px-3 py-1.5 rounded-lg text-sm font-bold active-pair">GOLD</button>
+                    <button onclick="Terminal.setPair('EURUSD')" class="btn-outline px-3 py-1.5 rounded-lg text-sm font-bold">EURUSD</button>
+                    <button onclick="Terminal.setPair('GBPUSD')" class="btn-outline px-3 py-1.5 rounded-lg text-sm font-bold">GBPUSD</button>
+                    <button onclick="Terminal.setPair('BTCUSD')" class="btn-outline px-3 py-1.5 rounded-lg text-sm font-bold">BTC</button>
+                    <button onclick="Terminal.setPair('ETHUSD')" class="btn-outline px-3 py-1.5 rounded-lg text-sm font-bold">ETH</button>
+                    <div class="ml-auto relative">
+                        <input type="text" id="custom-pair" placeholder="Search..." class="bg-slate-800 border-none rounded-lg px-3 py-1.5 text-sm text-white focus:ring-1 focus:ring-blue-500 w-32" onchange="Terminal.setPair(this.value.toUpperCase())">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0">
+                    <div class="lg:col-span-8 card p-0 overflow-hidden flex flex-col h-[500px] lg:h-auto">
+                        <div id="tv-chart" class="w-full h-full bg-black"></div>
+                    </div>
+
+                    <div class="lg:col-span-4 flex flex-col gap-4 overflow-y-auto pr-1">
+                        <div class="card space-y-4">
+                            <div class="flex justify-between items-center">
+                                <h3 class="font-bold text-blue-400"><i class="fa-solid fa-robot mr-2"></i>Gemini Analysis</h3>
+                                <div class="text-[10px] text-slate-500 bg-slate-800 px-2 py-1 rounded">Vision 1.5</div>
+                            </div>
+                            
+                            <div class="relative group cursor-pointer" onclick="document.getElementById('file-upload').click()">
+                                <input type="file" id="file-upload" accept="image/*" class="hidden" onchange="AI.handleImage(this)">
+                                <div id="upload-zone" class="border-2 border-dashed border-slate-700 rounded-xl h-32 flex flex-col items-center justify-center bg-slate-800/30 hover:bg-slate-800/50 hover:border-blue-500 transition">
+                                    <i class="fa-solid fa-camera text-2xl text-slate-500 mb-2"></i>
+                                    <p class="text-xs text-slate-400">Tap to Upload Chart</p>
+                                </div>
+                                <img id="img-preview" class="absolute inset-0 w-full h-full object-cover rounded-xl hidden">
+                                <button id="btn-clear-img" onclick="event.stopPropagation(); AI.clearImage()" class="absolute top-2 right-2 bg-black/50 text-white rounded-full w-6 h-6 text-xs hidden hover:bg-red-500"><i class="fa-solid fa-times"></i></button>
+                            </div>
+
+                            <button id="btn-run-ai" onclick="AI.analyze()" class="btn w-full py-3 shadow-lg shadow-blue-500/10">
+                                <i class="fa-solid fa-bolt"></i> GENERATE SIGNAL
                             </button>
-                            <span class="text-xs text-slate-500 hidden sm:block">Real-time Data</span>
                         </div>
-                        <div class="flex gap-2">
-                             <span class="px-2 py-1 rounded bg-green-500/10 text-green-400 text-[10px] border border-green-500/20 animate-pulse">● LIVE</span>
-                        </div>
-                    </div>
-                    
-                    <div id="tv-chart-container" class="flex-1 bg-black w-full h-full relative">
-                        </div>
-                </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="glass p-5 rounded-2xl">
-                        <div class="flex justify-between items-center mb-3">
-                            <label class="text-xs text-cyan-500 font-bold uppercase">Source Image</label>
-                            <button id="btn-clear" onclick="App.clearImage()" class="text-xs text-red-400 hover:text-white hidden"><i class="fa-solid fa-trash"></i> Clear</button>
-                        </div>
-                        <div id="drop-zone" class="border-2 border-dashed border-slate-700 rounded-xl h-40 relative flex flex-col items-center justify-center bg-[#020617]/50 hover:border-cyan-500/50 cursor-pointer group transition overflow-hidden">
-                            <input type="file" id="file-input" accept="image/*" class="absolute inset-0 opacity-0 z-20 cursor-pointer">
-                            
-                            <div id="upload-empty" class="text-center">
-                                <i class="fa-solid fa-camera text-2xl text-slate-500 group-hover:text-cyan-400 mb-2 transition"></i>
-                                <p class="text-xs text-slate-400">Click to Upload / Capture</p>
+                        <div id="ai-result-box" class="card hidden border-l-4 border-l-blue-500">
+                            <div class="flex justify-between items-start mb-2">
+                                <h2 id="res-action" class="text-3xl font-bold font-mono">WAIT</h2>
+                                <span id="res-conf" class="bg-slate-800 text-white px-2 py-1 rounded text-xs font-mono">0%</span>
                             </div>
-                            
-                            <img id="img-preview" class="absolute inset-0 w-full h-full object-contain hidden z-10 bg-black">
-                            
-                            <div id="scan-fx" class="absolute inset-0 z-15 hidden">
-                                <div class="scanner-line"></div>
-                                <div class="absolute inset-0 bg-cyan-500/10 mix-blend-overlay"></div>
+                            <div class="grid grid-cols-2 gap-2 mb-3">
+                                <div class="bg-red-500/10 p-2 rounded border border-red-500/20">
+                                    <div class="text-[10px] text-red-400 font-bold">SL</div>
+                                    <div id="res-sl" class="font-mono text-sm">-</div>
+                                </div>
+                                <div class="bg-green-500/10 p-2 rounded border border-green-500/20">
+                                    <div class="text-[10px] text-green-400 font-bold">TP</div>
+                                    <div id="res-tp" class="font-mono text-sm">-</div>
+                                </div>
                             </div>
+                            <p id="res-reason" class="text-xs text-slate-300 leading-relaxed border-t border-slate-700 pt-2 mt-2">-</p>
                         </div>
-                    </div>
-
-                    <div class="glass p-5 rounded-2xl flex flex-col justify-between">
-                        <div>
-                            <label class="text-xs text-purple-500 font-bold uppercase mb-2 block">AI Execution</label>
-                            <p class="text-[10px] text-slate-400 mb-4">Gemini Vision 1.5 will analyze chart patterns, support/resistance, and indicators.</p>
-                        </div>
-                        <button id="btn-analyze" onclick="AI.analyze()" class="btn-primary w-full py-4 rounded-xl text-lg tracking-widest flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed">
-                            <i class="fa-solid fa-microchip group-hover:animate-pulse"></i> ANALYZE
-                        </button>
                     </div>
                 </div>
             </div>
 
-            <div class="lg:col-span-5 flex flex-col gap-6">
-                
-                <div class="flex gap-2 p-1 glass rounded-xl w-fit">
-                    <button onclick="UI.tab('result')" id="t-res" class="px-4 py-2 rounded-lg text-xs font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/50">LIVE SIGNAL</button>
-                    <button onclick="UI.tab('history')" id="t-hist" class="px-4 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white">HISTORY</button>
+            <div id="view-journal" class="page-view hidden fade-in">
+                <h1 class="text-2xl font-bold text-white mb-6">Trade Journal</h1>
+                <div class="card overflow-x-auto p-0">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-xs text-slate-500 uppercase border-b border-slate-800 bg-slate-900/50">
+                                <th class="p-4 font-bold">Time</th>
+                                <th class="p-4 font-bold">Pair</th>
+                                <th class="p-4 font-bold">Signal</th>
+                                <th class="p-4 font-bold">Entry</th>
+                                <th class="p-4 font-bold">Outcome</th>
+                            </tr>
+                        </thead>
+                        <tbody id="journal-body" class="text-sm">
+                            </tbody>
+                    </table>
                 </div>
-
-                <div id="v-result" class="flex-1 space-y-4 anim-fade">
-                    
-                    <div id="res-wait" class="h-64 flex flex-col items-center justify-center border border-slate-800 rounded-2xl bg-slate-900/20">
-                        <i class="fa-solid fa-chart-line text-4xl text-slate-700 mb-3"></i>
-                        <p class="text-slate-500 text-xs uppercase tracking-wider">Ready for Analysis</p>
-                    </div>
-
-                    <div id="res-data" class="hidden space-y-4">
-                        <div class="glass p-6 rounded-2xl relative overflow-hidden border-t-4" id="sig-card">
-                            <div class="flex justify-between items-start mb-4">
-                                <div>
-                                    <h2 id="r-action" class="text-5xl font-bold tech-font text-white">BUY</h2>
-                                    <div class="flex items-center gap-2 mt-1">
-                                        <div class="h-1.5 w-20 bg-slate-700 rounded-full overflow-hidden"><div id="r-bar" class="h-full bg-white w-0"></div></div>
-                                        <span id="r-conf" class="text-xs font-mono text-cyan-400">90%</span>
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <div class="text-[10px] text-slate-400 uppercase">ENTRY PRICE</div>
-                                    <div id="r-entry" class="text-xl font-mono font-bold text-white">2034.50</div>
-                                </div>
-                            </div>
-                            
-                            <div class="grid grid-cols-2 gap-3">
-                                <div class="bg-red-500/10 border border-red-500/20 p-3 rounded-lg">
-                                    <div class="text-[10px] text-red-400 font-bold mb-1">STOP LOSS</div>
-                                    <div id="r-sl" class="font-mono text-white text-lg">-</div>
-                                </div>
-                                <div class="bg-green-500/10 border border-green-500/20 p-3 rounded-lg">
-                                    <div class="text-[10px] text-green-400 font-bold mb-1">TAKE PROFIT</div>
-                                    <div id="r-tp" class="font-mono text-white text-lg">-</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="glass p-5 rounded-2xl">
-                            <h3 class="text-xs font-bold text-cyan-400 mb-2 flex items-center gap-2"><i class="fa-solid fa-brain"></i> AI REASONING</h3>
-                            <p id="r-reason" class="text-sm text-slate-300 font-light leading-relaxed">-</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="v-history" class="hidden flex-1 h-[500px] glass rounded-2xl overflow-hidden flex flex-col">
-                    <div class="p-4 border-b border-slate-700 bg-slate-900/50 flex justify-between">
-                        <span class="font-bold text-sm text-white">Past Signals</span>
-                        <button onclick="History.load()" class="text-xs text-cyan-400"><i class="fa-solid fa-rotate"></i></button>
-                    </div>
-                    <div class="overflow-y-auto flex-1 p-2 space-y-2" id="hist-list">
-                        </div>
-                </div>
-
             </div>
+
+            <div id="view-calculator" class="page-view hidden fade-in">
+                <h1 class="text-2xl font-bold text-white mb-6">Risk Calculator</h1>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="card">
+                        <h3 class="font-bold mb-4 text-blue-400">Position Sizing</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs text-slate-400">Account Balance ($)</label>
+                                <input type="number" id="calc-bal" class="input-field" value="1000">
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-400">Risk Percentage (%)</label>
+                                <input type="number" id="calc-risk" class="input-field" value="1">
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-400">Stop Loss (Pips)</label>
+                                <input type="number" id="calc-sl" class="input-field" value="20">
+                            </div>
+                            <button onclick="Tools.calculate()" class="btn w-full">CALCULATE</button>
+                        </div>
+                    </div>
+                    <div class="card flex flex-col justify-center items-center text-center bg-slate-800/30">
+                        <div class="text-slate-400 text-sm uppercase mb-2">Recommended Lot Size</div>
+                        <div id="calc-result" class="text-6xl font-bold font-mono text-white">0.00</div>
+                        <div class="text-xs text-slate-500 mt-2">Standard Lot (100k Units)</div>
+                        <div id="calc-risk-amt" class="mt-4 px-3 py-1 rounded-full bg-red-500/10 text-red-400 text-xs font-bold">Risk Amount: $0.00</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-settings" class="page-view hidden fade-in">
+                <h1 class="text-2xl font-bold text-white mb-6">System Configuration</h1>
+                <div class="max-w-xl card">
+                    <div class="mb-6">
+                        <label class="block text-sm font-bold text-slate-300 mb-2">Gemini API Key</label>
+                        <div class="relative">
+                            <input type="password" id="api-key-input" class="input-field pr-10" placeholder="AIzaSy...">
+                            <button onclick="Settings.toggleEye()" class="absolute right-3 top-3 text-slate-500 hover:text-white"><i id="api-eye" class="fa-solid fa-eye-slash"></i></button>
+                        </div>
+                        <p class="text-[10px] text-slate-500 mt-2">Required for AI analysis. Key is stored locally in your browser.</p>
+                    </div>
+                    <button onclick="Settings.save()" class="btn w-full">SAVE CONFIGURATION</button>
+                </div>
+            </div>
+
         </main>
 
-    </section>
-
-    <div id="modal-asset" class="fixed inset-0 z-[60] hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="glass w-full max-w-lg rounded-2xl overflow-hidden flex flex-col max-h-[80vh]">
-            <div class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-900">
-                <h3 class="font-bold text-white">SELECT ASSET</h3>
-                <button onclick="AssetModal.close()" class="w-8 h-8 rounded-full hover:bg-slate-800 text-slate-400"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="p-4">
-                <div class="relative mb-4">
-                    <i class="fa-solid fa-search absolute left-3 top-3 text-slate-500"></i>
-                    <input type="text" id="asset-search" onkeyup="AssetModal.filter()" class="w-full bg-slate-800 border border-slate-600 rounded-lg py-2.5 pl-10 pr-4 text-sm text-white focus:border-cyan-500 outline-none" placeholder="Search Symbol (e.g. BTC, XAU, EUR)">
-                </div>
-                <div class="flex gap-2 mb-4 overflow-x-auto pb-2">
-                    <button onclick="AssetModal.filterType('all')" class="px-3 py-1 rounded-full text-xs font-bold bg-cyan-600 text-white">ALL</button>
-                    <button onclick="AssetModal.filterType('forex')" class="px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-400 hover:text-white">FOREX</button>
-                    <button onclick="AssetModal.filterType('crypto')" class="px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-400 hover:text-white">CRYPTO</button>
-                    <button onclick="AssetModal.filterType('index')" class="px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-400 hover:text-white">INDICES</button>
-                </div>
-            </div>
-            <div id="asset-list" class="flex-1 overflow-y-auto p-4 pt-0 grid grid-cols-1 gap-2">
-                </div>
-        </div>
-    </div>
-
-    <div id="modal-settings" class="fixed inset-0 z-[60] hidden bg-black/90 backdrop-blur flex items-center justify-center p-4">
-        <div class="glass w-full max-w-md rounded-2xl p-6 relative border border-cyan-500/30">
-            <button onclick="Settings.close()" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            <h3 class="text-xl font-bold tech-font text-white mb-6">CONFIGURATION</h3>
-            
-            <div class="mb-6">
-                <label class="text-xs text-slate-400 block mb-2 font-bold uppercase">Gemini API Key</label>
-                <div class="relative group">
-                    <i class="fa-brands fa-google absolute left-3 top-3.5 text-slate-500"></i>
-                    <input type="password" id="set-api-key" class="w-full bg-black/50 border border-slate-600 rounded-lg py-3 pl-10 pr-10 text-xs font-mono text-cyan-400 focus:border-cyan-500 outline-none transition" placeholder="Paste AIza... key here">
-                    <button onclick="Settings.toggleEye()" class="absolute right-3 top-3 text-slate-500 hover:text-white focus:outline-none">
-                        <i id="eye-icon" class="fa-solid fa-eye-slash"></i>
-                    </button>
-                </div>
-                <p class="text-[10px] text-slate-500 mt-2">Key is stored locally. Never shared.</p>
-            </div>
-
-            <button onclick="Settings.save()" class="w-full btn-primary py-3 rounded-lg shadow-lg text-sm">SAVE SETTINGS</button>
-        </div>
+        <nav class="mobile-nav lg:hidden">
+            <div class="nav-item p-2" onclick="Router.go('dashboard')"><i class="fa-solid fa-grid-2 text-xl"></i></div>
+            <div class="nav-item p-2" onclick="Router.go('terminal')"><i class="fa-solid fa-chart-line text-xl"></i></div>
+            <div class="nav-item p-2" onclick="Router.go('calculator')"><i class="fa-solid fa-calculator text-xl"></i></div>
+            <div class="nav-item p-2" onclick="Router.go('settings')"><i class="fa-solid fa-gear text-xl"></i></div>
+        </nav>
     </div>
 
     <script>
-        // --- CONFIG ---
+        // --- CONFIGURATION ---
         const FIREBASE_CONFIG = {
-            apiKey: "AIzaSyADXGuFyQ-hVkMYCZVy1GHPB218iztS1Ag",
+            apiKey: "AIzaSyADXGuFyQ-hVkMYCZVy1GHPB218iztS1Ag", // ใส่ API Key Firebase ของคุณตรงนี้ (ถ้ามี)
             authDomain: "eistrade.firebaseapp.com",
             projectId: "eistrade",
             storageBucket: "eistrade.firebasestorage.app",
             messagingSenderId: "387010350248",
-            appId: "1:387010350248:web:1b2eb28de888943e1c069d",
-            measurementId: "G-R0WF2FVMT2"
+            appId: "1:387010350248:web:1b2eb28de888943e1c069d"
         };
 
-        // --- ASSET DATABASE ---
-        const ASSETS = [
-            { s: 'XAUUSD', n: 'Gold / US Dollar', t: 'forex', i: 'https://cryptologos.cc/logos/gold-aux-logo.png?v=026' },
-            { s: 'EURUSD', n: 'Euro / US Dollar', t: 'forex', i: 'https://upload.wikimedia.org/wikipedia/commons/b/b7/Flag_of_Europe.svg' },
-            { s: 'GBPUSD', n: 'British Pound / US Dollar', t: 'forex', i: 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Flag_of_the_United_Kingdom.svg' },
-            { s: 'USDJPY', n: 'US Dollar / Japanese Yen', t: 'forex', i: 'https://upload.wikimedia.org/wikipedia/en/9/9e/Flag_of_Japan.svg' },
-            { s: 'BTCUSD', n: 'Bitcoin', t: 'crypto', i: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png' },
-            { s: 'ETHUSD', n: 'Ethereum', t: 'crypto', i: 'https://cryptologos.cc/logos/ethereum-eth-logo.png' },
-            { s: 'SOLUSD', n: 'Solana', t: 'crypto', i: 'https://cryptologos.cc/logos/solana-sol-logo.png' },
-            { s: 'US30', n: 'Dow Jones 30', t: 'index', i: 'https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg' },
-            { s: 'NAS100', n: 'Nasdaq 100', t: 'index', i: 'https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg' },
-        ];
-
-        // --- INIT FIREBASE ---
-        try { if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG); } catch(e){}
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-
-        // --- APP LOGIC ---
+        // --- CORE MODULES ---
+        
+        // 1. DATABASE & AUTH
         const App = {
-            pair: 'XAUUSD',
-            imgData: null,
+            db: null,
+            auth: null,
+            user: null,
             
-            init() {
-                this.loadChart('XAUUSD');
-                Auth.init();
-                AssetModal.init();
-            },
+            async init() {
+                // Initialize Firebase
+                if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+                this.auth = firebase.auth();
+                this.db = firebase.firestore();
 
-            loadChart(symbol) {
-                this.pair = symbol;
-                // Update UI Header
-                document.getElementById('curr-pair-display').innerText = symbol;
-                const asset = ASSETS.find(a => a.s === symbol);
-                if(asset) document.getElementById('curr-icon').src = asset.i;
-
-                // Load TradingView Widget
-                document.getElementById('tv-chart-container').innerHTML = '';
-                new TradingView.widget({
-                    "autosize": true,
-                    "symbol": symbol.includes('USD') || symbol.includes('JPY') ? symbol : `BINANCE:${symbol}`,
-                    "interval": "15",
-                    "timezone": "Asia/Bangkok",
-                    "theme": "dark",
-                    "style": "1",
-                    "locale": "en",
-                    "toolbar_bg": "#f1f3f6",
-                    "enable_publishing": false,
-                    "hide_top_toolbar": false,
-                    "container_id": "tv-chart-container"
+                // Auth Listener
+                this.auth.onAuthStateChanged(user => {
+                    this.user = user;
+                    if(user) {
+                        document.getElementById('auth-screen').classList.add('hidden');
+                        document.getElementById('app-layout').classList.remove('hidden');
+                        document.getElementById('user-name').innerText = user.email.split('@')[0];
+                        Dashboard.load();
+                        Terminal.init();
+                    } else {
+                        document.getElementById('auth-screen').classList.remove('hidden');
+                        document.getElementById('app-layout').classList.add('hidden');
+                    }
                 });
-            },
 
-            handleFile(f) {
-                if(!f) return;
-                const r = new FileReader();
-                r.onload = e => {
-                    this.imgData = e.target.result.split(',')[1];
-                    document.getElementById('img-preview').src = e.target.result;
-                    document.getElementById('img-preview').classList.remove('hidden');
-                    document.getElementById('upload-empty').classList.add('hidden');
-                    document.getElementById('btn-clear').classList.remove('hidden');
-                };
-                r.readAsDataURL(f);
-            },
-            
-            clearImage() {
-                this.imgData = null;
-                document.getElementById('img-preview').classList.add('hidden');
-                document.getElementById('upload-empty').classList.remove('hidden');
-                document.getElementById('btn-clear').classList.add('hidden');
-                document.getElementById('file-input').value = '';
+                // Start Clock
+                setInterval(Tools.updateClock, 1000);
             }
         };
 
-        const AssetModal = {
-            init() { this.render(ASSETS); },
-            open() { document.getElementById('modal-asset').classList.remove('hidden'); },
-            close() { document.getElementById('modal-asset').classList.add('hidden'); },
+        // 2. ROUTING
+        const Router = {
+            go(pageId) {
+                document.querySelectorAll('.page-view').forEach(el => el.classList.add('hidden'));
+                document.getElementById(`view-${pageId}`).classList.remove('hidden');
+                
+                // Sidebar Active State
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active', 'text-blue-500'));
+                // Simple logic to highlight sidebar (can be improved)
+            }
+        };
+
+        // 3. AUTHENTICATION
+        const Auth = {
+            isRegister: false,
+            toggleMode() {
+                this.isRegister = !this.isRegister;
+                const btn = document.getElementById('auth-switch-btn');
+                const submitBtn = document.querySelector('button[type="submit"]');
+                if(this.isRegister) {
+                    btn.innerText = "Already have an account? Login";
+                    submitBtn.innerText = "REGISTER NEW ID";
+                } else {
+                    btn.innerText = "Don't have an account? Register";
+                    submitBtn.innerText = "ACCESS TERMINAL";
+                }
+            },
+            async submit() {
+                const email = document.getElementById('auth-email').value;
+                const pass = document.getElementById('auth-pass').value;
+                try {
+                    if(this.isRegister) {
+                        await App.auth.createUserWithEmailAndPassword(email, pass);
+                        Swal.fire('Welcome!', 'Account created successfully.', 'success');
+                    } else {
+                        await App.auth.signInWithEmailAndPassword(email, pass);
+                    }
+                } catch(e) {
+                    Swal.fire('Error', e.message, 'error');
+                }
+            },
+            logout() { App.auth.signOut(); }
+        };
+
+        // 4. TERMINAL & TRADINGVIEW
+        const Terminal = {
+            currentPair: 'XAUUSD',
+            widget: null,
             
-            render(list) {
-                const con = document.getElementById('asset-list');
-                con.innerHTML = '';
-                list.forEach(a => {
-                    const div = document.createElement('div');
-                    div.className = `asset-item flex items-center gap-3 p-3 rounded-xl bg-slate-800/50 border border-slate-700 ${App.pair === a.s ? 'active' : ''}`;
-                    div.onclick = () => { App.loadChart(a.s); this.close(); };
-                    div.innerHTML = `
-                        <img src="${a.i}" class="w-8 h-8 rounded-full bg-white object-contain p-0.5">
-                        <div>
-                            <div class="font-bold text-sm text-white">${a.s}</div>
-                            <div class="text-[10px] text-slate-400">${a.n}</div>
-                        </div>
-                        <div class="ml-auto text-[10px] uppercase font-bold text-slate-500 bg-slate-900 px-2 py-1 rounded border border-slate-700">${a.t}</div>
-                    `;
-                    con.appendChild(div);
+            init() {
+                this.setPair('XAUUSD');
+            },
+            
+            setPair(pair) {
+                this.currentPair = pair;
+                // Highlight button
+                // (Logic omitted for brevity - assume simple class toggle)
+                
+                // Re-render Widget
+                document.getElementById('tv-chart').innerHTML = '';
+                new TradingView.widget({
+                    "autosize": true,
+                    "symbol": pair,
+                    "interval": "15",
+                    "timezone": "Etc/UTC",
+                    "theme": "dark",
+                    "style": "1",
+                    "locale": "en",
+                    "enable_publishing": false,
+                    "hide_side_toolbar": false,
+                    "allow_symbol_change": true,
+                    "container_id": "tv-chart",
+                    "toolbar_bg": "#0b0e14"
                 });
+            }
+        };
+
+        // 5. AI ENGINE
+        const AI = {
+            imgBase64: null,
+            
+            handleImage(input) {
+                const file = input.files[0];
+                if(!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.imgBase64 = e.target.result.split(',')[1];
+                    const preview = document.getElementById('img-preview');
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                    document.getElementById('upload-zone').classList.add('opacity-0');
+                    document.getElementById('btn-clear-img').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
             },
             
-            filter() {
-                const q = document.getElementById('asset-search').value.toUpperCase();
-                const filtered = ASSETS.filter(a => a.s.includes(q) || a.n.toUpperCase().includes(q));
-                this.render(filtered);
+            clearImage() {
+                this.imgBase64 = null;
+                document.getElementById('img-preview').classList.add('hidden');
+                document.getElementById('upload-zone').classList.remove('opacity-0');
+                document.getElementById('btn-clear-img').classList.add('hidden');
+                document.getElementById('file-upload').value = '';
+            },
+
+            async analyze() {
+                const apiKey = localStorage.getItem('gemini_api_key');
+                if(!apiKey) return Swal.fire('Missing API Key', 'Please go to Settings and enter your Gemini API Key.', 'warning');
+                if(!this.imgBase64) return Swal.fire('No Image', 'Please upload a chart screenshot first.', 'info');
+
+                const btn = document.getElementById('btn-run-ai');
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ANALYZING...';
+                btn.disabled = true;
+
+                try {
+                    const prompt = `Analyze this ${Terminal.currentPair} chart. Identify trend, key levels, and indicators. 
+                    Format JSON ONLY: {"action":"BUY/SELL/WAIT", "confidence": "80-90", "sl":"price", "tp":"price", "reason":"short concise technical reason"}`;
+
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            contents: [{ parts: [{text: prompt}, {inline_data: {mime_type: "image/jpeg", data: this.imgBase64}}] }]
+                        })
+                    });
+
+                    const data = await response.json();
+                    if(data.error) throw new Error(data.error.message);
+
+                    const text = data.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
+                    const result = JSON.parse(text);
+
+                    this.showResult(result);
+                    Dashboard.saveLog(result);
+
+                } catch(e) {
+                    Swal.fire('Analysis Failed', e.message, 'error');
+                } finally {
+                    btn.innerHTML = '<i class="fa-solid fa-bolt"></i> GENERATE SIGNAL';
+                    btn.disabled = false;
+                }
+            },
+
+            showResult(res) {
+                const box = document.getElementById('ai-result-box');
+                const action = document.getElementById('res-action');
+                
+                box.classList.remove('hidden');
+                
+                action.innerText = res.action;
+                action.className = `text-3xl font-bold font-mono ${res.action === 'BUY' ? 'text-green-400' : (res.action === 'SELL' ? 'text-red-400' : 'text-slate-400')}`;
+                box.className = `card border-l-4 ${res.action === 'BUY' ? 'border-l-green-500' : (res.action === 'SELL' ? 'border-l-red-500' : 'border-l-slate-500')}`;
+
+                document.getElementById('res-conf').innerText = res.confidence + '% Conf.';
+                document.getElementById('res-sl').innerText = res.sl;
+                document.getElementById('res-tp').innerText = res.tp;
+                document.getElementById('res-reason').innerText = res.reason;
+            }
+        };
+
+        // 6. DASHBOARD & HISTORY
+        const Dashboard = {
+            async saveLog(data) {
+                if(!App.user) return;
+                try {
+                    await App.db.collection('trade_logs').add({
+                        uid: App.user.uid,
+                        pair: Terminal.currentPair,
+                        action: data.action,
+                        result: data,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    this.load(); // Refresh
+                } catch(e) { console.error(e); }
+            },
+
+            async load() {
+                if(!App.user) return;
+                const snap = await App.db.collection('trade_logs')
+                    .where('uid', '==', App.user.uid)
+                    .orderBy('timestamp', 'desc')
+                    .limit(20)
+                    .get();
+
+                const logs = [];
+                const list = document.getElementById('dash-logs');
+                const table = document.getElementById('journal-body');
+                
+                list.innerHTML = '';
+                table.innerHTML = '';
+
+                let buyCount = 0, sellCount = 0;
+
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    logs.push(d);
+                    const time = d.timestamp ? new Date(d.timestamp.toDate()).toLocaleTimeString() : '-';
+                    const color = d.action === 'BUY' ? 'text-green-400' : (d.action === 'SELL' ? 'text-red-400' : 'text-slate-400');
+
+                    // Dashboard List Item
+                    list.innerHTML += `
+                        <div class="flex justify-between items-center p-3 bg-slate-800/20 rounded border border-slate-700/50">
+                            <div><div class="font-bold text-sm">${d.pair}</div><div class="text-[10px] text-slate-500">${time}</div></div>
+                            <div class="${color} font-bold">${d.action}</div>
+                        </div>`;
+
+                    // Journal Table Row
+                    table.innerHTML += `
+                        <tr class="border-b border-slate-800 hover:bg-slate-800/30">
+                            <td class="p-4">${time}</td>
+                            <td class="p-4 font-bold">${d.pair}</td>
+                            <td class="p-4 ${color} font-bold">${d.action}</td>
+                            <td class="p-4 font-mono text-slate-400">Wait</td>
+                            <td class="p-4"><button class="text-xs bg-slate-700 px-2 py-1 rounded">Edit</button></td>
+                        </tr>`;
+                    
+                    if(d.action === 'BUY') buyCount++;
+                    if(d.action === 'SELL') sellCount++;
+                });
+
+                // Update Stats
+                document.getElementById('dash-total').innerText = logs.length;
+                if(logs.length > 0) {
+                    document.getElementById('dash-last').innerText = logs[0].action + ' ' + logs[0].pair;
+                    document.getElementById('dash-last').className = `text-xl font-bold truncate ${logs[0].action === 'BUY' ? 'text-green-400' : 'text-red-400'}`;
+                }
+
+                // Render Chart
+                this.renderChart(buyCount, sellCount);
+            },
+
+            renderChart(buy, sell) {
+                const ctx = document.getElementById('chart-signals').getContext('2d');
+                if(window.myChart) window.myChart.destroy();
+                window.myChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['BUY', 'SELL', 'WAIT'],
+                        datasets: [{
+                            data: [buy, sell, 0],
+                            backgroundColor: ['#10b981', '#ef4444', '#64748b'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                });
+            }
+        };
+
+        // 7. TOOLS & CALCULATOR
+        const Tools = {
+            calculate() {
+                const bal = parseFloat(document.getElementById('calc-bal').value);
+                const risk = parseFloat(document.getElementById('calc-risk').value);
+                const sl = parseFloat(document.getElementById('calc-sl').value);
+                
+                if(sl === 0) return;
+                
+                const riskAmount = bal * (risk / 100);
+                // Standard Lot Formula (Approx for USD pairs): RiskAmt / (SL * 10)
+                const lotSize = riskAmount / (sl * 10);
+                
+                document.getElementById('calc-result').innerText = lotSize.toFixed(2);
+                document.getElementById('calc-risk-amt').innerText = `Risk Amount: $${riskAmount.toFixed(2)}`;
             },
             
-            filterType(t) {
-                const filtered = t === 'all' ? ASSETS : ASSETS.filter(a => a.t === t);
-                this.render(filtered);
+            updateClock() {
+                const now = new Date();
+                const h = now.getUTCHours();
+                
+                // Simple Session Logic (UTC)
+                // Tokyo: 0-9, London: 8-16, NY: 13-21
+                const isTokyo = h >= 0 && h < 9;
+                const isLondon = h >= 8 && h < 16;
+                const isNY = h >= 13 && h < 22;
+
+                const setStatus = (id, active) => {
+                    const el = document.getElementById(id);
+                    el.className = active ? 'clock-dot clock-active' : 'clock-dot clock-inactive';
+                    el.parentElement.className = active ? 'flex items-center text-white font-bold' : 'flex items-center text-slate-500';
+                };
+
+                setStatus('session-tokyo', isTokyo);
+                setStatus('session-london', isLondon);
+                setStatus('session-ny', isNY);
             }
         };
 
         const Settings = {
-            open() {
-                document.getElementById('modal-settings').classList.remove('hidden');
-                document.getElementById('set-api-key').value = localStorage.getItem('gemini_api_key') || '';
-            },
-            close() { document.getElementById('modal-settings').classList.add('hidden'); },
-            
-            toggleEye() {
-                const input = document.getElementById('set-api-key');
-                const icon = document.getElementById('eye-icon');
-                if(input.type === 'password') {
-                    input.type = 'text';
-                    icon.classList.replace('fa-eye-slash', 'fa-eye');
-                    icon.classList.add('text-cyan-400');
-                } else {
-                    input.type = 'password';
-                    icon.classList.replace('fa-eye', 'fa-eye-slash');
-                    icon.classList.remove('text-cyan-400');
-                }
-            },
-            
             save() {
-                localStorage.setItem('gemini_api_key', document.getElementById('set-api-key').value.trim());
-                Toast.show('Configuration Saved');
-                this.close();
-            }
-        };
-
-        const AI = {
-            async analyze() {
-                const key = localStorage.getItem('gemini_api_key');
-                if(!key) return Toast.show('Please set API Key first!', 'error');
-                if(!App.imgData) return Toast.show('No image uploaded!', 'error');
-
-                const btn = document.getElementById('btn-analyze');
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> SCANNING...';
-                document.getElementById('scan-fx').classList.remove('hidden');
-
-                try {
-                    const prompt = `Analyze chart for ${App.pair}. Return JSON ONLY: {"action":"BUY/SELL/WAIT", "confidence":85, "entry":"1.2345", "sl":"1.2300", "tp":"1.2400", "reason":"Brief technical reason in Thai language."}`;
-                    
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({
-                            contents: [{ parts: [{text: prompt}, {inline_data: {mime_type: "image/jpeg", data: App.imgData}}] }]
-                        })
-                    });
-                    
-                    const raw = await res.json();
-                    if(raw.error) throw new Error(raw.error.message);
-                    
-                    const txt = raw.candidates[0].content.parts[0].text.replace(/```json|```/g,'').trim();
-                    const data = JSON.parse(txt);
-                    
-                    this.display(data);
-                    History.save(data);
-                    Toast.show('Analysis Complete');
-
-                } catch(e) {
-                    Toast.show(e.message, 'error');
-                } finally {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fa-solid fa-microchip"></i> ANALYZE';
-                    document.getElementById('scan-fx').classList.add('hidden');
-                }
+                const key = document.getElementById('api-key-input').value;
+                localStorage.setItem('gemini_api_key', key);
+                Swal.fire('Saved', 'API Key configured successfully', 'success');
             },
-            display(d) {
-                UI.tab('result');
-                document.getElementById('res-wait').classList.add('hidden');
-                document.getElementById('res-data').classList.remove('hidden');
-                
-                const isBuy = d.action === 'BUY';
-                const isSell = d.action === 'SELL';
-                const color = isBuy ? 'text-green-400' : (isSell ? 'text-red-400' : 'text-slate-400');
-                const borderColor = isBuy ? 'border-green-500' : (isSell ? 'border-red-500' : 'border-slate-500');
-
-                document.getElementById('sig-card').className = `glass p-6 rounded-2xl relative overflow-hidden border-t-4 ${borderColor}`;
-                document.getElementById('r-action').innerText = d.action;
-                document.getElementById('r-action').className = `text-5xl font-bold tech-font ${color}`;
-                document.getElementById('r-conf').innerText = d.confidence + '%';
-                document.getElementById('r-bar').style.width = d.confidence + '%';
-                document.getElementById('r-entry').innerText = d.entry;
-                document.getElementById('r-sl').innerText = d.sl;
-                document.getElementById('r-tp').innerText = d.tp;
-                document.getElementById('r-reason').innerText = d.reason;
+            toggleEye() {
+                const inp = document.getElementById('api-key-input');
+                const icon = document.getElementById('api-eye');
+                if(inp.type === 'password') { inp.type = 'text'; icon.className='fa-solid fa-eye text-blue-400'; }
+                else { inp.type = 'password'; icon.className='fa-solid fa-eye-slash'; }
             }
         };
 
-        const History = {
-            async save(d) {
-                if(!Auth.user) return;
-                await db.collection('analysis_logs').add({
-                    uid: Auth.user.uid,
-                    pair: App.pair,
-                    action: d.action,
-                    entry: d.entry,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            },
-            async load() {
-                if(!Auth.user) return;
-                const list = document.getElementById('hist-list');
-                list.innerHTML = '<div class="text-center p-4 text-slate-500"><i class="fa-solid fa-spinner fa-spin"></i></div>';
-                
-                try {
-                    const snap = await db.collection('analysis_logs')
-                        .where('uid', '==', Auth.user.uid)
-                        .orderBy('timestamp', 'desc')
-                        .limit(20)
-                        .get();
-                        
-                    list.innerHTML = '';
-                    if(snap.empty) {
-                        list.innerHTML = '<div class="text-center p-4 text-slate-500 text-xs">No Data</div>';
-                        return;
-                    }
-                    
-                    snap.forEach(doc => {
-                        const r = doc.data();
-                        const color = r.action === 'BUY' ? 'text-green-400' : (r.action === 'SELL' ? 'text-red-400' : 'text-slate-400');
-                        const time = r.timestamp ? new Date(r.timestamp.toDate()).toLocaleTimeString() : '-';
-                        
-                        const div = document.createElement('div');
-                        div.className = 'flex justify-between items-center p-3 rounded-lg bg-slate-800/40 border border-white/5 hover:bg-slate-800 transition';
-                        div.innerHTML = `
-                            <div>
-                                <div class="font-bold text-white text-sm">${r.pair}</div>
-                                <div class="text-[10px] text-slate-500">${time}</div>
-                            </div>
-                            <div class="text-right">
-                                <div class="${color} font-bold text-sm">${r.action}</div>
-                                <div class="text-[10px] text-slate-400 font-mono">${r.entry}</div>
-                            </div>
-                        `;
-                        list.appendChild(div);
-                    });
-                } catch(e) {
-                    list.innerHTML = '<div class="text-center text-red-400 text-xs p-2">Index Required</div>';
-                }
-            }
-        };
-
-        const Auth = {
-            user: null,
-            init() {
-                auth.onAuthStateChanged(u => {
-                    this.user = u;
-                    const loader = document.getElementById('loader');
-                    if(u) {
-                        document.getElementById('auth-page').classList.add('hidden');
-                        document.getElementById('app-page').classList.remove('hidden');
-                        document.getElementById('user-display').innerText = u.email.split('@')[0];
-                        History.load();
-                    } else {
-                        document.getElementById('auth-page').classList.remove('hidden');
-                        document.getElementById('app-page').classList.add('hidden');
-                    }
-                    setTimeout(()=>loader.remove(), 1000);
-                });
-            },
-            async login() {
-                try { await auth.signInWithEmailAndPassword(document.getElementById('l-email').value, document.getElementById('l-pass').value); }
-                catch(e) { Toast.show(e.message, 'error'); }
-            },
-            async register() {
-                try { await auth.createUserWithEmailAndPassword(document.getElementById('r-email').value, document.getElementById('r-pass').value); }
-                catch(e) { Toast.show(e.message, 'error'); }
-            },
-            switch(p) {
-                if(p==='register') { document.getElementById('login-form').classList.add('hidden'); document.getElementById('register-form').classList.remove('hidden'); }
-                else { document.getElementById('register-form').classList.add('hidden'); document.getElementById('login-form').classList.remove('hidden'); }
-            }
-        };
-
-        const UI = {
-            tab(t) {
-                if(t==='result') {
-                    document.getElementById('v-result').classList.remove('hidden');
-                    document.getElementById('v-history').classList.add('hidden');
-                    document.getElementById('t-res').classList.replace('text-slate-400','text-cyan-400');
-                    document.getElementById('t-res').classList.add('bg-cyan-500/20');
-                    document.getElementById('t-hist').classList.remove('text-cyan-400','bg-cyan-500/20');
-                } else {
-                    document.getElementById('v-history').classList.remove('hidden');
-                    document.getElementById('v-result').classList.add('hidden');
-                    document.getElementById('t-hist').classList.add('text-cyan-400','bg-cyan-500/20');
-                    document.getElementById('t-res').classList.remove('text-cyan-400','bg-cyan-500/20');
-                    History.load();
-                }
-            }
-        };
-
-        const Toast = {
-            show(msg, type='info') {
-                const box = document.getElementById('toast-box');
-                const div = document.createElement('div');
-                div.className = `glass px-4 py-3 rounded-lg border-l-4 ${type==='error'?'border-red-500':'border-green-500'} text-xs text-white shadow-xl animate-bounce`;
-                div.innerText = msg;
-                box.appendChild(div);
-                setTimeout(()=>div.remove(), 3000);
-            }
-        };
-
-        // Starfield
-        const cvs = document.getElementById('starfield'), ctx = cvs.getContext('2d');
-        cvs.width=window.innerWidth; cvs.height=window.innerHeight;
-        let pts = Array(100).fill().map(()=>({x:Math.random()*cvs.width,y:Math.random()*cvs.height,s:Math.random()*2,sp:Math.random()*0.5}));
-        function anim(){
-            ctx.clearRect(0,0,cvs.width,cvs.height);
-            ctx.fillStyle='rgba(255,255,255,0.3)';
-            pts.forEach(p=>{ p.y-=p.sp; if(p.y<0)p.y=cvs.height; ctx.beginPath(); ctx.arc(p.x,p.y,p.s,0,Math.PI*2); ctx.fill(); });
-            requestAnimationFrame(anim);
-        }
-        anim();
-
-        document.getElementById('file-input').addEventListener('change', e => App.handleFile(e.target.files[0]));
+        // Init App
+        document.getElementById('api-key-input').value = localStorage.getItem('gemini_api_key') || '';
         window.onload = () => App.init();
     </script>
 </body>
