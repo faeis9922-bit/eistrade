@@ -1,564 +1,533 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NAMTRADE QUANTUM | AI Data-Driven Terminal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EISGEMINI | CENTRAL INTELLIGENCE</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/technicalindicators/3.1.0/browser.js"></script>
-    
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Rajdhani', 'sans-serif'],
+                        cyber: ['Orbitron', 'sans-serif'],
+                        mono: ['Courier New', 'monospace'],
+                    },
+                    colors: {
+                        gold: { 400: '#ffd700', 500: '#d4af37' },
+                        neon: '#00ffcc',
+                        danger: '#ff0033'
+                    },
+                    animation: {
+                        'spin-slow': 'spin 3s linear infinite',
+                        'pulse-fast': 'pulse 0.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
 
     <style>
         :root {
-            --bg-deep: #050505;
-            --bg-panel: #0f1115;
-            --bg-card: #161920;
-            --primary: #00ff9d; /* Quantum Green */
-            --secondary: #00b8ff; /* Cyber Blue */
-            --danger: #ff0055;
-            --text-main: #ffffff;
-            --text-mute: #8890a0;
-            --border: #252a35;
+            --bg-dark: #080808;
+            --panel-bg: rgba(20, 20, 20, 0.7);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --neon-blue: #00f3ff;
+            --neon-green: #00ff9d;
         }
 
-        body { background-color: var(--bg-deep); color: var(--text-main); font-family: 'Inter', sans-serif; overflow: hidden; }
-        .font-tech { font-family: 'Rajdhani', sans-serif; text-transform: uppercase; }
-        
-        /* Layout Grid */
-        .layout-grid { display: grid; grid-template-columns: 280px 1fr 350px; height: 100vh; }
-        @media (max-width: 1280px) { .layout-grid { grid-template-columns: 240px 1fr; } .right-panel { display: none; } }
-        @media (max-width: 1024px) { .layout-grid { grid-template-columns: 1fr; grid-template-rows: 60px 1fr; } .sidebar { display: none; } }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-track { background: var(--bg-deep); }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
-
-        /* Components */
-        .glass-panel { background: rgba(22, 25, 32, 0.6); backdrop-filter: blur(10px); border: 1px solid var(--border); }
-        .btn-quantum {
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            color: #000; font-weight: 700; border: none;
-            box-shadow: 0 0 15px rgba(0, 255, 157, 0.2);
-            transition: all 0.3s ease;
-            position: relative; overflow: hidden;
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                linear-gradient(rgba(0, 255, 157, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 157, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+            color: #e0e0e0;
+            overflow: hidden; /* App style */
         }
-        .btn-quantum:hover { box-shadow: 0 0 25px rgba(0, 255, 157, 0.4); transform: translateY(-1px); }
-        .btn-quantum:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
-        
-        .asset-card {
-            display: flex; align-items: center; gap: 10px; padding: 12px;
-            border-bottom: 1px solid var(--border); cursor: pointer; transition: 0.2s;
-        }
-        .asset-card:hover { background: rgba(255,255,255,0.03); }
-        .asset-card.active { background: linear-gradient(90deg, rgba(0,255,157,0.1), transparent); border-left: 3px solid var(--primary); }
-        
-        .stat-box { background: var(--bg-card); border: 1px solid var(--border); padding: 15px; border-radius: 8px; }
-        
-        /* Animations */
-        @keyframes pulse-glow { 0% { box-shadow: 0 0 0 0 rgba(0, 255, 157, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(0, 255, 157, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 255, 157, 0); } }
-        .animate-scan { animation: pulse-glow 2s infinite; }
-        
-        .loading-line { height: 2px; width: 100%; background: #222; position: relative; overflow: hidden; }
-        .loading-line::after { content: ''; position: absolute; top: 0; left: 0; height: 100%; width: 30%; background: var(--primary); animation: loading 1s infinite ease-in-out; }
-        @keyframes loading { 0% { left: -30%; } 100% { left: 100%; } }
 
-        /* Neon Text */
-        .text-neon { color: var(--primary); text-shadow: 0 0 10px rgba(0,255,157,0.5); }
-        .text-neon-red { color: var(--danger); text-shadow: 0 0 10px rgba(255,0,85,0.5); }
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #111; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--neon-green); }
+
+        /* GLASS PANEL */
+        .glass-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        /* SIDEBAR ITEM */
+        .pair-item {
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .pair-item:hover, .pair-item.active {
+            background: rgba(255,255,255,0.05);
+            border-left-color: var(--neon-green);
+            color: white;
+        }
+
+        /* LOADING ANIMATION */
+        .scanner-line {
+            width: 100%; height: 2px;
+            background: var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue);
+            animation: scan 2s infinite linear;
+        }
+        @keyframes scan {
+            0% { transform: translateY(-100px); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(100px); opacity: 0; }
+        }
+
+        /* GLOW TEXT */
+        .text-glow { text-shadow: 0 0 10px currentColor; }
+        
+        .grid-bg {
+            background-image: radial-gradient(circle, #222 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
     </style>
 </head>
-<body>
+<body class="flex h-screen w-screen text-sm">
 
-    <div id="auth-screen" class="fixed inset-0 z-50 bg-[#050505] flex items-center justify-center">
-        <div class="w-full max-w-md p-8 glass-panel rounded-2xl border-t-4 border-t-[#00ff9d]">
-            <div class="text-center mb-8">
-                <h1 class="text-4xl font-bold font-tech text-white tracking-widest">NAM<span class="text-[#00ff9d]">QUANTUM</span></h1>
-                <p class="text-xs text-gray-500 uppercase tracking-widest mt-2">Data-Driven AI Intelligence</p>
-            </div>
-            <form onsubmit="event.preventDefault(); Auth.login();" class="space-y-4">
-                <input type="email" id="l-email" placeholder="Trader ID (Email)" class="w-full bg-[#0f1115] border border-[#252a35] text-white p-3 rounded focus:border-[#00ff9d] outline-none">
-                <input type="password" id="l-pass" placeholder="Password" class="w-full bg-[#0f1115] border border-[#252a35] text-white p-3 rounded focus:border-[#00ff9d] outline-none">
-                <button type="submit" class="btn-quantum w-full py-3 rounded font-tech text-lg">INITIALIZE SYSTEM</button>
-            </form>
-            <div class="mt-4 text-center">
-                <button onclick="Auth.register()" class="text-xs text-gray-500 hover:text-white">Create New Access ID</button>
+    <aside class="w-64 flex flex-col glass-panel z-20 border-r border-gray-800">
+        <div class="p-4 border-b border-gray-800 bg-black/40">
+            <h1 class="text-2xl font-cyber font-bold tracking-widest text-center">
+                <span class="text-white">EIS</span><span class="text-neon">GEMINI</span>
+            </h1>
+            <div class="flex items-center justify-between mt-2 text-[10px] text-gray-500 font-mono">
+                <span><i class="fa-solid fa-server text-green-500 mr-1"></i>DB: ONLINE</span>
+                <span>V.4.0</span>
             </div>
         </div>
-    </div>
 
-    <div id="app-container" class="layout-grid hidden">
-        
-        <aside class="sidebar bg-[#0f1115] border-r border-[#252a35] flex flex-col">
-            <div class="p-4 border-b border-[#252a35] flex items-center gap-3">
-                <div class="w-8 h-8 bg-gradient-to-br from-[#00ff9d] to-[#00b8ff] rounded flex items-center justify-center font-bold text-black font-tech">Q</div>
+        <div class="p-3">
+            <div class="relative">
+                <i class="fa-solid fa-search absolute left-3 top-2.5 text-gray-500 text-xs"></i>
+                <input type="text" id="search-pair" placeholder="SEARCH ASSET..." class="w-full bg-black/50 border border-gray-700 rounded py-2 pl-8 pr-2 text-xs text-white focus:border-neon focus:outline-none uppercase font-display" onkeyup="filterPairs()">
+            </div>
+        </div>
+
+        <div id="pair-list" class="flex-1 overflow-y-auto custom-scrollbar">
+            </div>
+
+        <div class="p-3 border-t border-gray-800 bg-black/20">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 flex items-center justify-center font-bold text-xs">AD</div>
                 <div>
-                    <h2 class="font-bold text-sm tracking-widest font-tech">MARKET WATCH</h2>
-                    <div class="text-[10px] text-green-500 flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div> LIVE FEED</div>
+                    <div class="font-bold text-xs text-white">ADMINISTRATOR</div>
+                    <div class="text-[10px] text-green-400">ACCESS GRANTED</div>
                 </div>
             </div>
+        </div>
+    </aside>
 
-            <div class="p-3">
-                <div class="relative">
-                    <i class="fa-solid fa-search absolute left-3 top-3 text-gray-500 text-xs"></i>
-                    <input type="text" id="asset-search" onkeyup="Market.filterAssets()" placeholder="Search Symbol..." class="w-full bg-[#161920] border border-[#252a35] rounded pl-8 py-2 text-xs text-white focus:border-[#00ff9d] outline-none">
-                </div>
-                <div class="flex gap-2 mt-2">
-                    <button onclick="Market.filterType('all')" class="flex-1 py-1 text-[10px] font-bold bg-[#252a35] hover:bg-[#00ff9d] hover:text-black rounded transition">ALL</button>
-                    <button onclick="Market.filterType('crypto')" class="flex-1 py-1 text-[10px] font-bold bg-[#252a35] hover:bg-[#00ff9d] hover:text-black rounded transition">CRYPTO</button>
-                    <button onclick="Market.filterType('forex')" class="flex-1 py-1 text-[10px] font-bold bg-[#252a35] hover:bg-[#00ff9d] hover:text-black rounded transition">FOREX</button>
-                </div>
+    <main class="flex-1 flex flex-col relative z-10 bg-[#0b0b0b]">
+        
+        <header class="h-14 glass-panel border-b border-gray-800 flex items-center justify-between px-6">
+            <div class="flex items-center gap-4">
+                <h2 id="current-pair-title" class="text-xl font-bold font-display text-white tracking-wider flex items-center gap-2">
+                    <img id="current-pair-icon" src="https://cryptologos.cc/logos/bitcoin-btc-logo.png?v=025" class="w-6 h-6">
+                    <span id="pair-name">BTC/USD</span>
+                </h2>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-800 text-gray-400 border border-gray-700" id="market-status">MARKET OPEN</span>
             </div>
 
-            <div id="asset-list" class="flex-1 overflow-y-auto">
-                </div>
-
-            <div class="p-4 border-t border-[#252a35] bg-[#050505]">
-                <div class="flex justify-between items-center mb-2">
-                    <span id="user-display" class="text-xs font-bold text-gray-400">Trader</span>
-                    <button onclick="Settings.open()" class="text-gray-500 hover:text-white"><i class="fa-solid fa-gear"></i></button>
-                </div>
-                <button onclick="Auth.logout()" class="w-full py-1 text-[10px] border border-red-900 text-red-500 hover:bg-red-900/20 rounded">DISCONNECT</button>
-            </div>
-        </aside>
-
-        <main class="flex flex-col bg-[#050505] relative">
-            <header class="lg:hidden h-14 bg-[#0f1115] border-b border-[#252a35] flex items-center justify-between px-4">
-                <span class="font-bold font-tech text-lg">NAM<span class="text-[#00ff9d]">Q</span></span>
-                <button onclick="Mobile.toggleMenu()" class="text-white"><i class="fa-solid fa-bars"></i></button>
-            </header>
-
-            <div class="h-12 border-b border-[#252a35] flex items-center justify-between px-4 bg-[#0f1115]">
-                <div class="flex items-center gap-3">
-                    <img id="curr-icon" src="" class="w-6 h-6 rounded-full bg-white p-0.5 hidden">
-                    <h2 id="curr-pair" class="font-bold text-lg font-tech tracking-wider text-white">SELECT ASSET</h2>
-                    <span id="curr-price" class="font-mono text-[#00ff9d] text-sm">Waiting...</span>
-                </div>
-                <div class="flex items-center gap-4 text-xs text-gray-500">
-                    <div class="hidden md:flex gap-4">
-                        <span>RSI: <b id="ind-rsi" class="text-white">-</b></span>
-                        <span>EMA(50): <b id="ind-ema" class="text-white">-</b></span>
-                        <span>Trend: <b id="ind-trend" class="text-white">-</b></span>
+            <div class="flex items-center gap-4">
+                <div class="text-right hidden md:block">
+                    <div class="text-[10px] text-gray-500 font-mono">AI CONFIDENCE</div>
+                    <div class="w-32 h-1.5 bg-gray-800 rounded-full overflow-hidden mt-1">
+                        <div id="top-confidence-bar" class="h-full bg-neon w-0 transition-all duration-1000"></div>
                     </div>
                 </div>
+                <button onclick="refreshAnalysis()" class="bg-neon/10 text-neon border border-neon/50 px-4 py-1.5 rounded hover:bg-neon/20 transition-all font-display font-bold text-xs flex items-center gap-2">
+                    <i class="fa-solid fa-rotate"></i> REFRESH AI
+                </button>
             </div>
+        </header>
 
-            <div id="tv-chart-container" class="flex-1 bg-black w-full relative z-0">
-                </div>
-
-            <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 w-[90%] max-w-2xl z-20">
-                <div class="glass-panel p-2 rounded-xl flex gap-3 shadow-2xl shadow-[#00ff9d]/10">
-                    <div class="flex-1">
-                        <div class="text-[10px] text-gray-400 uppercase font-bold ml-1 mb-1">AI Engine Status</div>
-                        <div class="flex items-center gap-2 bg-[#050505] rounded px-3 py-2 border border-[#252a35]">
-                            <div id="ai-status-dot" class="w-2 h-2 rounded-full bg-gray-500"></div>
-                            <span id="ai-status-text" class="text-xs text-gray-300 truncate">Ready to Analyze Data Stream</span>
-                        </div>
-                    </div>
-                    <button id="btn-analyze" onclick="QuantumEngine.analyze()" class="btn-quantum px-8 rounded-lg flex flex-col items-center justify-center min-w-[140px] group">
-                        <i class="fa-solid fa-brain text-xl mb-1 group-hover:rotate-12 transition"></i>
-                        <span class="text-[10px] tracking-widest">RUN QUANTUM AI</span>
-                    </button>
-                </div>
-            </div>
-        </main>
-
-        <aside class="right-panel bg-[#0f1115] border-l border-[#252a35] flex flex-col overflow-hidden">
-            <div class="p-4 border-b border-[#252a35]">
-                <h3 class="font-bold font-tech text-[#00b8ff]"><i class="fa-solid fa-microchip mr-2"></i>ANALYSIS RESULT</h3>
-            </div>
+        <div class="flex-1 p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-y-auto">
             
-            <div id="result-container" class="flex-1 overflow-y-auto p-4 space-y-4 hidden">
-                <div class="glass-panel p-6 rounded-xl border-t-4" id="sig-card">
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <div class="text-xs text-gray-400 uppercase">Recommendation</div>
-                            <h1 id="res-action" class="text-5xl font-bold font-tech text-white mt-1">BUY</h1>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-xs text-gray-400 uppercase">Confidence</div>
-                            <div id="res-conf" class="text-2xl font-mono text-[#00ff9d]">92%</div>
-                        </div>
+            <div class="lg:col-span-8 flex flex-col gap-4">
+                <div class="glass-panel h-[500px] w-full relative overflow-hidden rounded-lg p-1">
+                    <div class="absolute inset-0 z-0" id="tv-chart-container"></div>
+                </div>
+
+                <div class="glass-panel p-3 flex justify-between items-center text-xs font-mono">
+                    <div class="flex gap-4">
+                        <span class="text-gray-500">SESSION: <span class="text-white">LONDON/NY</span></span>
+                        <span class="text-gray-500">VOLATILITY: <span class="text-yellow-400">HIGH</span></span>
+                    </div>
+                    <div class="text-neon animate-pulse">● LIVE DATA FEED ACTIVE</div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-4 flex flex-col gap-4 relative">
+                
+                <div id="ai-processing-overlay" class="hidden absolute inset-0 z-50 glass-panel flex-col items-center justify-center bg-black/90 backdrop-blur-xl">
+                    <div class="relative w-24 h-24 mb-4">
+                        <div class="absolute inset-0 border-4 border-t-neon border-r-transparent border-b-purple-500 border-l-transparent rounded-full animate-spin"></div>
+                        <div class="absolute inset-2 border-2 border-t-transparent border-r-white border-b-transparent border-l-white rounded-full animate-spin-slow opacity-50"></div>
+                        <i class="fa-solid fa-brain absolute inset-0 flex items-center justify-center text-2xl text-neon/80"></i>
+                    </div>
+                    <h3 class="text-xl font-display font-bold text-white tracking-widest animate-pulse">ANALYZING MARKET</h3>
+                    <div class="font-mono text-[10px] text-green-400 mt-2 h-6 overflow-hidden w-48 text-center" id="loading-text">
+                        Loading Historic Data...
+                    </div>
+                    <div class="w-48 h-1 bg-gray-800 rounded mt-2 overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-neon to-purple-500 animate-[width_2s_ease-in-out_infinite]" style="width: 50%"></div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-5 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <i class="fa-solid fa-robot text-6xl text-white"></i>
                     </div>
                     
-                    <div class="grid grid-cols-2 gap-3 mb-4">
-                        <div class="stat-box bg-red-900/10 border-red-500/30">
-                            <div class="text-[10px] text-red-400 font-bold uppercase">Stop Loss</div>
-                            <div id="res-sl" class="text-lg font-mono text-white">-</div>
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-[10px] font-bold text-gray-500 tracking-widest border border-gray-700 px-2 py-0.5 rounded">AI DECISION</span>
+                            <span id="data-timestamp" class="text-[10px] text-gray-600 font-mono">UPDATED: JUST NOW</span>
                         </div>
-                        <div class="stat-box bg-green-900/10 border-green-500/30">
-                            <div class="text-[10px] text-green-400 font-bold uppercase">Take Profit</div>
-                            <div id="res-tp" class="text-lg font-mono text-white">-</div>
+                        
+                        <div class="flex items-center gap-4 my-3">
+                            <div id="signal-text" class="text-4xl font-black font-display text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">NEUTRAL</div>
+                            <div class="flex flex-col">
+                                <span class="text-[10px] text-gray-400">WIN RATE PROBABILITY</span>
+                                <span id="confidence-val" class="text-2xl font-bold text-neon font-cyber">0%</span>
+                            </div>
+                        </div>
+
+                        <div class="w-full bg-gray-800 h-2 rounded-full overflow-hidden mb-4">
+                            <div id="signal-meter" class="h-full bg-gray-600 w-0 transition-all duration-1000"></div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="bg-red-500/10 border border-red-500/30 p-2 rounded">
+                                <div class="text-[9px] text-red-400 font-bold mb-1">STOP LOSS</div>
+                                <div id="price-sl" class="text-sm font-mono font-bold text-white">0.00000</div>
+                            </div>
+                            <div class="bg-green-500/10 border border-green-500/30 p-2 rounded">
+                                <div class="text-[9px] text-green-400 font-bold mb-1">TAKE PROFIT</div>
+                                <div id="price-tp" class="text-sm font-mono font-bold text-white">0.00000</div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="stat-box">
-                    <h4 class="text-xs font-bold text-gray-400 uppercase mb-3 border-b border-[#252a35] pb-2">Technical Data Stream</h4>
-                    <div class="space-y-2 text-xs font-mono">
-                        <div class="flex justify-between"><span class="text-gray-500">RSI (14)</span> <span id="log-rsi" class="text-white">-</span></div>
-                        <div class="flex justify-between"><span class="text-gray-500">MACD Status</span> <span id="log-macd" class="text-white">-</span></div>
-                        <div class="flex justify-between"><span class="text-gray-500">Trend (EMA200)</span> <span id="log-trend" class="text-white">-</span></div>
-                        <div class="flex justify-between"><span class="text-gray-500">Volatility</span> <span id="log-vol" class="text-white">-</span></div>
+                <div class="glass-panel p-4 space-y-3">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fa-solid fa-crosshairs text-blue-400"></i>
+                        <span class="text-xs font-bold text-gray-300 font-display">ENTRY STRATEGY</span>
+                    </div>
+
+                    <div class="flex justify-between items-center bg-black/40 p-3 rounded border border-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.1)]">
+                        <span class="text-[10px] text-blue-400 font-bold">ENTRY PRICE</span>
+                        <span id="price-entry" class="text-xl font-mono font-bold text-white">0.00000</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 mt-2">
+                        <div class="text-center p-2 bg-black/20 rounded">
+                            <div class="text-[9px] text-gray-500">TREND (H4)</div>
+                            <div id="trend-val" class="text-xs font-bold text-white mt-1">BULLISH</div>
+                        </div>
+                        <div class="text-center p-2 bg-black/20 rounded">
+                            <div class="text-[9px] text-gray-500">ORDER BLOCK</div>
+                            <div id="ob-val" class="text-xs font-bold text-white mt-1">DETECTED</div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="stat-box">
-                    <h4 class="text-xs font-bold text-[#00b8ff] uppercase mb-2"><i class="fa-solid fa-comment-dots mr-1"></i> Gemini Insight</h4>
-                    <p id="res-reason" class="text-sm text-gray-300 leading-relaxed font-light">-</p>
+                <div class="glass-panel flex-1 flex flex-col p-0 overflow-hidden min-h-[150px]">
+                    <div class="bg-gray-900/80 px-3 py-1 border-b border-gray-700 flex justify-between items-center">
+                        <span class="text-[10px] font-mono text-gray-400">root@eis-ai:~# reasoning_log</span>
+                        <div class="flex gap-1">
+                            <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                            <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                        </div>
+                    </div>
+                    <div class="p-3 font-mono text-[11px] text-green-400 overflow-y-auto custom-scrollbar leading-relaxed" id="terminal-reasoning">
+                        Waiting for signal selection...<br>
+                        > System ready.
+                    </div>
                 </div>
-            </div>
 
-            <div id="empty-state" class="flex-1 flex flex-col items-center justify-center text-gray-600 p-8 text-center">
-                <i class="fa-solid fa-chart-pie text-6xl mb-4 opacity-20"></i>
-                <p class="text-sm">Select an asset and press<br><b class="text-[#00ff9d]">RUN QUANTUM AI</b><br>to generate signal.</p>
             </div>
-        </aside>
-    </div>
-
-    <div id="settings-modal" class="fixed inset-0 z-50 hidden bg-black/90 backdrop-blur flex items-center justify-center p-4">
-        <div class="w-full max-w-md glass-panel p-6 rounded-xl border border-[#00ff9d]/30 relative">
-            <button onclick="Settings.close()" class="absolute top-4 right-4 text-gray-500 hover:text-white"><i class="fa-solid fa-times"></i></button>
-            <h2 class="text-xl font-bold font-tech text-white mb-6">SYSTEM CONFIG</h2>
-            <div class="mb-4">
-                <label class="text-xs font-bold text-[#00ff9d] uppercase">Gemini API Key</label>
-                <input type="password" id="api-key-input" class="w-full mt-2 bg-black border border-[#252a35] p-3 rounded text-white text-xs font-mono focus:border-[#00ff9d] outline-none" placeholder="AIza...">
-                <p class="text-[10px] text-gray-500 mt-2">The key is required for the AI to process technical data.</p>
-            </div>
-            <button onclick="Settings.save()" class="btn-quantum w-full py-2 rounded text-sm">SAVE CONFIGURATION</button>
         </div>
-    </div>
+    </main>
 
     <script>
-        // --- CONFIGURATION ---
-        const CONFIG = {
-            firebase: {
-                apiKey: "AIzaSyADXGuFyQ-hVkMYCZVy1GHPB218iztS1Ag", // Example Key
-                authDomain: "eistrade.firebaseapp.com",
-                projectId: "eistrade"
-            }
+        // --- 1. CONFIG & DATA ---
+        
+        // ************************************************
+        // ตั้งค่า FIREBASE ของคุณตรงนี้ (ถ้ายังไม่มี ข้ามไปก่อนได้)
+        // ************************************************
+        const firebaseConfig = {
+            apiKey: "API_KEY",
+            authDomain: "PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://PROJECT_ID-default-rtdb.firebaseio.com",
+            projectId: "PROJECT_ID",
+            storageBucket: "PROJECT_ID.appspot.com",
+            messagingSenderId: "SENDER_ID",
+            appId: "APP_ID"
         };
+        
+        // Set to TRUE to use fake data (Demo Mode), FALSE to use Real Firebase
+        const USE_MOCK_DATA = true; 
 
-        // --- DATA ENGINE (The Core of "No Image") ---
-        const MarketData = {
-            // Simulated Data Generator for Forex (Since Free APIs are limited)
-            // Real API for Crypto (Binance Public)
-            async getTechnicalData(symbol, type) {
-                // Return structure: { price, rsi, ema, macd, trend, candles: [] }
-                
-                if (type === 'crypto') {
-                    return await this.fetchBinanceData(symbol);
-                } else {
-                    return this.generateSimulatedData(symbol); // For Forex/Gold (Pro simulation)
-                }
-            },
+        // Init Firebase (Try/Catch in case config is empty)
+        let db;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+        } catch (e) {
+            console.log("Firebase not configured properly, running in Offline Mode");
+        }
 
-            async fetchBinanceData(symbol) {
-                // Convert symbol format (e.g. BTCUSD -> BTCUSDT)
-                const pair = symbol.replace('USD', 'USDT'); 
-                try {
-                    const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${pair}&interval=15m&limit=100`);
-                    const data = await res.json();
-                    
-                    // Parse Candles (Open, High, Low, Close)
-                    const closes = data.map(d => parseFloat(d[4]));
-                    const highs = data.map(d => parseFloat(d[2]));
-                    const lows = data.map(d => parseFloat(d[3]));
-                    const currentPrice = closes[closes.length - 1];
-
-                    // Calculate Indicators locally using JS Logic
-                    const rsi = this.calculateRSI(closes, 14);
-                    const ema50 = this.calculateEMA(closes, 50);
-                    const ema200 = this.calculateEMA(closes, 200);
-                    
-                    return {
-                        price: currentPrice,
-                        rsi: rsi.toFixed(2),
-                        ema: ema50.toFixed(2),
-                        trend: currentPrice > ema200 ? 'UPTREND' : 'DOWNTREND',
-                        macd: 'Neutral', // Simplified for demo
-                        source: 'Binance API (Real-time)'
-                    };
-                } catch (e) {
-                    console.error(e);
-                    return this.generateSimulatedData(symbol); // Fallback
-                }
-            },
-
-            generateSimulatedData(symbol) {
-                // High-fidelity simulation for Forex pairs to prevent API errors
-                const basePrice = symbol === 'XAUUSD' ? 2030 : 1.08;
-                const randomVar = Math.random() * (symbol === 'XAUUSD' ? 10 : 0.005);
-                const price = basePrice + randomVar;
-                
-                const rsi = (Math.random() * (70 - 30) + 30).toFixed(2);
-                const trend = Math.random() > 0.5 ? 'UPTREND' : 'DOWNTREND';
-                
-                return {
-                    price: price.toFixed(symbol === 'XAUUSD' ? 2 : 5),
-                    rsi: rsi,
-                    ema: (price * 0.995).toFixed(symbol === 'XAUUSD' ? 2 : 5),
-                    trend: trend,
-                    macd: rsi > 50 ? 'Bullish Cross' : 'Bearish Divergence',
-                    source: 'Quantum Simulation (Forex)'
-                };
-            },
-
-            // Math Helpers
-            calculateRSI(prices, period) {
-                if(prices.length < period) return 50;
-                let gains = 0, losses = 0;
-                for(let i = prices.length - period; i < prices.length; i++) {
-                    const diff = prices[i] - prices[i-1];
-                    if(diff >= 0) gains += diff; else losses -= diff;
-                }
-                const rs = (gains/period) / (losses/period);
-                return 100 - (100 / (1 + rs));
-            },
-            
-            calculateEMA(prices, period) {
-                const k = 2 / (period + 1);
-                let ema = prices[0];
-                for (let i = 1; i < prices.length; i++) {
-                    ema = prices[i] * k + ema * (1 - k);
-                }
-                return ema;
-            }
-        };
-
-        // --- ASSET LIST ---
-        const ASSETS = [
-            { s: 'XAUUSD', n: 'Gold Spot', t: 'forex', icon: 'https://cryptologos.cc/logos/gold-aux-logo.png?v=026' },
-            { s: 'BTCUSD', n: 'Bitcoin', t: 'crypto', icon: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png' },
-            { s: 'ETHUSD', n: 'Ethereum', t: 'crypto', icon: 'https://cryptologos.cc/logos/ethereum-eth-logo.png' },
-            { s: 'EURUSD', n: 'Euro/USD', t: 'forex', icon: 'https://upload.wikimedia.org/wikipedia/commons/b/b7/Flag_of_Europe.svg' },
-            { s: 'GBPUSD', n: 'GBP/USD', t: 'forex', icon: 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Flag_of_the_United_Kingdom.svg' },
-            { s: 'USDJPY', n: 'USD/JPY', t: 'forex', icon: 'https://upload.wikimedia.org/wikipedia/en/9/9e/Flag_of_Japan.svg' },
-            { s: 'SOLUSD', n: 'Solana', t: 'crypto', icon: 'https://cryptologos.cc/logos/solana-sol-logo.png' },
-            { s: 'XRPUSD', n: 'Ripple', t: 'crypto', icon: 'https://cryptologos.cc/logos/xrp-xrp-logo.png' },
-            { s: 'BNBUSD', n: 'Binance Coin', t: 'crypto', icon: 'https://cryptologos.cc/logos/binance-coin-bnb-logo.png' },
-            { s: 'AUDUSD', n: 'Australian Dollar', t: 'forex', icon: 'https://upload.wikimedia.org/wikipedia/commons/b/b9/Flag_of_Australia.svg' }
+        // Available Assets
+        const assets = [
+            { symbol: "XAUUSD", name: "GOLD", type: "COMMODITY", icon: "https://cdn-icons-png.flaticon.com/512/11520/11520626.png" },
+            { symbol: "BTCUSD", name: "BITCOIN", type: "CRYPTO", icon: "https://cryptologos.cc/logos/bitcoin-btc-logo.png?v=025" },
+            { symbol: "ETHUSD", name: "ETHEREUM", type: "CRYPTO", icon: "https://cryptologos.cc/logos/ethereum-eth-logo.png?v=025" },
+            { symbol: "EURUSD", name: "EURO/USD", type: "FOREX", icon: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Flag_of_Europe.svg/1200px-Flag_of_Europe.svg.png" },
+            { symbol: "GBPUSD", name: "GBP/USD", type: "FOREX", icon: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Flag_of_the_United_Kingdom_%281-2%29.svg/1200px-Flag_of_the_United_Kingdom_%281-2%29.svg.png" },
+            { symbol: "USDJPY", name: "USD/JPY", type: "FOREX", icon: "https://upload.wikimedia.org/wikipedia/en/thumb/9/9e/Flag_of_Japan.svg/1200px-Flag_of_Japan.svg.png" },
+            { symbol: "SOLUSD", name: "SOLANA", type: "CRYPTO", icon: "https://cryptologos.cc/logos/solana-sol-logo.png?v=025" },
+            { symbol: "XRPUSD", name: "XRP", type: "CRYPTO", icon: "https://cryptologos.cc/logos/xrp-xrp-logo.png?v=025" }
         ];
 
-        // --- APP CONTROLLER ---
-        const App = {
-            currentAsset: null,
+        let currentSymbol = "XAUUSD";
+
+        // --- 2. INIT & FUNCTIONS ---
+
+        window.onload = function() {
+            renderPairList();
+            loadChart(currentSymbol);
+            refreshAnalysis(); // Simulate first load
+        };
+
+        function renderPairList() {
+            const list = document.getElementById('pair-list');
+            list.innerHTML = '';
+            assets.forEach(asset => {
+                const item = document.createElement('div');
+                item.className = `pair-item p-3 cursor-pointer flex items-center justify-between ${asset.symbol === currentSymbol ? 'active' : ''}`;
+                item.onclick = () => selectPair(asset);
+                item.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <img src="${asset.icon}" class="w-6 h-6 rounded-full object-cover bg-white">
+                        <div>
+                            <div class="font-bold text-xs font-display tracking-wide text-white">${asset.symbol}</div>
+                            <div class="text-[9px] text-gray-500">${asset.name}</div>
+                        </div>
+                    </div>
+                    <div class="text-[9px] font-bold ${asset.type === 'CRYPTO' ? 'text-purple-400' : (asset.type === 'FOREX' ? 'text-blue-400' : 'text-yellow-400')}">${asset.type}</div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function filterPairs() {
+            const query = document.getElementById('search-pair').value.toUpperCase();
+            const items = document.querySelectorAll('.pair-item');
+            items.forEach(item => {
+                const text = item.innerText.toUpperCase();
+                item.style.display = text.includes(query) ? 'flex' : 'none';
+            });
+        }
+
+        function selectPair(asset) {
+            currentSymbol = asset.symbol;
             
-            init() {
-                // Firebase Init
-                if(!firebase.apps.length) firebase.initializeApp(CONFIG.firebase);
-                
-                // Render List
-                Market.renderAssets(ASSETS);
-                
-                // Auth Check
-                firebase.auth().onAuthStateChanged(user => {
-                    if(user) {
-                        document.getElementById('auth-screen').classList.add('hidden');
-                        document.getElementById('app-container').classList.remove('hidden');
-                        document.getElementById('user-display').innerText = user.email.split('@')[0];
-                        this.selectAsset('XAUUSD'); // Default
-                    } else {
-                        document.getElementById('auth-screen').classList.remove('hidden');
-                        document.getElementById('app-container').classList.add('hidden');
-                    }
-                });
-            },
+            // Update Header
+            document.getElementById('pair-name').innerText = asset.symbol;
+            document.getElementById('current-pair-icon').src = asset.icon;
 
-            selectAsset(symbol) {
-                const asset = ASSETS.find(a => a.s === symbol);
-                this.currentAsset = asset;
-                
-                // Update UI
-                document.getElementById('curr-pair').innerText = asset.s;
-                document.getElementById('curr-icon').src = asset.icon;
-                document.getElementById('curr-icon').classList.remove('hidden');
-                
-                // Highlight List
-                document.querySelectorAll('.asset-card').forEach(el => el.classList.remove('active'));
-                const activeCard = document.getElementById(`card-${symbol}`);
-                if(activeCard) activeCard.classList.add('active');
+            // Update List Active State
+            renderPairList();
 
-                // Update Chart
-                document.getElementById('tv-chart-container').innerHTML = '';
+            // Reload Chart
+            loadChart(asset.symbol);
+
+            // Trigger AI Analysis
+            refreshAnalysis();
+        }
+
+        // TradingView Widget Code
+        function loadChart(symbol) {
+            // Clean symbol for TV (e.g., remove USD for some forex or keep as is)
+            const tvSymbol = symbol.includes("USD") ? symbol : `BINANCE:${symbol}`; 
+            
+            const container = document.getElementById('tv-chart-container');
+            container.innerHTML = ''; // Clear old chart
+
+            const script = document.createElement('script');
+            script.src = 'https://s3.tradingview.com/tv.js';
+            script.onload = () => {
                 new TradingView.widget({
                     "autosize": true,
-                    "symbol": asset.t === 'crypto' ? `BINANCE:${symbol.replace('USD','USDT')}` : symbol,
-                    "interval": "15",
-                    "timezone": "Asia/Bangkok",
+                    "symbol": symbol,
+                    "interval": "30",
+                    "timezone": "Etc/UTC",
                     "theme": "dark",
                     "style": "1",
                     "locale": "en",
-                    "toolbar_bg": "#0f1115",
+                    "toolbar_bg": "#f1f3f6",
                     "enable_publishing": false,
                     "hide_top_toolbar": false,
-                    "container_id": "tv-chart-container"
+                    "hide_side_toolbar": false,
+                    "container_id": "tv-chart-container",
+                    "allow_symbol_change": false,
+                    "details": false,
+                    "studies": [
+                        "RSI@tv-basicstudies"
+                    ]
                 });
+            };
+            container.appendChild(script);
+        }
 
-                // Clear Old Results
-                document.getElementById('empty-state').classList.remove('hidden');
-                document.getElementById('result-container').classList.add('hidden');
-                document.getElementById('res-action').innerText = ""; // Clear text
-            }
-        };
+        // --- 3. THE AI SIMULATION CORE ---
+        
+        function refreshAnalysis() {
+            // Show Loader
+            const overlay = document.getElementById('ai-processing-overlay');
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
 
-        const Market = {
-            renderAssets(list) {
-                const con = document.getElementById('asset-list');
-                con.innerHTML = '';
-                list.forEach(a => {
-                    const div = document.createElement('div');
-                    div.className = 'asset-card';
-                    div.id = `card-${a.s}`;
-                    div.onclick = () => App.selectAsset(a.s);
-                    div.innerHTML = `
-                        <img src="${a.icon}" class="w-8 h-8 rounded-full bg-white p-0.5 object-cover">
-                        <div class="flex-1">
-                            <div class="font-bold text-sm text-white">${a.s}</div>
-                            <div class="text-[10px] text-gray-500">${a.n}</div>
-                        </div>
-                        <div class="text-[10px] font-bold ${a.t==='crypto'?'text-[#00b8ff]':'text-[#00ff9d]'}">${a.t.toUpperCase()}</div>
-                    `;
-                    con.appendChild(div);
-                });
-            },
-            filterType(type) {
-                if(type === 'all') this.renderAssets(ASSETS);
-                else this.renderAssets(ASSETS.filter(a => a.t === type));
-            },
-            filterAssets() {
-                const q = document.getElementById('asset-search').value.toUpperCase();
-                this.renderAssets(ASSETS.filter(a => a.s.includes(q) || a.n.toUpperCase().includes(q)));
-            }
-        };
-
-        const QuantumEngine = {
-            async analyze() {
-                const apiKey = localStorage.getItem('gemini_api_key');
-                if(!apiKey) return Swal.fire('System Error', 'Please verify your API Key in Settings.', 'error');
-
-                const btn = document.getElementById('btn-analyze');
-                const dot = document.getElementById('ai-status-dot');
-                const txt = document.getElementById('ai-status-text');
-
-                // UI Loading State
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-xl"></i><span class="text-[10px] mt-1">PROCESSING</span>';
-                dot.className = 'w-2 h-2 rounded-full bg-[#00ff9d] animate-ping';
-                txt.innerText = 'Fetching Market Data Stream...';
-                txt.classList.add('text-[#00ff9d]');
-
-                try {
-                    // 1. Fetch Data (No Image!)
-                    const techData = await MarketData.getTechnicalData(App.currentAsset.s, App.currentAsset.t);
-                    
-                    // Update Top Bar UI
-                    document.getElementById('curr-price').innerText = techData.price;
-                    document.getElementById('ind-rsi').innerText = techData.rsi;
-                    document.getElementById('ind-ema').innerText = techData.ema;
-                    document.getElementById('ind-trend').innerText = techData.trend;
-
-                    txt.innerText = 'Sending Data to Gemini Matrix...';
-
-                    // 2. Construct Text Prompt
-                    const prompt = `
-                    Act as a professional algorithmic trader. Analyze this market data for ${App.currentAsset.s}:
-                    - Price: ${techData.price}
-                    - RSI(14): ${techData.rsi}
-                    - EMA Trend: ${techData.trend}
-                    - MACD Signal: ${techData.macd}
-                    
-                    Based STRICTLY on this data, provide a trade signal.
-                    Return JSON ONLY: {"action": "BUY/SELL/WAIT", "confidence": "80-99", "entry": "${techData.price}", "tp": "price", "sl": "price", "reason": "concise technical reason in Thai"}
-                    `;
-
-                    // 3. Send to AI
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ contents: [{ parts: [{text: prompt}] }] })
-                    });
-
-                    const json = await response.json();
-                    const aiText = json.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
-                    const result = JSON.parse(aiText);
-
-                    // 4. Display Result
-                    this.renderResult(result, techData);
-
-                } catch (e) {
-                    Swal.fire('Matrix Error', 'Failed to analyze market data. ' + e.message, 'error');
-                } finally {
-                    // Reset UI
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fa-solid fa-brain text-xl mb-1 group-hover:rotate-12 transition"></i><span class="text-[10px] tracking-widest">RUN QUANTUM AI</span>';
-                    dot.className = 'w-2 h-2 rounded-full bg-gray-500';
-                    txt.innerText = 'Ready to Analyze Data Stream';
-                    txt.classList.remove('text-[#00ff9d]');
+            // Simulate loading steps text
+            const loadTexts = [
+                "Connecting to Satellite...",
+                "Scanning H4 Trendlines...",
+                "Detecting Liquidity Pools...",
+                "Calculating Fibonacci Levels...",
+                "Synthesizing Neural Output..."
+            ];
+            const textEl = document.getElementById('loading-text');
+            let step = 0;
+            const interval = setInterval(() => {
+                if(step < loadTexts.length) {
+                    textEl.innerText = loadTexts[step];
+                    step++;
                 }
-            },
+            }, 400);
 
-            renderResult(res, tech) {
-                document.getElementById('empty-state').classList.add('hidden');
-                document.getElementById('result-container').classList.remove('hidden');
-
-                const card = document.getElementById('sig-card');
-                const action = document.getElementById('res-action');
+            // Wait 2.5 seconds then show result
+            setTimeout(() => {
+                clearInterval(interval);
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
                 
-                // Color Logic
-                let colorClass = 'text-gray-400';
-                let borderClass = 'border-gray-500';
-                if(res.action === 'BUY') { colorClass = 'text-[#00ff9d]'; borderClass = 'border-[#00ff9d]'; }
-                if(res.action === 'SELL') { colorClass = 'text-[#ff0055]'; borderClass = 'border-[#ff0055]'; }
+                fetchDataAndRender();
+            }, 2500);
+        }
 
-                action.innerText = res.action;
-                action.className = `text-5xl font-bold font-tech mt-1 ${colorClass}`;
-                card.className = `glass-panel p-6 rounded-xl border-t-4 ${borderClass}`;
-                
-                document.getElementById('res-conf').innerText = res.confidence + '%';
-                document.getElementById('res-sl').innerText = res.sl;
-                document.getElementById('res-tp').innerText = res.tp;
-                document.getElementById('res-reason').innerText = res.reason;
-
-                // Log Tech Data
-                document.getElementById('log-rsi').innerText = tech.rsi;
-                document.getElementById('log-macd').innerText = tech.macd;
-                document.getElementById('log-trend').innerText = tech.trend;
-                document.getElementById('log-vol').innerText = 'Standard';
+        function fetchDataAndRender() {
+            if (USE_MOCK_DATA) {
+                // Generate Fake Data for Demo
+                const isBuy = Math.random() > 0.5;
+                const price = Math.random() * 2000 + 1000;
+                const data = {
+                    signal: isBuy ? "BUY" : "SELL",
+                    confidence: Math.floor(Math.random() * 30) + 70, // 70-99%
+                    entry: (isBuy ? price : price + 5).toFixed(2),
+                    sl: (isBuy ? price - 10 : price + 15).toFixed(2),
+                    tp: (isBuy ? price + 20 : price - 25).toFixed(2),
+                    trend: isBuy ? "STRONG BULLISH" : "BEARISH DIVERGENCE",
+                    ob: "M15 OB + FVG",
+                    reasoning: `> Analyzing ${currentSymbol} structure...\n> Break of structure (BOS) detected on M30.\n> Price approaching key demand zone at ${price.toFixed(0)}.\n> RSI divergence confirms momentum shift.\n> RECOMMENDED ACTION: Wait for retest before entry.`
+                };
+                renderUI(data);
+            } else {
+                // Real Firebase Fetch
+                if(!db) return;
+                const ref = db.ref('signals/' + currentSymbol);
+                ref.once('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if(data) {
+                        renderUI(data);
+                    } else {
+                        renderUI({ signal: "WAIT", confidence: 0, reasoning: "No data available in database." });
+                    }
+                });
             }
-        };
+        }
 
-        const Auth = {
-            login() { 
-                const e = document.getElementById('l-email').value;
-                const p = document.getElementById('l-pass').value;
-                firebase.auth().signInWithEmailAndPassword(e,p).catch(err => Swal.fire('Login Failed', err.message, 'error'));
-            },
-            register() {
-                const e = document.getElementById('l-email').value;
-                const p = document.getElementById('l-pass').value;
-                firebase.auth().createUserWithEmailAndPassword(e,p).then(() => Swal.fire('Created', 'Welcome to Quantum', 'success')).catch(err => Swal.fire('Error', err.message, 'error'));
-            },
-            logout() { firebase.auth().signOut(); }
-        };
+        function renderUI(data) {
+            // Elements
+            const signalText = document.getElementById('signal-text');
+            const meter = document.getElementById('signal-meter');
+            const confVal = document.getElementById('confidence-val');
+            const topBar = document.getElementById('top-confidence-bar');
 
-        const Settings = {
-            open() { document.getElementById('settings-modal').classList.remove('hidden'); document.getElementById('api-key-input').value = localStorage.getItem('gemini_api_key') || ''; },
-            close() { document.getElementById('settings-modal').classList.add('hidden'); },
-            save() { localStorage.setItem('gemini_api_key', document.getElementById('api-key-input').value); this.close(); Swal.fire('Saved', 'System Connected to AI Core', 'success'); }
-        };
+            // Colors
+            let colorClass = "text-gray-400";
+            let bgClass = "bg-gray-600";
+            
+            if(data.signal === "BUY") {
+                colorClass = "text-neon";
+                bgClass = "bg-neon";
+                signalText.style.textShadow = "0 0 20px #00ff9d";
+            } else if (data.signal === "SELL") {
+                colorClass = "text-red-500";
+                bgClass = "bg-red-500";
+                signalText.style.textShadow = "0 0 20px #ff0033";
+            } else {
+                signalText.style.textShadow = "none";
+            }
 
-        // Initialize
-        window.onload = () => App.init();
+            // Update Values
+            signalText.innerText = data.signal;
+            signalText.className = `text-4xl font-black font-display drop-shadow-lg ${colorClass}`;
+            
+            confVal.innerText = data.confidence + "%";
+            confVal.className = `text-2xl font-bold font-cyber ${colorClass}`;
+
+            meter.className = `h-full transition-all duration-1000 ${bgClass}`;
+            meter.style.width = data.confidence + "%";
+            
+            topBar.className = `h-full transition-all duration-1000 ${bgClass}`;
+            topBar.style.width = data.confidence + "%";
+
+            // Prices
+            document.getElementById('price-entry').innerText = data.entry || "-";
+            document.getElementById('price-sl').innerText = data.sl || "-";
+            document.getElementById('price-tp').innerText = data.tp || "-";
+
+            // Details
+            document.getElementById('trend-val').innerText = data.trend || "-";
+            document.getElementById('ob-val').innerText = data.ob || "-";
+
+            // Reasoning Typewriter
+            const terminal = document.getElementById('terminal-reasoning');
+            terminal.innerHTML = "";
+            let i = 0;
+            const txt = data.reasoning;
+            function typeWriter() {
+                if (i < txt.length) {
+                    terminal.innerHTML += txt.charAt(i) === '\n' ? '<br>' : txt.charAt(i);
+                    i++;
+                    setTimeout(typeWriter, 20);
+                    terminal.scrollTop = terminal.scrollHeight;
+                }
+            }
+            typeWriter();
+        }
+
     </script>
 </body>
 </html>
