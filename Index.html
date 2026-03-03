@@ -1,404 +1,429 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EISGEMINI | SYSTEM V.10 (STABLE)</title>
+    <title>KlangRS - Dashboard Admin</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://s3.tradingview.com/tv.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Rajdhani', 'sans-serif'],
-                        cyber: ['Orbitron', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    },
-                    colors: {
-                        neon: '#00ffcc',
-                        neon_blue: '#00ccff',
-                        neon_red: '#ff0055',
-                        dark: '#050505',
-                        panel: 'rgba(15, 15, 20, 0.95)'
-                    }
-                }
-            }
-        }
-    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-auth-compat.js"></script>
 
     <style>
-        :root { --primary: #00ffcc; --bg: #050505; --glass: rgba(20, 20, 25, 0.9); }
-        body {
-            background-color: var(--bg);
-            background-image: linear-gradient(rgba(0, 255, 204, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 204, 0.02) 1px, transparent 1px);
-            background-size: 30px 30px;
-            color: #dcdcdc;
-            overflow: hidden;
-        }
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: #000; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
-
-        .glass-panel {
-            background: var(--glass);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 0 15px rgba(0,0,0,0.5);
-        }
-        .text-shadow { text-shadow: 0 0 8px currentColor; }
-        
-        @keyframes scanline {
-            0% { transform: translateY(-100%); }
-            100% { transform: translateY(100%); }
-        }
-        .scan-overlay {
-            position: absolute; inset: 0; pointer-events: none; overflow: hidden; opacity: 0.05;
-        }
-        .scan-overlay::after {
-            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 20%;
-            background: linear-gradient(to bottom, transparent, #00ffcc, transparent);
-            animation: scanline 4s linear infinite;
-        }
+        body { font-family: 'Kanit', sans-serif; background-color: #f1f5f9; }
+        .sidebar-link.active { background-color: #1e293b; border-left: 4px solid #3b82f6; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
     </style>
 </head>
-<body class="flex h-screen w-screen text-xs select-none font-sans bg-black">
+<body class="bg-slate-50">
 
-    <aside class="w-64 flex flex-col glass-panel z-20 border-r border-white/10">
-        <div class="p-5 border-b border-white/10 bg-black/40 text-center">
-            <h1 class="text-2xl font-cyber font-bold tracking-widest text-white">
-                EIS<span class="text-neon text-shadow">GEMINI</span>
-            </h1>
-            <div id="connection-status" class="mt-2 text-[9px] font-mono text-red-500 border border-red-500/20 bg-red-500/5 py-1 rounded">
-                ● SYSTEM DISCONNECTED
+    <div class="flex min-h-screen">
+        <aside class="w-64 bg-slate-800 text-slate-300 flex-shrink-0 flex flex-col hidden md:flex">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+                    <i data-lucide="shield-check" class="text-blue-400"></i> กลางRS
+                </h1>
+                <p class="text-[10px] text-slate-400 mt-1 uppercase tracking-widest">Administrator v2.0</p>
             </div>
-        </div>
-
-        <div id="panel-assets" class="flex-1 overflow-y-auto p-2 space-y-1">
+            <nav class="flex-1 mt-4 px-3 space-y-1">
+                <button onclick="switchTab('tab-dash')" id="btn-tab-dash" class="sidebar-link active w-full flex items-center gap-3 p-3 rounded-xl transition-all">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i> ภาพรวมระบบ
+                </button>
+                <button onclick="switchTab('tab-users')" id="btn-tab-users" class="sidebar-link w-full flex items-center gap-3 p-3 rounded-xl transition-all">
+                    <i data-lucide="users" class="w-5 h-5"></i> จัดการสมาชิก
+                </button>
+                <button onclick="switchTab('tab-activities')" id="btn-tab-activities" class="sidebar-link w-full flex items-center gap-3 p-3 rounded-xl transition-all">
+                    <i data-lucide="gift" class="w-5 h-5"></i> กิจกรรม & เควส
+                </button>
+                <button onclick="switchTab('tab-settings')" id="btn-tab-settings" class="sidebar-link w-full flex items-center gap-3 p-3 rounded-xl transition-all">
+                    <i data-lucide="settings" class="w-5 h-5"></i> ตั้งค่าเว็บไซต์
+                </button>
+            </nav>
+            <div class="p-4 border-t border-slate-700">
+                <button onclick="handleLogout()" class="flex items-center gap-3 p-3 text-red-400 hover:bg-red-500/10 w-full rounded-xl transition-all">
+                    <i data-lucide="log-out" class="w-5 h-5"></i> ออกจากระบบ
+                </button>
             </div>
+        </aside>
 
-        <div class="p-3 border-t border-white/10 bg-black/20">
-            <button onclick="app.toggleSettings()" class="w-full bg-white/5 border border-white/10 py-2 text-gray-300 hover:text-white hover:border-neon hover:bg-neon/10 transition rounded flex items-center justify-center gap-2 font-bold">
-                <i class="fa-solid fa-key"></i> API CONFIG
-            </button>
-        </div>
-    </aside>
-
-    <main class="flex-1 flex flex-col relative">
-        <div class="scan-overlay"></div>
-        
-        <header class="h-14 glass-panel border-b border-white/10 flex items-center justify-between px-5 z-10">
-            <div class="flex items-center gap-3">
-                <h2 id="active-pair" class="text-xl font-cyber font-bold text-white tracking-widest">SELECT ASSET</h2>
-                <span class="text-[9px] bg-gray-800 px-2 py-0.5 rounded text-gray-400 font-mono" id="model-badge">NO MODEL</span>
-            </div>
-            <button onclick="app.runAnalysis()" class="bg-neon/10 text-neon border border-neon px-6 py-2 rounded hover:bg-neon hover:text-black transition font-bold font-cyber tracking-widest flex items-center gap-2 shadow-[0_0_15px_rgba(0,255,204,0.2)]">
-                <i class="fa-solid fa-bolt"></i> ANALYZE MARKET
-            </button>
-        </header>
-
-        <div class="flex-1 p-3 grid grid-cols-12 gap-3 overflow-hidden z-10">
-            
-            <div class="col-span-8 glass-panel relative flex flex-col">
-                <div id="tv-chart-container" class="flex-1 bg-black w-full h-full"></div>
-            </div>
-
-            <div class="col-span-4 flex flex-col gap-3 h-full overflow-hidden">
-                
-                <div class="glass-panel p-4 relative overflow-hidden min-h-[200px] flex flex-col justify-between">
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="text-[9px] text-gray-500">AI SIGNAL</span>
-                            <span id="signal-time" class="text-[9px] text-gray-500 font-mono">--:--:--</span>
-                        </div>
-                        <div id="signal-text" class="text-5xl font-black font-cyber text-gray-600">WAIT</div>
-                    </div>
-
-                    <div class="mt-2">
-                        <div class="flex justify-between text-[10px] mb-1">
-                            <span class="text-gray-400">CONFIDENCE</span>
-                            <span id="confidence-text" class="font-bold text-gray-500">0%</span>
-                        </div>
-                        <div class="w-full bg-gray-800 h-1 rounded overflow-hidden">
-                            <div id="confidence-bar" class="h-full bg-gray-500 w-0 transition-all duration-1000"></div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-2 mt-4 text-center">
-                        <div class="bg-white/5 p-1 rounded border border-white/5">
-                            <div class="text-[8px] text-blue-400">ENTRY</div>
-                            <div id="val-entry" class="text-[10px] font-mono font-bold text-white">-</div>
-                        </div>
-                        <div class="bg-red-500/10 p-1 rounded border border-red-500/20">
-                            <div class="text-[8px] text-red-400">STOP LOSS</div>
-                            <div id="val-sl" class="text-[10px] font-mono font-bold text-white">-</div>
-                        </div>
-                        <div class="bg-green-500/10 p-1 rounded border border-green-500/20">
-                            <div class="text-[8px] text-green-400">TAKE PROFIT</div>
-                            <div id="val-tp" class="text-[10px] font-mono font-bold text-white">-</div>
-                        </div>
-                    </div>
+        <main class="flex-1 overflow-y-auto">
+            <header class="bg-white h-16 shadow-sm border-b flex items-center justify-between px-8 sticky top-0 z-10">
+                <h2 id="header-title" class="text-lg font-bold text-slate-700">หน้าหลักระบบ</h2>
+                <div class="flex items-center gap-4">
+                    <span class="text-xs bg-emerald-100 text-emerald-600 px-3 py-1 rounded-full font-medium">แอดมินออนไลน์</span>
                 </div>
+            </header>
 
-                <div class="glass-panel p-3 min-h-[80px] flex flex-col">
-                    <span class="text-[9px] text-neon mb-1"><i class="fa-solid fa-comment-dots"></i> LOGIC</span>
-                    <p id="reason-text" class="text-[10px] text-gray-300 leading-relaxed font-mono">Waiting for analysis...</p>
-                </div>
-
-                <div class="glass-panel flex-1 flex flex-col overflow-hidden">
-                    <div class="bg-black/50 px-3 py-1 border-b border-white/10 flex justify-between items-center">
-                        <span class="text-[9px] text-neon font-mono">SYSTEM LOG</span>
-                        <div class="flex gap-1"><div class="w-1.5 h-1.5 rounded-full bg-red-500"></div><div class="w-1.5 h-1.5 rounded-full bg-green-500"></div></div>
+            <div class="p-8">
+                <section id="tab-dash" class="tab-content active animate-in fade-in duration-500">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border">
+                            <p class="text-slate-400 text-sm">ผู้ใช้งานทั้งหมด</p>
+                            <h3 class="text-3xl font-bold mt-1" id="stat-users">0</h3>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-blue-100">
+                            <p class="text-blue-400 text-sm">รวมยอดเงินลูกค้า</p>
+                            <h3 class="text-3xl font-bold mt-1 text-blue-600">฿<span id="stat-balance">0</span></h3>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border">
+                            <p class="text-slate-400 text-sm">กิจกรรมที่เปิดอยู่</p>
+                            <h3 class="text-3xl font-bold mt-1" id="stat-acts">0</h3>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-orange-100">
+                            <p class="text-orange-400 text-sm">รายการประวัติ</p>
+                            <h3 class="text-3xl font-bold mt-1 text-orange-600" id="stat-hist">0</h3>
+                        </div>
                     </div>
-                    <div id="terminal-body" class="flex-1 p-2 font-mono text-[9px] text-green-400 overflow-y-auto space-y-1">
-                        <div class="opacity-50">> Boot sequence complete.</div>
+                </section>
+
+                <section id="tab-users" class="tab-content animate-in fade-in">
+                    <div class="bg-white rounded-2xl shadow-sm border p-6 mb-6">
+                        <div class="flex flex-col md:flex-row gap-4 mb-6">
+                            <div class="relative flex-1">
+                                <i data-lucide="search" class="absolute left-3 top-2.5 w-5 h-5 text-slate-400"></i>
+                                <input type="text" id="user-search-input" placeholder="ค้นหาด้วยอีเมล..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border rounded-xl focus:ring-2 ring-blue-500 transition-all outline-none">
+                            </div>
+                            <button onclick="searchUser()" class="bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700 transition-all">ค้นหาสมาชิก</button>
+                        </div>
+
+                        <div id="user-result" class="hidden border rounded-2xl p-6 bg-slate-50 border-blue-100">
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                                <div>
+                                    <h4 class="text-xl font-bold text-slate-800" id="res-email">Email@test.com</h4>
+                                    <p class="text-xs text-slate-500">UID: <span id="res-uid">---</span></p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <div class="bg-white px-4 py-2 rounded-xl shadow-sm border">
+                                        <p class="text-[10px] uppercase text-slate-400">เงินในระบบ</p>
+                                        <p class="font-bold text-lg text-emerald-600">฿<span id="res-balance">0</span></p>
+                                    </div>
+                                    <div class="bg-white px-4 py-2 rounded-xl shadow-sm border">
+                                        <p class="text-[10px] uppercase text-slate-400">จำนวนการกลาง</p>
+                                        <p class="font-bold text-lg text-blue-600"><span id="res-count">0</span> ครั้ง</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-white p-4 rounded-xl shadow-sm border space-y-3">
+                                    <h5 class="text-sm font-bold border-b pb-2">จัดการยอดเงิน</h5>
+                                    <input type="number" id="amt-adjust" placeholder="จำนวนเงิน" class="w-full p-2 bg-slate-50 border rounded-lg">
+                                    <div class="flex gap-2">
+                                        <button onclick="updateBalance(true)" class="flex-1 bg-emerald-500 text-white py-2 rounded-lg text-sm font-bold">+ เพิ่มเงิน</button>
+                                        <button onclick="updateBalance(false)" class="flex-1 bg-red-500 text-white py-2 rounded-lg text-sm font-bold">- หักเงิน</button>
+                                    </div>
+                                </div>
+                                <div class="bg-white p-4 rounded-xl shadow-sm border space-y-3">
+                                    <h5 class="text-sm font-bold border-b pb-2">จัดการการใช้งาน</h5>
+                                    <p class="text-xs text-slate-400">แอดมินสามารถกดปุ่มนี้เพื่อเพิ่มรอบการกลางให้ลูกค้าได้โดยตรง ระบบจะไปตรวจสอบกิจกรรมให้อัตโนมัติ</p>
+                                    <button onclick="addTransCount()" class="w-full bg-slate-800 text-white py-3 rounded-lg text-sm font-bold hover:bg-slate-900 transition-all">
+                                        + บันทึกการใช้งานกลาง (1 รอบ)
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </section>
 
-            </div>
-        </div>
+                <section id="tab-activities" class="tab-content animate-in fade-in">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-1">
+                            <div class="bg-white p-6 rounded-2xl shadow-sm border sticky top-24">
+                                <h3 class="text-lg font-bold mb-4">เพิ่มกิจกรรมใหม่</h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="text-xs font-bold text-slate-400 ml-1">ชื่อกิจกรรม</label>
+                                        <input type="text" id="act-name" placeholder="เช่น ครบ 5 รอบ รับเงินฟรี" class="w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 ring-blue-500">
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="text-xs font-bold text-slate-400 ml-1">เป้าหมาย (รอบ)</label>
+                                            <input type="number" id="act-target" placeholder="10" class="w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 ring-blue-500">
+                                        </div>
+                                        <div>
+                                            <label class="text-xs font-bold text-slate-400 ml-1">รางวัล (บาท)</label>
+                                            <input type="number" id="act-reward" placeholder="100" class="w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 ring-blue-500">
+                                        </div>
+                                    </div>
+                                    <button onclick="handleCreateAct()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all">
+                                        สร้างกิจกรรม
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-2">
+                            <div class="bg-white rounded-2xl shadow-sm border p-6">
+                                <h3 class="text-lg font-bold mb-4">รายการกิจกรรมทั้งหมด</h3>
+                                <div id="admin-act-container" class="space-y-4">
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
-        <div id="overlay-loading" class="hidden absolute inset-0 bg-black/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
-            <div class="w-16 h-16 border-4 border-neon border-t-transparent rounded-full animate-spin"></div>
-            <div class="mt-4 font-cyber text-neon tracking-widest animate-pulse">ANALYZING MARKET DATA</div>
-            <div id="loading-step" class="mt-2 font-mono text-gray-500 text-[10px]">Connecting to AI...</div>
-        </div>
-    </main>
-
-    <div id="modal-settings" class="hidden fixed inset-0 z-[100] bg-black/80 backdrop-blur flex items-center justify-center">
-        <div class="glass-panel w-96 p-6 rounded border border-neon/30">
-            <h3 class="text-lg font-cyber font-bold text-white mb-4">SYSTEM CONFIGURATION</h3>
-            <label class="text-[10px] text-gray-400 block mb-2">GOOGLE GEMINI API KEY</label>
-            <input type="password" id="input-api-key" class="w-full bg-black border border-gray-700 rounded p-2 text-white font-mono text-xs focus:border-neon outline-none mb-1" placeholder="AIzaSy...">
-            <p class="text-[9px] text-gray-500 mb-4">Key is stored locally. No server upload.</p>
-            
-            <div class="flex gap-2">
-                <button onclick="app.saveConfig()" class="flex-1 bg-neon text-black font-bold py-2 rounded hover:bg-white transition font-cyber">CONNECT</button>
-                <button onclick="app.toggleSettings()" class="flex-1 bg-gray-800 text-white font-bold py-2 rounded hover:bg-gray-700 transition font-cyber">CANCEL</button>
+                <section id="tab-settings" class="tab-content animate-in fade-in">
+                    <div class="bg-white rounded-2xl shadow-sm border p-8 max-w-2xl">
+                        <h3 class="text-xl font-bold mb-6">ตั้งค่าหน้าบ้าน</h3>
+                        <div class="space-y-6">
+                            <div class="space-y-2">
+                                <label class="text-sm font-bold text-slate-600">ข้อความประกาศหน้าเว็บ (Announcement)</label>
+                                <textarea id="set-announce" rows="3" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 ring-blue-500" placeholder="ใส่ข้อความที่จะแจ้งเตือนลูกค้า..."></textarea>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-sm font-bold text-slate-600">ลิงก์ติดต่อ Facebook / Messenger</label>
+                                <input type="text" id="set-fb" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 ring-blue-500" placeholder="https://m.me/yourpage">
+                            </div>
+                            <button onclick="saveSettings()" class="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all active:scale-95">
+                                บันทึกการเปลี่ยนแปลง
+                            </button>
+                        </div>
+                    </div>
+                </section>
             </div>
-            <div class="mt-3 text-center">
-                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-[9px] text-neon hover:underline">Get Free Key Here</a>
-            </div>
-        </div>
+        </main>
     </div>
 
     <script>
         // CONFIG
-        const ASSETS = [
-            { id: "XAUUSD", name: "Gold", type: "CMD" },
-            { id: "BTCUSD", name: "Bitcoin", type: "CRY" },
-            { id: "ETHUSD", name: "Ethereum", type: "CRY" },
-            { id: "EURUSD", name: "Euro/USD", type: "FX" },
-            { id: "GBPUSD", name: "GBP/USD", type: "FX" },
-            { id: "USDJPY", name: "USD/JPY", type: "FX" },
-            { id: "SOLUSD", name: "Solana", type: "CRY" }
-        ];
+        const firebaseConfig = {
+            apiKey: "AIzaSyA8bS2o0--kQjdu0m4WXaUMXhWh7vGJerY",
+            authDomain: "cczxvod.firebaseapp.com",
+            projectId: "cczxvod",
+            storageBucket: "cczxvod.firebasestorage.app",
+            messagingSenderId: "360567380642",
+            appId: "1:360567380642:web:f196257ad9215e30fa55fb",
+            measurementId: "G-N8HVDQMJBG"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
 
-        // *** FIX: MODEL FALLBACK LIST ***
-        // ระบบจะวนหา Model เหล่านี้ทีละตัวจนกว่าจะเจอตัวที่ API Key คุณใช้ได้
-        const MODEL_LIST = [
-            "gemini-1.5-flash",          // Fast & New
-            "gemini-1.5-flash-latest",   // Alternative name
-            "gemini-1.5-pro",            // Smart but slower
-            "gemini-pro"                 // Old but stable (Legacy)
-        ];
+        let currentTargetUid = null;
 
-        class App {
-            constructor() {
-                this.apiKey = localStorage.getItem('EIS_API_KEY') || '';
-                this.currentPair = ASSETS[0];
-                this.dom = {
-                    assets: document.getElementById('panel-assets'),
-                    terminal: document.getElementById('terminal-body'),
-                    status: document.getElementById('connection-status'),
-                    modelBadge: document.getElementById('model-badge')
-                };
+        // AUTH & TABS
+        auth.onAuthStateChanged(user => {
+            if (!user) {
+                // Redirect to login if not authenticated (Optionally)
+            }
+            loadStats();
+            loadActivities();
+            loadSettings();
+            lucide.createIcons();
+        });
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            
+            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+            document.getElementById('btn-' + tabId).classList.add('active');
+            
+            const titles = { 'tab-dash': 'หน้าหลักระบบ', 'tab-users': 'จัดการสมาชิก', 'tab-activities': 'กิจกรรม & เควส', 'tab-settings': 'ตั้งค่าหน้าบ้าน' };
+            document.getElementById('header-title').innerText = titles[tabId];
+            lucide.createIcons();
+        }
+
+        // STATS
+        async function loadStats() {
+            const users = await db.collection("users").get();
+            let totalBal = 0;
+            users.forEach(u => totalBal += u.data().balance);
+            
+            document.getElementById('stat-users').innerText = users.size;
+            document.getElementById('stat-balance').innerText = totalBal.toLocaleString();
+            
+            const acts = await db.collection("activities").get();
+            document.getElementById('stat-acts').innerText = acts.size;
+
+            const hists = await db.collection("history").get();
+            document.getElementById('stat-hist').innerText = hists.size;
+        }
+
+        // USER MANAGEMENT
+        async function searchUser() {
+            const email = document.getElementById('user-search-input').value;
+            if(!email) return;
+
+            const snap = await db.collection("users").where("email", "==", email).get();
+            if(snap.empty) {
+                return Swal.fire('ไม่พบข้อมูล', 'อีเมลนี้ยังไม่ได้ลงทะเบียน', 'error');
             }
 
-            init() {
-                this.renderAssets();
-                this.loadChart(this.currentPair.id);
-                this.checkStatus();
-                this.log("System Ready. Waiting for user input...");
-            }
+            const user = snap.docs[0];
+            currentTargetUid = user.id;
+            const data = user.data();
 
-            renderAssets() {
-                this.dom.assets.innerHTML = '';
-                ASSETS.forEach(a => {
-                    const div = document.createElement('div');
-                    div.className = `flex justify-between items-center p-2 rounded cursor-pointer border-l-2 transition ${a.id === this.currentPair.id ? 'bg-white/10 border-neon' : 'border-transparent hover:bg-white/5'}`;
-                    div.onclick = () => this.selectAsset(a);
-                    div.innerHTML = `<span class="font-bold text-gray-200">${a.id}</span><span class="text-[9px] bg-black px-1 rounded text-gray-500">${a.type}</span>`;
-                    this.dom.assets.appendChild(div);
+            document.getElementById('user-result').classList.remove('hidden');
+            document.getElementById('res-email').innerText = data.email;
+            document.getElementById('res-uid').innerText = user.id;
+            document.getElementById('res-balance').innerText = data.balance.toLocaleString();
+            document.getElementById('res-count').innerText = data.transCount;
+        }
+
+        async function updateBalance(isPlus) {
+            const amount = parseFloat(document.getElementById('amt-adjust').value);
+            if(!amount || amount <= 0) return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณาระบุจำนวนเงิน', 'warning');
+
+            const result = await Swal.fire({
+                title: 'ยืนยันรายการ?',
+                text: `${isPlus ? 'เพิ่มเงิน' : 'หักเงิน'} จำนวน ฿${amount} ให้ลูกค้า`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3b82f6',
+                confirmButtonText: 'ยืนยันดำเนินการ'
+            });
+
+            if(result.isConfirmed) {
+                const finalAmt = isPlus ? amount : -amount;
+                await db.collection("users").doc(currentTargetUid).update({
+                    balance: firebase.firestore.FieldValue.increment(finalAmt)
                 });
-            }
-
-            selectAsset(asset) {
-                this.currentPair = asset;
-                document.getElementById('active-pair').innerText = asset.id;
-                this.renderAssets();
-                this.loadChart(asset.id);
-                this.resetUI();
-                this.log(`Asset switched to ${asset.id}`);
-            }
-
-            loadChart(symbol) {
-                const s = symbol.includes('USD') ? symbol : `BINANCE:${symbol}`;
-                document.getElementById('tv-chart-container').innerHTML = '';
-                new TradingView.widget({
-                    "autosize": true, "symbol": s, "interval": "60", "timezone": "Etc/UTC", "theme": "dark", "style": "1", "locale": "en", "toolbar_bg": "#f1f3f6", "enable_publishing": false, "hide_top_toolbar": false, "container_id": "tv-chart-container", "studies": ["RSI@tv-basicstudies"]
-                });
-            }
-
-            // --- CORE LOGIC: AUTO MODEL SWITCHER ---
-            async runAnalysis() {
-                if(!this.apiKey) { this.toggleSettings(); return; }
-
-                this.setLoading(true);
-                this.log(`Analyzing ${this.currentPair.id}...`);
-
-                const prompt = `
-                    You are an expert trader. Analyze ${this.currentPair.id} based on current general market structure.
-                    TASK: Return valid JSON only. No Markdown.
-                    JSON Format: {"signal": "BUY" or "SELL" or "WAIT", "confidence": number 0-100, "entry": "price", "sl": "price", "tp": "price", "reason": "Short reason under 10 words"}
-                    Mock realistic data.
-                `;
-
-                // Loop through models until one works
-                let success = false;
                 
-                for (const modelName of MODEL_LIST) {
-                    if (success) break;
-                    
-                    try {
-                        this.log(`Trying model: ${modelName}...`);
-                        document.getElementById('loading-step').innerText = `Connecting to ${modelName}...`;
+                await db.collection("history").add({
+                    uid: currentTargetUid,
+                    type: isPlus ? "แอดมินเพิ่มเงินให้" : "แอดมินหักเงิน",
+                    amount: finalAmt,
+                    date: new Date()
+                });
 
-                        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${this.apiKey}`, {
-                            method: 'POST',
-                            headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({
-                                contents: [{ parts: [{ text: prompt }] }],
-                                safetySettings: [
-                                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-                                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-                                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-                                ]
-                            })
-                        });
-
-                        const data = await response.json();
-
-                        // Check for API Errors
-                        if (data.error) {
-                            console.warn(`${modelName} failed: ${data.error.message}`);
-                            continue; // Try next model
-                        }
-
-                        if (!data.candidates || !data.candidates[0].content) {
-                            throw new Error("Safety Block");
-                        }
-
-                        // Success Parsing
-                        const text = data.candidates[0].content.parts[0].text;
-                        const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-                        const result = JSON.parse(jsonStr);
-
-                        this.updateDashboard(result, modelName);
-                        success = true;
-                        this.log("Analysis Success!", "success");
-
-                    } catch (err) {
-                        console.warn(`Error parsing ${modelName}:`, err);
-                    }
-                }
-
-                if (!success) {
-                    this.log("ALL MODELS FAILED. Check API Key.", "error");
-                    alert("API Key invalid or Quota exceeded. Please check your key.");
-                }
-
-                this.setLoading(false);
-            }
-
-            updateDashboard(data, modelUsed) {
-                // Colors
-                const color = data.signal === "BUY" ? "text-neon" : (data.signal === "SELL" ? "text-neon_red" : "text-gray-500");
-                const bg = data.signal === "BUY" ? "bg-neon" : (data.signal === "SELL" ? "bg-neon_red" : "bg-gray-600");
-
-                // Signal
-                const sigEl = document.getElementById('signal-text');
-                sigEl.innerText = data.signal;
-                sigEl.className = `text-5xl font-black font-cyber drop-shadow-lg ${color}`;
-
-                // Bar
-                document.getElementById('confidence-text').innerText = data.confidence + "%";
-                document.getElementById('confidence-text').className = `font-bold ${color}`;
-                document.getElementById('confidence-bar').className = `h-full transition-all duration-1000 ${bg}`;
-                document.getElementById('confidence-bar').style.width = data.confidence + "%";
-
-                // Data
-                document.getElementById('val-entry').innerText = data.entry;
-                document.getElementById('val-sl').innerText = data.sl;
-                document.getElementById('val-tp').innerText = data.tp;
-                document.getElementById('reason-text').innerText = data.reason;
-
-                // Badge
-                this.dom.modelBadge.innerText = modelUsed.toUpperCase().replace("GEMINI-", "");
-                this.dom.modelBadge.className = "text-[9px] bg-neon/20 text-neon px-2 py-0.5 rounded font-mono border border-neon/30";
-            }
-
-            // UTILS
-            log(msg, type="info") {
-                const color = type === "error" ? "text-red-500" : (type === "success" ? "text-neon" : "text-green-400");
-                this.dom.terminal.innerHTML += `<div class="${color} mb-1">> ${msg}</div>`;
-                this.dom.terminal.scrollTop = this.dom.terminal.scrollHeight;
-            }
-            toggleSettings() {
-                const el = document.getElementById('modal-settings');
-                el.classList.toggle('hidden');
-                if(!el.classList.contains('hidden')) document.getElementById('input-api-key').value = this.apiKey;
-            }
-            saveConfig() {
-                const key = document.getElementById('input-api-key').value.trim();
-                if(key) {
-                    this.apiKey = key;
-                    localStorage.setItem('EIS_API_KEY', key);
-                    this.checkStatus();
-                    this.toggleSettings();
-                    this.log("API Key Updated.");
-                }
-            }
-            checkStatus() {
-                if(this.apiKey) {
-                    this.dom.status.innerHTML = `<span class="animate-pulse">●</span> SYSTEM ONLINE`;
-                    this.dom.status.className = "mt-2 text-[9px] font-mono text-neon border border-neon/20 bg-neon/10 py-1 rounded shadow-[0_0_10px_rgba(0,255,204,0.1)]";
-                } else {
-                    this.dom.status.innerHTML = `● MISSING API KEY`;
-                    this.dom.status.className = "mt-2 text-[9px] font-mono text-red-500 border border-red-500/20 bg-red-500/5 py-1 rounded";
-                }
-            }
-            setLoading(isLoading) {
-                const el = document.getElementById('overlay-loading');
-                if(isLoading) el.classList.remove('hidden');
-                else el.classList.add('hidden');
-            }
-            resetUI() {
-                document.getElementById('signal-text').innerText = "WAIT";
-                document.getElementById('signal-text').className = "text-5xl font-black font-cyber text-gray-600";
-                document.getElementById('confidence-bar').style.width = "0%";
+                Swal.fire('สำเร็จ!', 'ยอดเงินถูกอัปเดตแล้ว', 'success');
+                searchUser(); // refresh ui
+                loadStats();
             }
         }
 
-        const app = new App();
-        window.onload = () => app.init();
+        async function addTransCount() {
+            const result = await Swal.fire({
+                title: 'บันทึกการใช้งานกลาง?',
+                text: "ระบบจะเพิ่มรอบใช้งาน 1 รอบ และตรวจสอบกิจกรรมโบนัสให้อัตโนมัติ",
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'ยืนยันเพิ่มรอบ'
+            });
+
+            if(result.isConfirmed) {
+                const userRef = db.collection("users").doc(currentTargetUid);
+                await userRef.update({ transCount: firebase.firestore.FieldValue.increment(1) });
+
+                // Check activities
+                const userDoc = await userRef.get();
+                const uData = userDoc.data();
+                const acts = await db.collection("activities").where("status", "==", "active").get();
+                
+                let bonusFound = false;
+                acts.forEach(async (doc) => {
+                    const act = doc.data();
+                    if(uData.transCount === act.target) {
+                        bonusFound = true;
+                        await userRef.update({ balance: firebase.firestore.FieldValue.increment(act.reward) });
+                        await db.collection("history").add({
+                            uid: currentTargetUid,
+                            type: `รางวัลกิจกรรม: ${act.name}`,
+                            amount: act.reward,
+                            date: new Date()
+                        });
+                        Swal.fire('ยินดีด้วย!', `ผู้ใช้ได้รับรางวัลโบนัส ฿${act.reward} จากกิจกรรม ${act.name}`, 'success');
+                    }
+                });
+
+                if(!bonusFound) Swal.fire('สำเร็จ', 'เพิ่มรอบการกลางเรียบร้อย', 'success');
+                searchUser();
+            }
+        }
+
+        // ACTIVITIES CRUD
+        async function handleCreateAct() {
+            const name = document.getElementById('act-name').value;
+            const target = parseInt(document.getElementById('act-target').value);
+            const reward = parseInt(document.getElementById('act-reward').value);
+
+            if(!name || !target || !reward) return Swal.fire('แจ้งเตือน', 'กรุณากรอกข้อมูลกิจกรรมให้ครบ', 'warning');
+
+            await db.collection("activities").add({
+                name, target, reward, status: 'active', createdAt: new Date()
+            });
+            Swal.fire('สร้างแล้ว', 'กิจกรรมใหม่พร้อมใช้งาน', 'success');
+            loadActivities();
+            loadStats();
+        }
+
+        function loadActivities() {
+            db.collection("activities").orderBy("createdAt", "desc").onSnapshot(snap => {
+                const container = document.getElementById('admin-act-container');
+                let html = '';
+                snap.forEach(doc => {
+                    const a = doc.data();
+                    const isActive = a.status === 'active';
+                    html += `
+                        <div class="flex items-center justify-between p-5 border rounded-2xl ${isActive ? 'bg-white' : 'bg-slate-50 opacity-60'} transition-all">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center ${isActive ? 'bg-blue-100 text-blue-600' : 'bg-slate-200 text-slate-500'}">
+                                    <i data-lucide="gift"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-700">${a.name}</h4>
+                                    <p class="text-xs text-slate-400">เป้าหมาย: ${a.target} รอบ | รางวัล: ฿${a.reward}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="toggleActStatus('${doc.id}', '${a.status}')" class="p-2 hover:bg-slate-100 rounded-lg text-slate-400">
+                                    <i data-lucide="${isActive ? 'eye' : 'eye-off'}"></i>
+                                </button>
+                                <button onclick="deleteAct('${doc.id}')" class="p-2 hover:bg-red-50 rounded-lg text-red-400">
+                                    <i data-lucide="trash-2"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html || '<p class="text-center text-slate-300 py-10 italic">ยังไม่มีกิจกรรม</p>';
+                lucide.createIcons();
+            });
+        }
+
+        async function toggleActStatus(id, current) {
+            const next = current === 'active' ? 'inactive' : 'active';
+            await db.collection("activities").doc(id).update({ status: next });
+        }
+
+        async function deleteAct(id) {
+            const res = await Swal.fire({ title: 'ลบกิจกรรม?', text: "ไม่สามารถย้อนคืนได้", icon: 'warning', showCancelButton: true });
+            if(res.isConfirmed) {
+                await db.collection("activities").doc(id).delete();
+                Swal.fire('ลบแล้ว', '', 'success');
+            }
+        }
+
+        // SETTINGS
+        async function loadSettings() {
+            const doc = await db.collection("settings").doc("main").get();
+            if(doc.exists) {
+                document.getElementById('set-announce').value = doc.data().announce || '';
+                document.getElementById('set-fb').value = doc.data().fbLink || '';
+            }
+        }
+
+        async function saveSettings() {
+            await db.collection("settings").doc("main").set({
+                announce: document.getElementById('set-announce').value,
+                fbLink: document.getElementById('set-fb').value
+            });
+            Swal.fire('บันทึกสำเร็จ', 'อัปเดตข้อมูลหน้าเว็บแล้ว', 'success');
+        }
+
+        function handleLogout() {
+            Swal.fire({
+                title: 'ต้องการออกจากระบบ?',
+                icon: 'question',
+                showCancelButton: true
+            }).then(r => { if(r.isConfirmed) auth.signOut().then(() => location.reload()); });
+        }
     </script>
 </body>
 </html>
